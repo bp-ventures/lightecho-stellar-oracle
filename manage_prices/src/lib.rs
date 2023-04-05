@@ -1,14 +1,30 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use soroban_sdk::{contractimpl, contracttype, xdr::AccountId, Env};
+
+#[derive(Clone)]
+#[contracttype]
+pub enum DataKey {
+    Price,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub struct Price {
+    pub seller: AccountId,
+    pub sell_price: u32,
+    pub buy_price: u32,
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+pub struct PriceUpdate;
+
+#[contractimpl]
+impl PriceUpdate {
+    // setting price in oracle
+    pub fn set_price(e: &Env, price: &Price) {
+        e.storage().set(&DataKey::Price, price);
+    }
+
+    // getting price from oracle
+    pub fn get_price(e: Env) -> Price {
+        e.storage().get_unchecked(&DataKey::Price).unwrap()
     }
 }
+
+mod test;
