@@ -20,6 +20,7 @@ pub struct PriceUpdate;
 
 #[contractimpl]
 impl PriceUpdate {
+    // create price
     pub fn create(e: Env, seller: Address, sell_price: u32, buy_price: u32) {
         if e.storage().has(&DataKey::Price) {
             panic!("price is already created");
@@ -32,6 +33,7 @@ impl PriceUpdate {
         e.storage().set(&DataKey::Price, &price);
     }
 
+    // update price
     pub fn update(e: Env, seller: Address, sell_price: u32, buy_price: u32) {
         if !e.storage().has(&DataKey::Price) {
             panic!("price is not created");
@@ -44,6 +46,7 @@ impl PriceUpdate {
         e.storage().set(&DataKey::Price, &price);
     }
 
+    // get price
     pub fn get(e: Env) -> Price {
         if !e.storage().has(&DataKey::Price) {
             panic!("price is not created");
@@ -51,6 +54,7 @@ impl PriceUpdate {
         e.storage().get_unchecked(&DataKey::Price).unwrap()
     }
 
+    // delete price
     pub fn delete(e: Env) {
         if !e.storage().has(&DataKey::Price) {
             panic!("price is deleted");
@@ -58,14 +62,14 @@ impl PriceUpdate {
         e.storage().remove(&DataKey::Price);
     }
 }
-// getting price from oracle
-pub fn get_price(e: &Env) -> Price {
-    e.storage().get_unchecked(&DataKey::Price).unwrap()
-}
+// // getting price from oracle
+// pub fn get_price(e: &Env) -> Price {
+//     e.storage().get_unchecked(&DataKey::Price).unwrap()
+// }
 
-// setting price in oracle
-pub fn set_price(e: &Env, price: &Price) {
-    e.storage().set(&DataKey::Price, price);
-}
+// // setting price in oracle
+// pub fn set_price(e: &Env, price: &Price) {
+//     e.storage().set(&DataKey::Price, price);
+// }
 
 mod test;
