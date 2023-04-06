@@ -1,4 +1,6 @@
-use soroban_sdk::{contractimpl, contracttype, xdr::AccountId, Env};
+#![no_std]
+
+use soroban_sdk::{contractimpl, contracttype, Address, Env};
 
 #[derive(Clone)]
 #[contracttype]
@@ -6,8 +8,10 @@ pub enum DataKey {
     Price,
 }
 
+#[derive(Clone)]
+#[contracttype]
 pub struct Price {
-    pub seller: AccountId,
+    pub seller: Address,
     pub sell_price: u32,
     pub buy_price: u32,
 }
@@ -16,7 +20,7 @@ pub struct PriceUpdate;
 
 #[contractimpl]
 impl PriceUpdate {
-    pub fn create(e: Env, seller: AccountId, sell_price: u32, buy_price: u32) {
+    pub fn create(e: Env, seller: Address, sell_price: u32, buy_price: u32) {
         if e.storage().has(&DataKey::Price) {
             panic!("price is already created");
         }
@@ -28,7 +32,7 @@ impl PriceUpdate {
         e.storage().set(&DataKey::Price, &price);
     }
 
-    pub fn update(e: Env, seller: AccountId, sell_price: u32, buy_price: u32) {
+    pub fn update(e: Env, seller: Address, sell_price: u32, buy_price: u32) {
         if !e.storage().has(&DataKey::Price) {
             panic!("price is not created");
         }
@@ -38,6 +42,20 @@ impl PriceUpdate {
             buy_price,
         };
         e.storage().set(&DataKey::Price, &price);
+    }
+
+    pub fn get(e: Env) -> Price {
+        if !e.storage().has(&DataKey::Price) {
+            panic!("price is not created");
+        }
+        e.storage().get_unchecked(&DataKey::Price).unwrap()
+    }
+
+    pub fn delete(e: Env) {
+        if !e.storage().has(&DataKey::Price) {
+            panic!("price is deleted");
+        }
+        e.storage().remove(&DataKey::Price);
     }
 }
 // getting price from oracle
