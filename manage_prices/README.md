@@ -10,7 +10,7 @@ This app lets you create, update, get and delete prices associated with stellar 
 
 To create a price, you need to send a transaction to the oracle setter with the following parameters:
 
-- `oracle env` - environment of the oracle
+- `env` - environment of the oracle
 - `sellar` - stellar address of the user
 - `sell_price` - price of the asset
 - `buy_price` - price of the asset
@@ -19,7 +19,7 @@ To create a price, you need to send a transaction to the oracle setter with the 
 
 To update a price, you need to send a transaction to the oracle setter with the following parameters:
 
-- `oracle env` - environment of the oracle
+- `env` - environment of the oracle
 - `sellar` - stellar address of the user
 - `sell_price` - price of the asset
 - `buy_price` - price of the asset
@@ -28,13 +28,13 @@ To update a price, you need to send a transaction to the oracle setter with the 
 
 To get a price, you need to send a transaction to the oracle getter with the following parameters:
 
-- `oracle env` - environment of the oracle
+- `env` - environment of the oracle
 
 ### Delete a price
 
 To delete a price, you need to send a transaction to the oracle setter with the following parameters:
 
-- `oracle env` - environment of the oracle
+- `env` - environment of the oracle
 
 ## License
 
