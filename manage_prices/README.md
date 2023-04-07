@@ -90,7 +90,7 @@ soroban contract invoke \
     --args '{"stellar": "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B", "sell_price": 0.0000005, "buy_price": 0.0000005}'
 ```
 
-Invoke Get Price function
+Invoke get price function
 
 ```
 soroban contract invoke \
@@ -100,7 +100,7 @@ soroban contract invoke \
     --args '{"stellar": "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"}'
 ```
 
-Invoke Delete function
+Invoke delete function
 
 ```
 soroban contract invoke \
