@@ -76,8 +76,10 @@ Invoke create function
 soroban contract invoke \
     --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
     --id [contract_id] \
-    --fn create \
-    --args '{"stellar": "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B", "sell_price": 0.0000001, "buy_price": 0.0000001}'
+    --create \
+    --stellar "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"
+    --sell_price 0.0000001
+    --buy_price 0.0000001
 ```
 
 Invoke update function
@@ -86,30 +88,37 @@ Invoke update function
 soroban contract invoke \
     --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
     --id [contract_id] \
-    --fn update \
-    --args '{"stellar": "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B", "sell_price": 0.0000005, "buy_price": 0.0000005}'
+    --update \
+    --stellar "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"
+    --sell_price 0.0000001
+    --buy_price 0.0000001
 ```
 
 Invoke get price function
 
-```
+````
 soroban contract invoke \
     --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
     --id [contract_id] \
-    --fn get \
-    --args '{"stellar": "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"}'
+    --get \
+    --stellar "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"
+    --sell_price 0.0000001
+    --buy_price 0.0000001
 ```
 
 Invoke delete function
 
-```
+````
+
 soroban contract invoke \
-    --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
-    --id [contract_id] \
-    --fn delete \
-    --args '{"stellar": "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"}'
+ --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
+--id [contract_id] \
+ --delete \
+--stellar "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"
+
 ```
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+```
