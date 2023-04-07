@@ -36,6 +36,80 @@ To delete a price, you need to send a transaction to the oracle setter with the 
 
 - `env` - environment of the oracle
 
+## How to run
+
+### Prerequisites
+
+- A [Rust](https://www.rust-lang.org/) toolchain
+- An editor that supports Rust
+- [Soroban CLI](https://soroban.stellar.org/docs/getting-started/setup#install-the-soroban-cli)
+
+### Run the Tests
+
+```
+cargo test
+```
+
+### Build
+
+```
+cargo build --target wasm32-unknown-unknown --release
+```
+
+A `.wasm` file will be outputted in the `target` directory. The `.wasm` file is the built contract.
+
+```
+target/wasm32-unknown-unknown/release/manage_prices.wasm
+```
+
+### Deploy
+
+```
+soroban contract deploy --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
+```
+
+### Invoke the contract
+
+Invoke create function
+
+```
+soroban contract invoke \
+    --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
+    --id [contract_id] \
+    --fn create \
+    --args '{"stellar": "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B", "sell_price": 0.0000001, "buy_price": 0.0000001}'
+```
+
+Invoke update function
+
+```
+soroban contract invoke \
+    --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
+    --id [contract_id] \
+    --fn update \
+    --args '{"stellar": "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B", "sell_price": 0.0000005, "buy_price": 0.0000005}'
+```
+
+Invoke Get Price function
+
+```
+soroban contract invoke \
+    --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
+    --id [contract_id] \
+    --fn get \
+    --args '{"stellar": "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"}'
+```
+
+Invoke Delete function
+
+```
+soroban contract invoke \
+    --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
+    --id [contract_id] \
+    --fn delete \
+    --args '{"stellar": "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"}'
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
