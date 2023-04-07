@@ -7,9 +7,13 @@ use soroban_sdk::{testutils::Address as _, Address, Env};
 fn test() {
     // Create a new environment for each test
     let env: Env = Default::default();
+
+    // Register the contract and get the contract id
     let contract_id = env.register_contract(None, PriceUpdate);
 
+    // Create a new client for the contract
     let client = PriceUpdateClient::new(&env, &contract_id);
+
     // Create a random address for the seller
     let seller = Address::random(&env);
     let sell_price = 100;
