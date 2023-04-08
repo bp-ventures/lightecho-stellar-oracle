@@ -62,14 +62,5 @@ impl PriceUpdate {
         e.storage().remove(&DataKey::Price);
     }
 }
-// // getting price from oracle
-// pub fn get_price(e: &Env) -> Price {
-//     e.storage().get_unchecked(&DataKey::Price).unwrap()
-// }
-
-// // setting price in oracle
-// pub fn set_price(e: &Env, price: &Price) {
-//     e.storage().set(&DataKey::Price, price);
-// }
 
 mod test;

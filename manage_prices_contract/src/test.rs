@@ -1,8 +1,9 @@
 #![cfg(test)]
+extern crate std;
+use std::println;
 
 use super::{PriceUpdate, PriceUpdateClient};
 use soroban_sdk::{testutils::Address as _, Address, Env};
-
 #[test]
 fn test() {
     // Create a new environment for each test
@@ -29,4 +30,10 @@ fn test() {
     assert_eq!(price.seller, seller);
     assert_eq!(price.sell_price, sell_price);
     assert_eq!(price.buy_price, buy_price);
+
+    // Print the price update
+    println!("Getted price update:");
+    println!("Address: {:?}", price.seller);
+    println!("Sell price: {}", price.sell_price);
+    println!("Buy price: {}", price.buy_price);
 }
