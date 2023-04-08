@@ -6,8 +6,8 @@ This repository contains the smart contracts for the Soroban project.
 
 The price oracle contract is a simple contract that allows to set the price. It is used to set the price of the Soroban token.
 
-[Code](/manage_prices)
+[Code](/manage_prices_contract/)
 
 ### Documentation
 
-[README.md](/manage_prices/README.md)
+[README.md](/manage_prices_contract/README.md)

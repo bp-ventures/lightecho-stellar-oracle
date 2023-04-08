@@ -14,16 +14,16 @@ from stellar_sdk.soroban.types import Uint32, Int128, Address, Symbol
 
 class Soroban:
     def auth():
-        contract_id = "8542841a633aafc771f07bc472b7a799fa2e82cced417356505f569daaaedc47"
+        contract_id = "61e3cb08e151f6bd3c7a69f97e13b6ee762f05b24cd21b73cef5c3e3ac3d1e59"
         tx_submitter_kp = Keypair.from_secret(
-            "SAAPYAPTTRZMCUZFPG3G66V4ZMHTK4TWA6NS7U4F7Z3IMUD52EK4DDEV"
+            "SCNLUY7SFXJYVIULV66V2OQHNB4XDWYFGNNCN5YBBC3MZT5XN4X7IJP6"
         )
         op_invoker_kp = Keypair.from_secret(
-            "SAEZSI6DY7AXJFIYA4PM6SIBNEYYXIEM2MSOTHFGKHDW32MBQ7KVO6EN"
+            "SCNLUY7SFXJYVIULV66V2OQHNB4XDWYFGNNCN5YBBC3MZT5XN4X7IJP6"
         )
 
         nonce = config.soroban_server.get_nonce(contract_id, op_invoker_kp.public_key)
-        func_name = "increment"
+        func_name = "get"
         args = [Address(op_invoker_kp.public_key), Uint32(10)]
 
         invocation = AuthorizedInvocation(
@@ -82,7 +82,6 @@ class Soroban:
             print(f"transaction result: {result}")
 
     def auth_with_transaction():
-
         contract_id = "f9da8befbc0084f01dfdd28ecfb3970abb53824390c563aa76bbc85c99b5e422"
         tx_submitter_kp = Keypair.from_secret(
             "SAKFQFUYTCWME2TK2AIRALDJKZBGOAEAKFJ2XIB5BZWO2BNV5ZMVTR3U"
@@ -335,7 +334,6 @@ class Soroban:
             print(f"transaction result: {output}")
 
     def payment():
-
         alice_kp = Keypair.from_secret(
             "SAAPYAPTTRZMCUZFPG3G66V4ZMHTK4TWA6NS7U4F7Z3IMUD52EK4DDEV"
         )  # GDAT5HWTGIU4TSSZ4752OUC4SABDLTLZFRPZUJ3D6LKBNEPA7V2CIG54

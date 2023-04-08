@@ -2,7 +2,7 @@
 
 ## Description
 
-This app lets you create, update, get and delete prices associated with stellar Address using the oracle setter and getter.
+This app lets you create, update, get and delete prices associated with seller Address using the oracle setter and getter.
 
 ## Usage
 
@@ -11,7 +11,7 @@ This app lets you create, update, get and delete prices associated with stellar 
 To create a price, you need to send a transaction to the oracle setter with the following parameters:
 
 - `env` - environment of the oracle
-- `sellar` - stellar address of the user
+- `sellar` - seller address of the user
 - `sell_price` - price of the asset
 - `buy_price` - price of the asset
 
@@ -20,7 +20,7 @@ To create a price, you need to send a transaction to the oracle setter with the 
 To update a price, you need to send a transaction to the oracle setter with the following parameters:
 
 - `env` - environment of the oracle
-- `sellar` - stellar address of the user
+- `sellar` - seller address of the user
 - `sell_price` - price of the asset
 - `buy_price` - price of the asset
 
@@ -76,10 +76,10 @@ Invoke create function
 soroban contract invoke \
     --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
     --id [contract_id] \
-    --create \
-    --stellar "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"
-    --sell_price 0.0000001
-    --buy_price 0.0000001
+    -- create \
+    --seller "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"
+    --sell_price 1
+    --buy_price 1
 ```
 
 Invoke update function
@@ -88,10 +88,10 @@ Invoke update function
 soroban contract invoke \
     --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
     --id [contract_id] \
-    --update \
-    --stellar "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"
-    --sell_price 0.0000001
-    --buy_price 0.0000001
+    -- update \
+    --seller "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"
+    --sell_price 1
+    --buy_price 1
 ```
 
 Invoke get price function
@@ -100,10 +100,7 @@ Invoke get price function
 soroban contract invoke \
     --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
     --id [contract_id] \
-    --get \
-    --stellar "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"
-    --sell_price 0.0000001
-    --buy_price 0.0000001
+    -- get
 ```
 
 Invoke delete function
@@ -113,8 +110,7 @@ Invoke delete function
 soroban contract invoke \
  --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
 --id [contract_id] \
- --delete \
---stellar "GAD77QJZFQSYMYL2ORVBJBKFJCYKOXFLGIROY3TAL6Z6R4HMFKBY2C2B"
+ -- delete
 
 ```
 
