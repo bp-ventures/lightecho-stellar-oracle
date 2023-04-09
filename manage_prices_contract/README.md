@@ -101,16 +101,17 @@ soroban contract invoke \
     --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
     --id [contract_id] \
     -- get
-```
+````
 
 Invoke delete function
 
 ````
-
 soroban contract invoke \
  --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
 --id [contract_id] \
  -- delete
+````
+
 
 ## License
 
