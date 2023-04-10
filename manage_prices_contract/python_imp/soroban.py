@@ -104,8 +104,8 @@ class Soroban:
             return
 
     def invoke():
-        secret = "SCNLUY7SFXJYVIULV66V2OQHNB4XDWYFGNNCN5YBBC3MZT5XN4X7IJP6"
-        contract_id = "69828e4b1032b13bbf3c86b3edb95249bf2a8d5bc740198816c5d5077a097178"
+        secret = "SAAPYAPTTRZMCUZFPG3G66V4ZMHTK4TWA6NS7U4F7Z3IMUD52EK4DDEV"
+        contract_id = "ca08ea2c19bd47d9e04de0cc86e1440866f6c7f8634095872c38000e1a7cbcd9"
 
         kp = Keypair.from_secret(secret)
         soroban_server = SorobanServer(config.rpc_server_url)
@@ -117,8 +117,8 @@ class Soroban:
             .set_timeout(300)
             .append_invoke_contract_function_op(
                 contract_id=contract_id,
-                method="get",
-                parameters="",
+                method="hello",
+                parameters=[Symbol("world")],
                 source=kp.public_key,
             )
             .build()
