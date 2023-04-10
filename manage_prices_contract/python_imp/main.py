@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     prompt = int(input("Enter your choice: "))
     if prompt == 1:
-        Soroban.auth()
+        Soroban.invoke()
     elif prompt == 0:
         exit()
     else:

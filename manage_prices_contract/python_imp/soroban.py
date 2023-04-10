@@ -2,7 +2,7 @@ import time
 import config
 from stellar_sdk import Asset, Keypair, TransactionBuilder
 from stellar_sdk import xdr as stellar_xdr
-from stellar_sdk.soroban import ContractAuth, AuthorizedInvocation
+from stellar_sdk.soroban import ContractAuth, AuthorizedInvocation, SorobanServer
 from stellar_sdk.soroban.soroban_rpc import TransactionStatus
 from stellar_sdk.soroban.types import Uint32, Uint128, Address, Symbol
 
@@ -102,3 +102,49 @@ class Soroban:
         except Exception as e:
             print(f"Error: {e}")
             return
+
+    def invoke():
+        secret = "SCNLUY7SFXJYVIULV66V2OQHNB4XDWYFGNNCN5YBBC3MZT5XN4X7IJP6"
+        contract_id = "69828e4b1032b13bbf3c86b3edb95249bf2a8d5bc740198816c5d5077a097178"
+
+        kp = Keypair.from_secret(secret)
+        soroban_server = SorobanServer(config.rpc_server_url)
+        source = soroban_server.load_account(kp.public_key)
+
+        # Let's build a transaction that invokes the `hello` function.
+        tx = (
+            TransactionBuilder(source, config.network_passphrase)
+            .set_timeout(300)
+            .append_invoke_contract_function_op(
+                contract_id=contract_id,
+                method="get",
+                parameters="",
+                source=kp.public_key,
+            )
+            .build()
+        )
+
+        simulate_transaction_data = soroban_server.simulate_transaction(tx)
+        print(f"simulated transaction: {simulate_transaction_data}")
+
+        print(f"setting footprint and signing transaction...")
+        tx.set_footpoint(simulate_transaction_data.footprint)
+        tx.sign(kp)
+
+        send_transaction_data = soroban_server.send_transaction(tx)
+        print(f"sent transaction: {send_transaction_data}")
+
+        while True:
+            print("waiting for transaction to be confirmed...")
+            get_transaction_status_data = soroban_server.get_transaction_status(
+                send_transaction_data.id
+            )
+            if get_transaction_status_data.status != TransactionStatus.PENDING:
+                break
+            time.sleep(3)
+        print(f"transaction status: {get_transaction_status_data}")
+
+        if get_transaction_status_data.status == TransactionStatus.SUCCESS:
+            result = stellar_xdr.SCVal.from_xdr(get_transaction_status_data.results[0].xdr)  # type: ignore
+            output = [x.sym.sc_symbol.decode() for x in result.obj.vec.sc_vec]  # type: ignore
+            print(f"transaction result: {output}")

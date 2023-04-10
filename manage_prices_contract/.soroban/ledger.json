@@ -1,7 +1,7 @@
 {
   "protocol_version": 20,
-  "sequence_number": 4,
-  "timestamp": 20,
+  "sequence_number": 7,
+  "timestamp": 35,
   "network_id": [
     154,
     137,
@@ -71,7 +71,7 @@
             "key": "ledger_key_contract_executable",
             "val": {
               "contract_executable": {
-                "wasm_ref": "3dc5bf9878820bd54133a21e8f6fed03957557f948eb9fe52b3552f54966f1d3"
+                "wasm_ref": "0037be2aa7c5099dc37d429271a67c03184b9ce802babd8b8049691d7b3d73fb"
               }
             }
           }
@@ -189,6 +189,153 @@
               "contract_executable": {
                 "wasm_ref": "0037be2aa7c5099dc37d429271a67c03184b9ce802babd8b8049691d7b3d73fb"
               }
+            }
+          }
+        },
+        "ext": "v0"
+      }
+    ],
+    [
+      {
+        "contract_data": {
+          "contract_id": "69828e4b1032b13bbf3c86b3edb95249bf2a8d5bc740198816c5d5077a097178",
+          "key": "ledger_key_contract_executable"
+        }
+      },
+      {
+        "last_modified_ledger_seq": 0,
+        "data": {
+          "contract_data": {
+            "contract_id": "69828e4b1032b13bbf3c86b3edb95249bf2a8d5bc740198816c5d5077a097178",
+            "key": "ledger_key_contract_executable",
+            "val": {
+              "contract_executable": {
+                "wasm_ref": "0037be2aa7c5099dc37d429271a67c03184b9ce802babd8b8049691d7b3d73fb"
+              }
+            }
+          }
+        },
+        "ext": "v0"
+      }
+    ],
+    [
+      {
+        "contract_data": {
+          "contract_id": "61e3cb08e151f6bd3c7a69f97e13b6ee762f05b24cd21b73cef5c3e3ac3d1e59",
+          "key": {
+            "vec": [
+              {
+                "symbol": "Price"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "last_modified_ledger_seq": 0,
+        "data": {
+          "contract_data": {
+            "contract_id": "61e3cb08e151f6bd3c7a69f97e13b6ee762f05b24cd21b73cef5c3e3ac3d1e59",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "Price"
+                }
+              ]
+            },
+            "val": {
+              "map": [
+                {
+                  "key": {
+                    "symbol": "buy_price"
+                  },
+                  "val": {
+                    "u32": 5
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "sell_price"
+                  },
+                  "val": {
+                    "u32": 5
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "seller"
+                  },
+                  "val": {
+                    "address": {
+                      "account": {
+                        "public_key_type_ed25519": "07ffc1392c2586617a746a14854548b0a75cab3222ec6e605fb3e8f0ec2a838d"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "ext": "v0"
+      }
+    ],
+    [
+      {
+        "contract_data": {
+          "contract_id": "69828e4b1032b13bbf3c86b3edb95249bf2a8d5bc740198816c5d5077a097178",
+          "key": {
+            "vec": [
+              {
+                "symbol": "Price"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "last_modified_ledger_seq": 0,
+        "data": {
+          "contract_data": {
+            "contract_id": "69828e4b1032b13bbf3c86b3edb95249bf2a8d5bc740198816c5d5077a097178",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "Price"
+                }
+              ]
+            },
+            "val": {
+              "map": [
+                {
+                  "key": {
+                    "symbol": "buy_price"
+                  },
+                  "val": {
+                    "u32": 5
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "sell_price"
+                  },
+                  "val": {
+                    "u32": 5
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "seller"
+                  },
+                  "val": {
+                    "address": {
+                      "account": {
+                        "public_key_type_ed25519": "07ffc1392c2586617a746a14854548b0a75cab3222ec6e605fb3e8f0ec2a838d"
+                      }
+                    }
+                  }
+                }
+              ]
             }
           }
         },
