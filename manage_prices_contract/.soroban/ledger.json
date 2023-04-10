@@ -171,6 +171,29 @@
         },
         "ext": "v0"
       }
+    ],
+    [
+      {
+        "contract_data": {
+          "contract_id": "22a7570343a828e97c5917487fc5c13325b21c3f02ed50ed4104d362031d5328",
+          "key": "ledger_key_contract_executable"
+        }
+      },
+      {
+        "last_modified_ledger_seq": 0,
+        "data": {
+          "contract_data": {
+            "contract_id": "22a7570343a828e97c5917487fc5c13325b21c3f02ed50ed4104d362031d5328",
+            "key": "ledger_key_contract_executable",
+            "val": {
+              "contract_executable": {
+                "wasm_ref": "0037be2aa7c5099dc37d429271a67c03184b9ce802babd8b8049691d7b3d73fb"
+              }
+            }
+          }
+        },
+        "ext": "v0"
+      }
     ]
   ]
 }
