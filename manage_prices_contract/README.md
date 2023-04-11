@@ -10,7 +10,7 @@ This app lets you create, update, get and delete prices associated with seller A
 
 To create a price, you need to send a transaction to the oracle setter with the following parameters:
 
-- `env` - environment of the oracle
+- `contract_id` - contract id of the oracle
 - `sellar` - seller address of the user
 - `sell_price` - price of the asset
 - `buy_price` - price of the asset
@@ -19,7 +19,7 @@ To create a price, you need to send a transaction to the oracle setter with the 
 
 To update a price, you need to send a transaction to the oracle setter with the following parameters:
 
-- `env` - environment of the oracle
+- `contract_id` - contract id of the oracle
 - `sellar` - seller address of the user
 - `sell_price` - price of the asset
 - `buy_price` - price of the asset
@@ -28,13 +28,13 @@ To update a price, you need to send a transaction to the oracle setter with the 
 
 To get a price, you need to send a transaction to the oracle getter with the following parameters:
 
-- `env` - environment of the oracle
+- `contract_id` - contract id of the oracle
 
 ### Delete a price
 
 To delete a price, you need to send a transaction to the oracle setter with the following parameters:
 
-- `env` - environment of the oracle
+- `contract_id` - contract id of the oracle
 
 ## How to run
 
@@ -111,6 +111,10 @@ soroban contract invoke \
  --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
 --id [contract_id] \
  -- delete
+
+### Python Integration
+
+To invoke deployed contract from python, you can see [soroban-py](./soroban-py/README.md) documentation.
 
 ## License
 

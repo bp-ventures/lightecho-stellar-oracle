@@ -1,14 +1,4 @@
-import time
-import config
-from stellar_sdk import Asset, Keypair, TransactionBuilder
-from stellar_sdk import xdr as stellar_xdr
-from stellar_sdk.soroban import ContractAuth, AuthorizedInvocation, SorobanServer
-from stellar_sdk.soroban.soroban_rpc import TransactionStatus
-from stellar_sdk.soroban.types import Uint32, Uint128, Address, Symbol
-
-
-class Soroban:
-    def auth():
+def auth():
         contract_id = input("Enter contract ID: ")
 
         tx_submitter_kp = input("Enter transaction submitter keypair: ")
@@ -88,13 +78,13 @@ class Soroban:
                         send_transaction_data.id
                     )
                 )
-                if get_transaction_status_data.status != TransactionStatus.PENDING:
+                if get_transaction_status_data.status != GetTransactionStatus.PENDING:
                     break
                 time.sleep(2)
 
             print(f"get transaction status: {get_transaction_status_data}")
 
-            if get_transaction_status_data.status == TransactionStatus.SUCCESS:
+            if get_transaction_status_data.status == GetTransactionStatus.SUCCESS:
                 result = stellar_xdr.SCVal.from_xdr(
                     get_transaction_status_data.results[0].xdr
                 )
@@ -102,49 +92,3 @@ class Soroban:
         except Exception as e:
             print(f"Error: {e}")
             return
-
-    def invoke():
-        secret = "SAAPYAPTTRZMCUZFPG3G66V4ZMHTK4TWA6NS7U4F7Z3IMUD52EK4DDEV"
-        contract_id = "ca08ea2c19bd47d9e04de0cc86e1440866f6c7f8634095872c38000e1a7cbcd9"
-
-        kp = Keypair.from_secret(secret)
-        soroban_server = SorobanServer(config.rpc_server_url)
-        source = soroban_server.load_account(kp.public_key)
-
-        # Let's build a transaction that invokes the `hello` function.
-        tx = (
-            TransactionBuilder(source, config.network_passphrase)
-            .set_timeout(300)
-            .append_invoke_contract_function_op(
-                contract_id=contract_id,
-                method="hello",
-                parameters=[Symbol("world")],
-                source=kp.public_key,
-            )
-            .build()
-        )
-
-        simulate_transaction_data = soroban_server.simulate_transaction(tx)
-        print(f"simulated transaction: {simulate_transaction_data}")
-
-        print(f"setting footprint and signing transaction...")
-        tx.set_footpoint(simulate_transaction_data.footprint)
-        tx.sign(kp)
-
-        send_transaction_data = soroban_server.send_transaction(tx)
-        print(f"sent transaction: {send_transaction_data}")
-
-        while True:
-            print("waiting for transaction to be confirmed...")
-            get_transaction_status_data = soroban_server.get_transaction_status(
-                send_transaction_data.id
-            )
-            if get_transaction_status_data.status != TransactionStatus.PENDING:
-                break
-            time.sleep(3)
-        print(f"transaction status: {get_transaction_status_data}")
-
-        if get_transaction_status_data.status == TransactionStatus.SUCCESS:
-            result = stellar_xdr.SCVal.from_xdr(get_transaction_status_data.results[0].xdr)  # type: ignore
-            output = [x.sym.sc_symbol.decode() for x in result.obj.vec.sc_vec]  # type: ignore
-            print(f"transaction result: {output}")

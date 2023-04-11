@@ -341,6 +341,29 @@
         },
         "ext": "v0"
       }
+    ],
+    [
+      {
+        "contract_data": {
+          "contract_id": "568bc8bdd864535c9b9f39d1c32fb7c7dd31d0443d31442ca7d0d06c758317e6",
+          "key": "ledger_key_contract_executable"
+        }
+      },
+      {
+        "last_modified_ledger_seq": 0,
+        "data": {
+          "contract_data": {
+            "contract_id": "568bc8bdd864535c9b9f39d1c32fb7c7dd31d0443d31442ca7d0d06c758317e6",
+            "key": "ledger_key_contract_executable",
+            "val": {
+              "contract_executable": {
+                "wasm_ref": "0037be2aa7c5099dc37d429271a67c03184b9ce802babd8b8049691d7b3d73fb"
+              }
+            }
+          }
+        },
+        "ext": "v0"
+      }
     ]
   ]
 }

@@ -5,7 +5,7 @@ if __name__ == "__main__":
     print("-------------Soroban Prices Oracle--------------")
     print("------------------------------------------------")
 
-    print("1 - Prices Oracle Menu")
+    print("1 - Invoke Create Prices Oracle Menu")
     print("0 - Exit")
 
     prompt = int(input("Enter your choice: "))
