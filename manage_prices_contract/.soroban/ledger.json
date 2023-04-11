@@ -2,6 +2,7 @@
   "protocol_version": 20,
   "sequence_number": 7,
   "timestamp": 35,
+
   "network_id": [
     154,
     137,
@@ -72,6 +73,7 @@
             "val": {
               "contract_executable": {
                 "wasm_ref": "0037be2aa7c5099dc37d429271a67c03184b9ce802babd8b8049691d7b3d73fb"
+
               }
             }
           }
@@ -364,6 +366,7 @@
         },
         "ext": "v0"
       }
+
     ]
   ]
 }
