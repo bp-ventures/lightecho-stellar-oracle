@@ -70,7 +70,7 @@ target/wasm32-unknown-unknown/release/manage_prices.wasm
 soroban contract deploy --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
 ```
 
-### Delpoy on FUTURENET
+### Deploy on FUTURENET
 
 ```
 soroban contract deploy \
