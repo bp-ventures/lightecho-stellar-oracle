@@ -62,10 +62,22 @@ A `.wasm` file will be outputted in the `target` directory. The `.wasm` file is 
 target/wasm32-unknown-unknown/release/manage_prices.wasm
 ```
 
-### Deploy
+## Deploy
+
+### Deploy on Testnet
 
 ```
 soroban contract deploy --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
+```
+
+### Delpoy on FUTURENET
+
+```
+soroban contract deploy \
+    --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm \
+    --source [secret_key] \
+    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --network-passphrase 'Test SDF Future Network ; October 2022'
 ```
 
 ### Invoke the contract
@@ -96,22 +108,21 @@ soroban contract invoke \
 
 Invoke get price function
 
-````
+```
 soroban contract invoke \
     --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
     --id [contract_id] \
     -- get
-````
-
+```
 
 Invoke delete function
 
-````
+```
 soroban contract invoke \
  --wasm target/wasm32-unknown-unknown/release/manage_prices.wasm
 --id [contract_id] \
  -- delete
-````
+```
 
 ### Python Integration
 

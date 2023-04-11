@@ -14,6 +14,10 @@ This app lets you invoke functions of deployed contract on the FUTURENET network
 
 ## Usage
 
+### Prerequisites
+
+- Make sure your contract is deployed on the FUTURENET network. You can follow the [instructions](https://soroban.stellar.org/docs/getting-started/deploy-to-futurenet) to deploy your contract or you can see soroban rust deploy on FUTURENET step [here](README.md#deploy-on-futurenet)
+
 ### Create a price
 
 To create a price, you need to send a transaction to the oracle setter with the following parameters:
