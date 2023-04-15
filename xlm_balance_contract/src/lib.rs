@@ -1,31 +1,26 @@
 #![no_std]
 
-use soroban_sdk::{contractimpl, contracttype, Address, Env};
+use soroban_sdk::{contractimpl, contracttype, Address, BytesN, Env};
+
+mod token {
+    soroban_sdk::contractimport!(file = "../utils/token/soroban_token_spec.wasm");
+}
 
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
-    Balance,
+    Balance(Address),
 }
 
-#[derive(Clone)]
-#[contracttype]
-pub struct Balance {
-    pub owner: Address,
-    pub amount: u32,
-}
-
-pub struct BalanceContract;
+pub struct SAContract;
 
 #[contractimpl]
-impl BalanceContract {
-    // get balance
-    pub fn get(e: Env) -> Balance {
-        if !e.storage().has(&DataKey::Balance) {
-            panic!("no balance found");
-        }
+impl SAContract {
+    fn token(e: Env, token_id: BytesN<32>) {
+        let client = token::Client::new(&e, &token_id);
 
-        e.storage().get_unchecked(&DataKey::Balance).unwrap()
+        // client.xfer(e, &to, &amount);
+        
     }
 }
 
