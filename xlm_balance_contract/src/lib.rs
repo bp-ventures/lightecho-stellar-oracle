@@ -9,7 +9,14 @@ mod token {
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
-    Balance(Address),
+    Balance,
+}
+
+#[derive(Clone)]
+#[contracttype]
+pub struct Balance {
+    pub address: Address,
+    pub balance: i128,
 }
 
 pub struct SAContract;
@@ -17,15 +24,16 @@ pub struct SAContract;
 #[contractimpl]
 impl SAContract {
     // get balance
-    fn get_balance(e: Env, address: Address, token_id: BytesN<32>) -> i128 {
+    pub fn get_balance(e: Env, address: Address, token_id: BytesN<32>) -> i128 {
+        // define client
         let client = token::Client::new(&e, &token_id);
 
         // client.xfer(e, &to, &amount);
         let balance = client.balance(&address);
 
-        e.storage().set(&DataKey::Balance(address), &balance);
-
+        // return balance
         balance
+        //e.storage().set(&DataKey::Balance(address), &balance);
     }
 }
 
