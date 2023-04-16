@@ -3,16 +3,16 @@
 extern crate std;
 use std::println;
 
-use super::{SAContract, SAContractClient};
+use super::{BalanceContract, BalanceContractClient};
 use soroban_sdk::{testutils::Address as _, Address, Env};
 
 #[test]
 fn test() {
     let env: Env = Default::default();
 
-    let contract_id = env.register_contract(None, SAContract);
+    let contract_id = env.register_contract(None, BalanceContract);
 
-    let client = SAContractClient::new(&env, &contract_id);
+    let client = BalanceContractClient::new(&env, &contract_id);
 
     //let address = "GALGFV6YVKMVAWHK6QA7GCC67VKBW73A3PB5IKZGKT5ID5AGK4S3Y7GX";
     let address = Address::random(&env);

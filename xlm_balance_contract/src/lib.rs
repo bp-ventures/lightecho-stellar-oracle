@@ -19,10 +19,10 @@ pub struct Balance {
     pub balance: i128,
 }
 
-pub struct SAContract;
+pub struct BalanceContract;
 
 #[contractimpl]
-impl SAContract {
+impl BalanceContract {
     // get balance
     pub fn get_balance(e: Env, address: Address, token_id: BytesN<32>) -> i128 {
         // define client
@@ -33,6 +33,7 @@ impl SAContract {
 
         // return balance
         balance
+
         //e.storage().set(&DataKey::Balance(address), &balance);
     }
 }
