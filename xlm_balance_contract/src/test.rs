@@ -1,0 +1,21 @@
+#![cfg(test)]
+
+extern crate std;
+use std::println;
+
+use super::{SAContract, SAContractClient};
+use soroban_sdk::{testutils::Address as _, Address, Env};
+
+#[test]
+fn test() {
+    let env: Env = Default::default();
+    let contract_id = env.register_contract(None, SAContract);
+
+    let client = SAContractClient::new(&env, &contract_id);
+
+    let address = "GALGFV6YVKMVAWHK6QA7GCC67VKBW73A3PB5IKZGKT5ID5AGK4S3Y7GX";
+
+    let balance = client.get_balance(&env, &address, &"XLM".as_bytes());
+
+    println!("balance: {}", balance);
+}

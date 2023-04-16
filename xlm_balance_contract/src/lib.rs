@@ -16,11 +16,16 @@ pub struct SAContract;
 
 #[contractimpl]
 impl SAContract {
-    fn token(e: Env, token_id: BytesN<32>) {
+    // get balance
+    fn get_balance(e: Env, address: Address, token_id: BytesN<32>) -> i128 {
         let client = token::Client::new(&e, &token_id);
 
         // client.xfer(e, &to, &amount);
-        
+        let balance = client.balance(&address);
+
+        e.storage().set(&DataKey::Balance(address), &balance);
+
+        balance
     }
 }
 
