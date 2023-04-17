@@ -17,6 +17,10 @@ fn test() {
     //let address = "GALGFV6YVKMVAWHK6QA7GCC67VKBW73A3PB5IKZGKT5ID5AGK4S3Y7GX";
     let address = Address::random(&env);
 
+    // TODO:
+    // stellar wallet pub key to Address
+    // generate token id from stellar wallet pub key and pass a bytesN array to register_stellar_asset_contract
+
     // generate token id
     let token = &env.register_stellar_asset_contract(address.clone());
 
