@@ -24,17 +24,14 @@ pub struct BalanceContract;
 #[contractimpl]
 impl BalanceContract {
     // get balance
-    pub fn get_balance(e: Env, address: Address, token_id: BytesN<32>) -> i128 {
+    pub fn balance(e: Env, address: Address, token_id: BytesN<32>) -> i128 {
         // define client
         let client = token::Client::new(&e, &token_id);
 
-        // client.xfer(e, &to, &amount);
         let balance = client.balance(&address);
 
         // return balance
         balance
-
-        //e.storage().set(&DataKey::Balance(address), &balance);
     }
 }
 
