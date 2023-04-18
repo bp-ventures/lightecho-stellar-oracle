@@ -5,12 +5,12 @@ This repository contains the smart contracts for the Soroban project.
 ## 1 - Price Oracle
 
 The price oracle contract allows to set the price, update the price, get the price & delete the price with address. It is used to set the price of the Soroban token.
+You can find contract [here](/manage_prices_contract/) and documentation [here](/manage_prices_contract/README.md)
 
-[Code](/manage_prices_contract/)
+## 2 - Get XLM balance
 
-## Documentation
-
-[README.md](/manage_prices_contract/README.md)
+The get XLM balance contract allows to get the XLM balance of the user.
+You can find contract [here](/xlm_balance_contract/) and documentation [here](/xlm_balance_contract/README.md)
 
 ## License
 
