@@ -127,7 +127,3 @@ soroban contract invoke \
 ### Python Integration
 
 To invoke deployed contract from python, you can see [soroban-py](./soroban-py/README.md) documentation.
-
-## License
-
-This project is licensed under the MIT License - see the [License](./LICENSE.md) file for details
