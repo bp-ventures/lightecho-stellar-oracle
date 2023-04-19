@@ -12,6 +12,10 @@ You can find contract [here](/manage_prices_contract/) and documentation [here](
 The get XLM balance contract allows to get the XLM balance of the user.
 You can find contract [here](/xlm_balance_contract/) and documentation [here](/xlm_balance_contract/README.md)
 
+## 3 - XLM Payment
+
+The XLM payment contract allows to send XLM to the user. You can find contract [here](/xlm_payment_contract/) and documentation [here](/xlm_payment_contract/README.md)
+
 ## License
 
 This project is licensed under the MIT License - see the [License](./LICENSE.md) file for details
