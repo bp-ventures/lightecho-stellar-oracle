@@ -28,5 +28,16 @@ pub struct PaymentContract;
 #[contractimpl]
 impl PaymentContract {
     // send payment
-    pub fn send(e: Env, from: Address, to: Address, amount: i128, token_id: BytesN<32>) {}
+    pub fn send(e: Env, from: Address, to: Address, amount: i128, token_id: BytesN<32>) {
+        // define client
+        let client = token::Client::new(&e, &token_id);
+
+        from.require_auth();
+
+        client.xfer(&from, &to, &amount);
+
+        transfer
+    }
 }
+
+mod test;

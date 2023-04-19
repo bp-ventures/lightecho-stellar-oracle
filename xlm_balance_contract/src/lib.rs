@@ -31,6 +31,8 @@ impl BalanceContract {
         let balance = client.balance(&address);
 
         // return balance
+        // The horizon endpoint automatically adds a decimal such that Assets are denoted with 7 decimal places.
+        // Numbers are not stored on chain with decimals, so the number you are receiving via CLI is the same as the one being returned by your Horizon query.
         balance
     }
 }
