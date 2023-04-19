@@ -34,9 +34,9 @@ impl PaymentContract {
 
         from.require_auth();
 
-        client.xfer(&from, &to, &amount);
+        client.transfer(&from, &to, &amount);
 
-        transfer
+        //transfer
     }
 }
 
