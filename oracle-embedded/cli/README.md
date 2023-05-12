@@ -14,8 +14,10 @@ NETWORK_PASSPHRASE = Network.FUTURENET_NETWORK_PASSPHRASE
 ```
 poetry install
 
-./oracle-cli.py --help
-./oracle-cli.py set-price BPV GAPIPGW67XQKK6D6ZFOCFXWK3X3UCHMJADTV4WFR4H6FTDKJX2X5Y4A2 1234567890 2 1683742901
-./oracle-cli.py price BPV GAPIPGW67XQKK6D6ZFOCFXWK3X3UCHMJADTV4WFR4H6FTDKJX2X5Y4A2
-
+./cli.py --help
+./cli.py set-base USD
+./cli.py get-base
+./cli.py get-base
+./cli.py set-rate USDC 1234 0 4.24
+./cli.py get-rate USDC 1234 0
 ```
