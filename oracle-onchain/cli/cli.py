@@ -172,24 +172,24 @@ def issuer_as_bytes(asset_issuer: Optional[str]) -> Optional[Bytes]:
         return None
 
 
-@app.command(help="Invoke the get_base() function of the deployed blockchain contract")
+@app.command(help="Invoke the get_base() function of the contract")
 def get_base():
     invoke_and_output("get_base")
 
 
-@app.command(help="Invoke the get_rate() function of the deployed blockchain contract")
+@app.command(help="Invoke the get_rate() function of the contract")
 def get_rate(asset_code: str, asset_issuer: str, source: int):
     invoke_and_output(
         "get_rate", [Symbol(asset_code), issuer_as_bytes(asset_issuer), Uint64(source)]
     )
 
 
-@app.command(help="Invoke the set_base() function of the deployed blockchain contract")
+@app.command(help="Invoke the set_base() function of the contract")
 def set_base(base: str):
     invoke_and_output("set_base", [Symbol(base)])
 
 
-@app.command(help="Invoke the set_rate() function of the deployed blockchain contract")
+@app.command(help="Invoke the set_rate() function of the contract")
 def set_rate(
     asset_code: str,
     asset_issuer: Optional[str],
