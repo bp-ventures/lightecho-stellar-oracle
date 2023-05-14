@@ -41,12 +41,13 @@ An overview of our modifications to the structure proposed by Alex and Orbitens 
 -  Base will always represent an off-chain currency by their ISO-4217 code, e.g. US Dollar is USD, Euro is EUR, Bitcoin is XBT/BTC (10).
 -  We renamed "price" to "rate", for simplifying the semantic of the values. A rate of 10 means that for 1 unit of the base asset, you get 10 units of the quote asset.
 - Each rate entry will have the following structure:
- ``` pub struct RateEntry {
+  ```
+  pub struct RateEntry {
       pub rate: u128,  // unsigned 128-bit integer since it's not impossible to have negative rate
       pub decimals: u128,  // indicates how many decimals the rate has
       pub timestamp: u64,  // timestamp in UNIX seconds
   }
-```
+  ```
 - A decimal rate can be derived from RateEntry by using this formula: rate_d = rate / (10^decimals)
 
 - The reason we put the decimals field inside the RateEntry structure (instead of having it as a global value) is due to how rates can be too high or too low in value. For example, some currency pairs like USD-BTC might require us to represent the rate with many decimal places because the rate is too low. In some other cases we might not need so many decimal places to represent a rate. Therefore we chose to keep each RateEntry with its own decimals indicator.
@@ -60,7 +61,7 @@ An overview of our modifications to the structure proposed by Alex and Orbitens 
 
 - Removed assets(), decimals(), resolution(), prices() and lastprice() functions, as we judge them not necessary due to how each RateEntry is independent with it's own decimals and timestamp values, and we won't store more than one entry per rate (the rate will always be the latest), so there's no point having functions that return an array of rates. We might re-add those functions or add other functions with similar purposes depending on the feedback we receive from the community.
 - In order to insert or update a rate, we have the set_rate() function:
-```  fn set_rate(env: Env, asset_code: Symbol, asset_issuer: Option<Bytes>, source: u128, rate: u128, decimals: u128, timestamp: u64)```
+`fn set_rate(env: Env, asset_code: Symbol, asset_issuer: Option<Bytes>, source: u128, rate: u128, decimals: u128, timestamp: u64)`
 - This function requires authorization depending on the value of source. A restricted list of accounts will be able to update rates, and ideally each source can be updated by an independent trusted account.
 - In the future we might add a set_rates() function to set many rates at once.
 
