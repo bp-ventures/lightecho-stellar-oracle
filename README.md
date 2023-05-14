@@ -37,7 +37,7 @@ For our pilot we have taken the developer discussion from Alex and Orbitens (3) 
 
 An overview of our modifications to the structure proposed by Alex and Orbitens (3):
 -  Base is of type Symbol instead of Address:
-   fn base(env: Env) -> Symbol;
+   `fn base(env: Env) -> Symbol;`
 -  Base will always represent an off-chain currency by their ISO-4217 code, e.g. US Dollar is USD, Euro is EUR, Bitcoin is XBT/BTC (10).
 -  We renamed "price" to "rate", for simplifying the semantic of the values. A rate of 10 means that for 1 unit of the base asset, you get 10 units of the quote asset.
 - Each rate entry will have the following structure:
@@ -55,7 +55,7 @@ An overview of our modifications to the structure proposed by Alex and Orbitens 
 - The source indicates where the rate is coming from. Each source is independent from the other
 
 - A rate can be retrieved by invoking the get_rates() contract function:
-  fn get_rates(env: Env, asset_code: Symbol, asset_issuer: Option<Bytes>) -> Option<Map<u128, RateEntry>>;
+  `fn get_rates(env: Env, asset_code: Symbol, asset_issuer: Option<Bytes>) -> Option<Map<u128, RateEntry>>;`
 
 - This function is equivalent to the price() function from the structure proposed by Alex and Orbitlens (3), and the difference is that instead of requiring the asset contract address as a parameter, we require the classic Stellar asset code + asset issuer combination. This is to simplify the usage of the contract, as we intend to support primarily the popular assets from classic Stellar like USDC, BTC, etc, in which their issuers are widely known, but their contract IDs in Soroban are yet undefined (need clarification on whether this still holds true at the moment). The return value is a Map, where each key represents the rate source, and each value contains the RateEntry for that source. Examples of sources: classic Stellar, Binance, Kraken, Coingecko, etc. Each source is represented by an integer, and sources are independently managed in a decentralized way, where specific accounts are authorized to update only a single source or set of sources. Our goal with this is to provide rates coming from many different sources to allow consumers of the contract to be able to choose which sources they trust, and get rates from trusted sources. This get_rate() structure is yet not definitive and is subject to changes.
 
