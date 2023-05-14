@@ -98,6 +98,7 @@
         appendToLog("Sending transaction");
         let response = await server.sendTransaction(transaction);
         const hash = response.hash;
+        appendToLog(`Transaction hash: ${hash}`);
         while (true) {
           appendToLog("Awaiting transaction to be confirmed");
           response = await server.getTransaction(hash);
@@ -115,6 +116,18 @@
             `${config.apiUrl}/soroban/parse-result-xdr/`,
             { xdr: response.resultMetaXdr }
           );
+          const horizonTx = `https://horizon-futurenet.stellar.org/transactions/${hash}`;
+          appendToLog(
+            <>
+              <span>Horizon tx: </span>
+              <span>
+                <a target="_blank" rel="noreferrer" href={horizonTx}>
+                  {horizonTx}
+                </a>
+              </span>
+            </>,
+            true
+          );
           appendToLog(`Tx Result: ${JSON.stringify(parsedResult.data)}`);
         }
       } catch (e) {
@@ -128,18 +141,28 @@
       const [source, Set_source] = useState("");
       const [assetCode, Set_assetCode] = useState(undefined);
       const [assetIssuer, Set_assetIssuer] = useState(undefined);
-      const [log, Set_log] = useState("");
+      const [logs, Set_logs] = useState([]);
       const messagesEndRef = createRef();
 
       const scrollLogToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       };
 
-      useEffect(() => scrollLogToBottom(), [log]);
+      useEffect(() => scrollLogToBottom(), [logs]);
 
-      const appendToLog = (msg) => {
+      const appendToLog = (msg, isJsx) => {
         console.log(msg);
-        Set_log((prev) => prev + `[${new Date().toISOString()}] ${msg}\n`);
+        if (isJsx) {
+          Set_logs((prev) => [
+            ...prev,
+            <>
+              <span>{`[${new Date().toISOString()}] `}</span>
+              <span>{msg}</span>
+            </>,
+          ]);
+        } else {
+          Set_logs((prev) => [...prev, `[${new Date().toISOString()}] ${msg}`]);
+        }
       };
 
       return (
@@ -225,7 +248,11 @@
             </div>
             <div className="row pt-3 justify-content-center">
               <div id="logs" className="col-12 col-sm-10 offset-sm-1">
-                <pre>{log}</pre>
+                <div className="d-flex flex-column">
+                  {logs.map((elem, index) => (
+                    <span key={index}>{elem}</span>
+                  ))}
+                </div>
                 <div
                   style={{ float: "left", clear: "both" }}
                   ref={messagesEndRef}
