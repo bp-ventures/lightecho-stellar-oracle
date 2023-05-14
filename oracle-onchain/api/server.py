@@ -1,8 +1,10 @@
 from flask import Flask, request
+from flask_cors import CORS
 from stellar_sdk import xdr as stellar_xdr
 from stellar_sdk.xdr.sc_val_type import SCValType
 
 app = Flask(__name__)
+CORS(app)
 
 
 def parse_sc_val(sc_val):

@@ -47,6 +47,7 @@
         "4426723b6edc323e15addb3c1700f142d806fd546a36ce7a3cd05f776eb42b82",
       networkPassphrase: "Test SDF Future Network ; October 2022",
       fee: 1000,
+      apiUrl: "https://lightecho-stellar-oracle-api.bpventures.us",
     };
 
     function splitToUint64(high, low) {
@@ -105,12 +106,22 @@
         console.log(JSON.stringify(response));
         if (response.status === "SUCCESS") {
           console.log(`resultMetaXdr: ${response.resultMetaXdr}`);
-          let transactionMeta = SorobanClient.xdr.TransactionMeta.fromXDR(
-            response.resultMetaXdr
+          let parsedResult = await fetch(
+            `${config.apiUrl}/soroban/parse-result-xdr/`,
+            {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ xdr: response.resultMetaXdr }),
+            }
           );
-          let result =
-            transactionMeta.v3.tx_result.result.results[0].tr
-              .invoke_host_function_result.success;
+          if (!parseResult.ok) {
+            throw parseResult;
+          }
+          parsedResult = await parsedResult.json();
+          appendToLog(`Tx Result: ${parsedResult}`);
         }
       } catch (e) {
         console.error(e);
