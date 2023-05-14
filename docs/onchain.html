@@ -61,7 +61,6 @@
     }
 
     const getRate = async ({ source, assetCode, assetIssuer, appendToLog }) => {
-      appendToLog("Converting source to Uint64");
       appendToLog("Building transaction envelope");
       const server = new SorobanClient.Server(config.rpcServerUrl);
       const keypair = SorobanClient.Keypair.fromSecret(config.sourceSecret);
