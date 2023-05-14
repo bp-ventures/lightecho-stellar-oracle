@@ -67,8 +67,8 @@
       const account = await server.getAccount(keypair.publicKey());
       const contract = new SorobanClient.Contract(config.contractId);
       const sourceParts = splitUint64(source);
-      if (!assetCode) {
-        assetCode = " ";
+      if (!assetIssuer) {
+        assetIssuer = " ";
       }
       let transaction = new SorobanClient.TransactionBuilder(account, {
         fee: config.fee,
@@ -195,7 +195,7 @@
               <div className="col-12 col-sm-2 mt-2">
                 <button
                   className="btn btn-primary w-100"
-                  disabled={!source || running || !assetCode || !assetIssuer}
+                  disabled={!source || running || !assetCode}
                   onClick={async () => {
                     if (source) {
                       Set_running(true);
