@@ -1,4 +1,5 @@
 from flask import Flask, request
+from flask import Response
 from flask_cors import CORS
 from stellar_sdk import xdr as stellar_xdr
 from stellar_sdk.xdr.sc_val_type import SCValType
@@ -27,6 +28,12 @@ def parse_sc_val(sc_val):
         uint128 = (high << 64) | low
         return uint128
     raise ValueError("Could not parse sc_val")
+
+
+@app.before_request
+def basic_authentication():
+    if request.method.lower() == "options":
+        return Response()
 
 
 @app.route("/soroban/parse-result-xdr/", methods=["POST", "OPTIONS"])
