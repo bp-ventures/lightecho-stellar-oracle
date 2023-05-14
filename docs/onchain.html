@@ -28,6 +28,8 @@
     src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"
   ></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/soroban-client/0.5.1/soroban-client.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/ethereumjs/browser-builds/dist/ethereumjs-tx/ethereumjs-tx-1.3.3.min.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -50,24 +52,21 @@
       apiUrl: "https://lightecho-stellar-oracle-api.bpventures.us",
     };
 
-    function splitToUint64(high, low) {
-      return (BigInt(high) << BigInt(32)) | BigInt(low);
+    function splitUint64(uint64) {
+      let n = BigInt(uint64);
+      let mask = (BigInt(1) << BigInt(32)) - BigInt(1); // mask for the lower 32 bits
+      let low = n & mask;
+      let high = n >> BigInt(32);
+      return [Number(high), Number(low)];
     }
 
-    function splitToHighLow(n) {
-      const bigN = BigInt(n);
-      const high = Number(bigN >> BigInt(32));
-      const low = Number(bigN & BigInt("0xffffffff"));
-
-      return { high, low };
-    }
-
-    const getRate = async ({ source, appendToLog }) => {
+    const getRate = async ({ source, assetCode, assetIssuer, appendToLog }) => {
       appendToLog("Building transaction envelope");
       const server = new SorobanClient.Server(config.rpcServerUrl);
       const keypair = SorobanClient.Keypair.fromSecret(config.sourceSecret);
       const account = await server.getAccount(keypair.publicKey());
       const contract = new SorobanClient.Contract(config.contractId);
+      const sourceUint64 = splitUint64(source);
       let transaction = new SorobanClient.TransactionBuilder(account, {
         fee: config.fee,
         networkPassphrase: config.networkPassphrase,
@@ -75,12 +74,12 @@
         .addOperation(
           contract.call(
             "get_rate",
-            SorobanClient.xdr.ScVal.scvSymbol("USDC"),
+            SorobanClient.xdr.ScVal.scvSymbol(assetCode),
             SorobanClient.xdr.ScVal.scvBytes(
-              "GAPIPGW67XQKK6D6ZFOCFXWK3X3UCHMJADTV4WFR4H6FTDKJX2X5Y4A2"
+              ethereumjs.Buffer.Buffer.from(assetIssuer, "utf-8")
             ),
             SorobanClient.xdr.ScVal.scvU64(
-              new SorobanClient.UnsignedHyper(splitToHighLow(source))
+              new SorobanClient.UnsignedHyper(sourceUint64[0], sourceUint64[1])
             )
           )
         )
@@ -89,7 +88,7 @@
       appendToLog("Preparing transaction");
       transaction = await server.prepareTransaction(transaction);
       transaction.sign(keypair);
-      console.log(transaction.toEnvelope().toXDR("base64"));
+      console.log(`xdr: ${transaction.toEnvelope().toXDR("base64")}`);
       try {
         appendToLog("Sending transaction");
         let response = await server.sendTransaction(transaction);
@@ -105,19 +104,13 @@
         appendToLog(`Transaction status: ${response.status}`);
         console.log(JSON.stringify(response));
         if (response.status === "SUCCESS") {
+          appendToLog("Parsing result");
           console.log(`resultMetaXdr: ${response.resultMetaXdr}`);
-          let parsedResult = await fetch(
+          let parsedResult = await axios.post(
             `${config.apiUrl}/soroban/parse-result-xdr/`,
-            {
-              method: "POST",
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ xdr: response.resultMetaXdr }),
-            }
+            { xdr: response.resultMetaXdr }
           );
-          appendToLog(`Tx Result: ${parsedResult.data}`);
+          appendToLog(`Tx Result: ${JSON.stringify(parsedResult.data)}`);
         }
       } catch (e) {
         console.error(e);
@@ -128,6 +121,8 @@
     const App = () => {
       const [running, Set_running] = useState(false);
       const [source, Set_source] = useState("");
+      const [assetCode, Set_assetCode] = useState(undefined);
+      const [assetIssuer, Set_assetIssuer] = useState(undefined);
       const [log, Set_log] = useState("");
       const messagesEndRef = createRef();
 
@@ -164,7 +159,25 @@
               </div>
             </div>
             <div className="row pt-2 justify-content-center">
-              <div className="col-8 col-sm-3 offset-sm-4">
+              <div className="col-12 col-sm-3">
+                <input
+                  className="form-control mt-2"
+                  type="text"
+                  placeholder="Asset code"
+                  aria-label="Asset code"
+                  onChange={(e) => Set_assetCode(e.target.value)}
+                />
+              </div>
+              <div className="col-12 col-sm-4 mt-2">
+                <input
+                  className="form-control"
+                  type="text"
+                  placeholder="Asset issuer"
+                  aria-label="Asset issuer"
+                  onChange={(e) => Set_assetIssuer(e.target.value)}
+                />
+              </div>
+              <div className="col-12 col-sm-3 mt-2">
                 <select
                   defaultValue=""
                   className="form-select"
@@ -176,15 +189,20 @@
                   <option value="1">1 - Binance</option>
                 </select>
               </div>
-              <div className="col-4 col-sm-5">
+              <div className="col-12 col-sm-2 mt-2">
                 <button
-                  className="btn btn-primary"
-                  disabled={!source || running}
+                  className="btn btn-primary w-100"
+                  disabled={!source || running || !assetCode || !assetIssuer}
                   onClick={async () => {
                     if (source) {
                       Set_running(true);
                       try {
-                        await getRate({ source, appendToLog });
+                        await getRate({
+                          source: parseInt(source),
+                          assetCode,
+                          assetIssuer,
+                          appendToLog,
+                        });
                       } catch (e) {
                         console.error(e);
                         appendToLog(
