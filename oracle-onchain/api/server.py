@@ -3,6 +3,7 @@ from flask import Response
 from flask_cors import CORS
 from stellar_sdk import xdr as stellar_xdr
 from stellar_sdk.xdr.sc_val_type import SCValType
+from stellar_sdk.xdr.uint64 import Uint64
 
 app = Flask(__name__)
 CORS(app)
@@ -61,3 +62,19 @@ def soroban_parse_tx_response():
         return {**common_resp, "sym": result.sym.sc_symbol.decode()}
     else:
         return {**common_resp, "error": "Unexpected result type"}, 400
+
+
+@app.route("/soroban/int-to-uint64-high-low/", methods=["POST", "OPTIONS"])
+def soroban_int_to_uint64():
+    if not request.json:
+        return {"error": "This endpoint requires a JSON payload"}, 400
+    value = request.json.get("value")
+    if not value:
+        return {"error": "Missing 'value' from JSON payload"}, 400
+    try:
+        value_int = int(value)
+    except (ValueError, TypeError):
+        return {"error": "'value' must be a valid integer"}, 400
+    high = (value_int >> 32) & 0xFFFFFFFF
+    low = value_int & 0xFFFFFFFF
+    return {"high": high, "low": low}
