@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "api"
+version = "0.1.0"
+description = ""
+authors = ["BP Ventures"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+flask = "^2.3.2"
+stellar-sdk = { git = "https://github.com/StellarCN/py-stellar-base.git", branch = "soroban" }
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

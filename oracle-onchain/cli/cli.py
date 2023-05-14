@@ -1,9 +1,11 @@
 #!/usr/bin/env -S poetry run python
 from decimal import Decimal
+import importlib.util
 import json
+from pathlib import Path
+import sys
 import time
 from typing import Optional
-from pathlib import Path
 
 from colorama import init as colorama_init
 from colorama import Fore
@@ -13,10 +15,9 @@ from stellar_sdk import xdr as stellar_xdr
 from stellar_sdk.soroban.server import SorobanServer
 from stellar_sdk.soroban.soroban_rpc import GetTransactionStatus
 from stellar_sdk.soroban.types import Bytes, Symbol, Uint128, Uint64
-import typer
+from stellar_sdk.xdr.sc_val_type import SCValType
 
-import importlib.util
-import sys
+import typer
 
 mod_spec = importlib.util.spec_from_file_location(
     "local_settings", Path(__file__).resolve().parent / "local_settings.py"
@@ -145,17 +146,20 @@ def output_tx_data(tx_data):
         print(f"transaction: {tx_data}")
     if is_tx_success(tx_data):
         result = parse_tx_result(tx_data)
-        if result.map:
+        if result.type == SCValType.SCV_VOID:
+            return
+        elif result.type == SCValType.SCV_MAP:
             data = {}
+            assert result.map is not None
             for entry in result.map.sc_map:
                 key = entry.key.sym.sc_symbol.decode()
                 value = parse_sc_val(entry.val)
                 data[key] = value
             print(json.dumps(data, indent=2))
-        elif result.sym:
+        elif result.type == SCValType.SCV_SYMBOL:
             print(result.sym.sc_symbol.decode())
         else:
-            return
+            print(f"Unexpected result type: {result.type}")
     else:
         abort(f"Error: {tx_data}")
 
