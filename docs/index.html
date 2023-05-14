@@ -36,67 +36,52 @@
     }
   </script>
   <script type="text/babel" data-type="module">
-    import React, { useState, StrictMode } from "react";
+    import React, { StrictMode } from "react";
     import { createRoot } from "react-dom/client";
 
-    const OracleOption = {
-      Onchain: 0,
-      Offchain: 1,
-    };
-
-    const OracleOnchain = ({ name }) => {
-      return <h1>Oracle Onchain {name}</h1>;
-    };
-
     const App = function App() {
-      const [selectedOracle, Set_selectedOracle] = useState(undefined);
       return (
         <main>
           <div className="container">
-            {selectedOracle === undefined && (
-              <>
-                <div className="row pt-4 pb-2">
-                  <div className="d-flex flex-row justify-content-center align-items-center mb-3">
-                    <img src="./assets/lightecho-icon-300x300.png" width="50" />
-                    <h3>Lightecho Stellar Oracle</h3>
-                  </div>
-                  <h4 className="text-center">Select Oracle</h4>
-                </div>
-                <div className="row">
-                  <div className="col d-flex flex-column border-end">
-                    <button className="btn fs-5 p-2 btn-primary mx-3 mt-2">
-                      On-chain
-                    </button>
-                    <p className="fs-6 p-4">
-                      All rates are stored in the blockchain, and any rate can
-                      be retrieved instantly at any time by invoking the
-                      get_rate contract function.
-                    </p>
-                  </div>
-                  <div className="col d-flex flex-column border-end">
-                    <button className="btn fs-5 p-2 btn-primary mx-3 mt-2">
-                      Off-chain
-                    </button>
-                    <p className="fs-6 p-4">
-                      No rate is stored in the blockchain. Rates are retrieved
-                      via a callback mechanism, where the rate is requested,
-                      processed by a backend aggregator, then returned via a
-                      contract function invocation.
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
-            {selectedOracle === OracleOption.Onchain && (
-              <div className="row">
-                <OracleOnchain name="[onchain]" />
+            <div className="row pt-4 pb-2">
+              <div className="d-flex flex-row justify-content-center align-items-center mb-3">
+                <img src="./assets/lightecho-icon-300x300.png" width="50" />
+                <h3>Lightecho Stellar Oracle</h3>
               </div>
-            )}
-            {selectedOracle === OracleOption.Offchain && (
-              <div className="row">
-                <OracleOffchain name="[offchain]" />
+              <h4 className="text-center">Select Oracle</h4>
+            </div>
+            <div className="row">
+              <div className="col d-flex flex-column border-end">
+                <button
+                  className="btn fs-5 p-2 btn-primary mx-3 mt-2"
+                  onClick={() => {
+                    window.location = "./onchain.html";
+                  }}
+                >
+                  On-chain
+                </button>
+                <p className="fs-6 p-4">
+                  All rates are stored in the blockchain, and any rate can be
+                  retrieved instantly at any time by invoking the&nbsp;
+                  <code>get_rate</code> contract function.
+                </p>
               </div>
-            )}
+              <div className="col d-flex flex-column border-end">
+                <button
+                  className="btn fs-5 p-2 btn-primary mx-3 mt-2"
+                  onClick={() => onOffchainSelected()}
+                  disabled
+                >
+                  Off-chain
+                </button>
+                <p className="fs-6 p-4">
+                  No rate is stored in the blockchain. Rates are retrieved via a
+                  callback mechanism, where the rate is requested, processed by
+                  a backend aggregator, then returned via a contract function
+                  invocation.
+                </p>
+              </div>
+            </div>
           </div>
         </main>
       );
