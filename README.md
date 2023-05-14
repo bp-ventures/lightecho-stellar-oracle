@@ -48,7 +48,7 @@ An overview of our modifications to the structure proposed by Alex and Orbitens 
       pub timestamp: u64,  // timestamp in UNIX seconds
   }
   ```
-- A decimal rate can be derived from RateEntry by using this formula: rate_d = rate / (10^decimals)
+- A decimal rate can be derived from RateEntry by using this formula: `rate_d = rate / (10^decimals)`
 
 - The reason we put the decimals field inside the RateEntry structure (instead of having it as a global value) is due to how rates can be too high or too low in value. For example, some currency pairs like USD-BTC might require us to represent the rate with many decimal places because the rate is too low. In some other cases we might not need so many decimal places to represent a rate. Therefore we chose to keep each RateEntry with its own decimals indicator.
 
@@ -71,32 +71,32 @@ Please feel free to ask questions and provide feedback via the Discussions page 
 
 ### REFERENCE:
 
-1    Ethereum Oracles
+#### 1 - Ethereum Oracles
 https://ethereum.org/en/developers/docs/oracles/
   
-2   The Oracle Problem: Unlocking the Potential of Blockchain By Jennifer Yen, Upenn
+#### 2 - The Oracle Problem: Unlocking the Potential of Blockchain By Jennifer Yen, Upenn
 https://www.cis.upenn.edu/~fbrett/assets/theses/jennifer_yen.pdf
 
-3   Script3 and Orbitlens discussion
+#### 3 - Script3 and Orbitlens discussion
 https://groups.google.com/g/stellar-dev/c/KV2XaQzcPPQ
 
-4   FIX 4.3 Market Data
+#### 4 - FIX 4.3 Market Data
 https://www.onixs.biz/fix-dictionary/4.3/app_g.html
 
-5   Chainlink whitepaper
+#### 5 - Chainlink whitepaper
 https://research.chain.link/whitepaper-v1.pdf
 
-6   CME BRTI calculation
+#### 6 - CME BRTI calculation
 https://www.cmegroup.com/education/bitcoin/infographic-cme-cf-brr-and-brti.html
 
-7   OpenZeppelin Oracle discussion
+#### 7 - OpenZeppelin Oracle discussion
 https://blog.openzeppelin.com/secure-smart-contract-guidelines-the-dangers-of-price-oracles/
 
-8 OpenZepplin Oracle Security
+#### 8 - OpenZepplin Oracle Security
 https://github.com/OpenZeppelin/workshops/blob/master/16-dangers-price-oracles-smart-contracts/slides.pdf
 
-9 Uniswap Oracles (TWAP)
+#### 9 - Uniswap Oracles (TWAP)
 https://docs.uniswap.org/contracts/v2/concepts/core-concepts/oracles
 
-10 Bitcoin currency code: XBT vs BTC
+#### 10 - Bitcoin currency code: XBT vs BTC
 https://support.kraken.com/hc/en-us/articles/360001206766-Bitcoin-currency-code-XBT-vs-BTC
