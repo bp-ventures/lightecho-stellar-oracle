@@ -67,6 +67,9 @@
       const account = await server.getAccount(keypair.publicKey());
       const contract = new SorobanClient.Contract(config.contractId);
       const sourceParts = splitUint64(source);
+      if (!assetCode) {
+        assetCode = " ";
+      }
       let transaction = new SorobanClient.TransactionBuilder(account, {
         fee: config.fee,
         networkPassphrase: config.networkPassphrase,
