@@ -57,9 +57,9 @@ def soroban_parse_tx_response():
             key = entry.key.sym.sc_symbol.decode()
             value = parse_sc_val(entry.val)
             data[key] = value
-        return {**common_resp, "map": data}
+        return {**common_resp, "value": data}
     elif result.type == SCValType.SCV_SYMBOL:
-        return {**common_resp, "sym": result.sym.sc_symbol.decode()}
+        return {**common_resp, "value": result.sym.sc_symbol.decode()}
     else:
         return {**common_resp, "error": "Unexpected result type"}, 400
 
