@@ -57,7 +57,7 @@
       let mask = (BigInt(1) << BigInt(32)) - BigInt(1); // mask for the lower 32 bits
       let low = n & mask;
       let high = n >> BigInt(32);
-      return [Number(high), Number(low)];
+      return { high: Number(high), low: Number(low) };
     }
 
     const getRate = async ({ source, assetCode, assetIssuer, appendToLog }) => {
@@ -79,7 +79,7 @@
               ethereumjs.Buffer.Buffer.from(assetIssuer, "utf-8")
             ),
             SorobanClient.xdr.ScVal.scvU64(
-              new SorobanClient.UnsignedHyper(sourceParts[1], sourceParts[0])
+              new SorobanClient.UnsignedHyper(sourceParts.low, sourceParts.high)
             )
           )
         )
