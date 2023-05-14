@@ -28,7 +28,6 @@
     src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"
   ></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/soroban-client/0.5.1/soroban-client.js"></script>
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -107,15 +106,18 @@
         console.log(JSON.stringify(response));
         if (response.status === "SUCCESS") {
           console.log(`resultMetaXdr: ${response.resultMetaXdr}`);
-          let parsedResult = await axios.post(
+          let parsedResult = await fetch(
             `${config.apiUrl}/soroban/parse-result-xdr/`,
-            { xdr: response.resultMetaXdr }
+            {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ xdr: response.resultMetaXdr }),
+            }
           );
-          if (!parsedResult.ok) {
-            throw parsedResult;
-          }
-          parsedResult = await parsedResult.json();
-          appendToLog(`Tx Result: ${parsedResult}`);
+          appendToLog(`Tx Result: ${parsedResult.data}`);
         }
       } catch (e) {
         console.error(e);
