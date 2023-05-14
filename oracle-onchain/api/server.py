@@ -29,7 +29,7 @@ def parse_sc_val(sc_val):
     raise ValueError("Could not parse sc_val")
 
 
-@app.route("/soroban/parse-result-xdr/", methods=["POST"])
+@app.route("/soroban/parse-result-xdr/", methods=["POST", "OPTIONS"])
 def soroban_parse_tx_response():
     if not request.json:
         return {"error": "This endpoint requires a JSON payload"}, 400
