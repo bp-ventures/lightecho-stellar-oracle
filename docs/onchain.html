@@ -38,7 +38,7 @@
     }
   </script>
   <script type="text/babel" data-type="module">
-    import React, { useState, StrictMode } from "react";
+    import React, { useEffect, createRef, useState, StrictMode } from "react";
     import { createRoot } from "react-dom/client";
 
     const config = {
@@ -120,8 +120,16 @@
     };
 
     const App = () => {
+      const [running, Set_running] = useState(false);
       const [source, Set_source] = useState("");
       const [log, Set_log] = useState("");
+      const messagesEndRef = createRef();
+
+      const scrollLogToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      };
+
+      useEffect(() => scrollLogToBottom(), [log]);
 
       const appendToLog = (msg) => {
         Set_log((prev) => prev + `[${new Date().toISOString()}] ${msg}\n`);
@@ -164,9 +172,18 @@
               <div className="col-4 col-sm-5">
                 <button
                   className="btn btn-primary"
-                  onClick={() => {
+                  disabled={!source || running}
+                  onClick={async () => {
                     if (source) {
-                      getRate({ source, appendToLog });
+                      Set_running(true);
+                      try {
+                        await getRate({ source, appendToLog });
+                      } catch (e) {
+                        console.error(e);
+                        appendToLog(`An error has occured: ${e}`);
+                      } finally {
+                        Set_running(false);
+                      }
                     }
                   }}
                 >
@@ -174,9 +191,13 @@
                 </button>
               </div>
             </div>
-            <div className="row pt-3 justify-content-center logs">
-              <div className="col-12 col-sm-10 offset-sm-1">
+            <div className="row pt-3 justify-content-center">
+              <div id="logs" className="col-12 col-sm-10 offset-sm-1">
                 <pre>{log}</pre>
+                <div
+                  style={{ float: "left", clear: "both" }}
+                  ref={messagesEndRef}
+                ></div>
               </div>
             </div>
           </div>
@@ -209,8 +230,8 @@
     pre {
       white-space: pre-wrap;
     }
-    .logs {
-      height: 400px;
+    #logs {
+      height: 200px;
       overflow: auto;
     }
   </style>
