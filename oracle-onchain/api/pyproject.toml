@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.10"
 flask = "^2.3.2"
 stellar-sdk = { git = "https://github.com/StellarCN/py-stellar-base.git", branch = "soroban" }
+gunicorn = "^20.1.0"
 
 
 [build-system]
