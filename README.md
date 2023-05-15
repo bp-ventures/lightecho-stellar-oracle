@@ -43,7 +43,7 @@ An overview of our modifications to the structure proposed by Alex and Orbitens 
 - Each rate entry will have the following structure:
   ```
   pub struct RateEntry {
-      pub rate: u128,  // unsigned 128-bit integer since it's not mpossible to have negative rate
+      pub rate: u128,  // unsigned 128-bit integer since it's not possible to have negative rate
       pub decimals: u128,  // indicates how many decimals the rate has
       pub timestamp: u64,  // timestamp in UNIX seconds
   }
