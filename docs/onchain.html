@@ -169,11 +169,29 @@
         <main>
           <div className="container">
             <div className="row pt-4 pb-2">
-              <div className="d-flex flex-row justify-content-center align-items-center mb-3">
-                <img src="./assets/lightecho-icon-300x300.png" width="50" />
-                <h3 className="m-0">Lightecho Stellar Oracle</h3>
+              <div className="col">
+                <div className="d-flex flex-row justify-content-center align-items-center">
+                  <img src="./assets/lightecho-icon-300x300.png" width="50" />
+                  <h3 className="m-0">Lightecho Stellar Oracle</h3>
+                </div>
+                <h6 className="text-center mb-4">
+                  Built on
+                  <a
+                    href="https://soroban.stellar.org/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="soroban"
+                  >
+                    <img
+                      src="./assets/soroban-inverted.png"
+                      width="20"
+                      className="soroban"
+                    />
+                    oroban
+                  </a>
+                </h6>
+                <h4 className="text-center">On-chain Oracle</h4>
               </div>
-              <h4 className="text-center">On-chain Oracle</h4>
             </div>
             <div className="row pt-2 justify-content-center">
               <div className="col">
@@ -292,6 +310,14 @@
     #logs {
       height: 200px;
       overflow: auto;
+    }
+    img.soroban {
+      margin-right: -3px;
+      margin-top: -5px;
+    }
+    a.soroban {
+      text-decoration: none;
+      color: black;
     }
   </style>
 </html>
