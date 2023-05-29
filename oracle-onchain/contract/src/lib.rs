@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contractimpl, contracttype, Bytes, Env, Map, Symbol};
+use soroban_sdk::{contractimpl, contracttype, Bytes, Env, Map, Address, Symbol};
 
 #[derive(Clone, Copy)]
 #[contracttype]
@@ -12,45 +12,45 @@ pub enum DataKey {
 
 #[derive(Clone, Copy)]
 #[contracttype]
-pub struct RateEntry {
-    pub rate: u128,
-    pub decimals: u128,
-    pub timestamp: u64,
+pub struct PriceData {
+    price: u128,
+    timestamp: u64,
 }
 
 struct Oracle;
 
-impl RateEntry {
-    pub fn new(rate: u128, decimals: u128, timestamp: u64) -> Self {
-        Self {
-            rate,
-            decimals,
-            timestamp,
-        }
+impl PriceData {
+    pub fn new(price: u128, timestamp: u64) -> Self {
+        Self { price, timestamp }
     }
 }
 
 pub trait OracleTrait {
-    fn get_base(env: Env) -> Option<Symbol>;
-    fn get_rate(
-        env: Env,
-        asset_code: Symbol,
-        asset_issuer: Option<Bytes>,
-        source: u64,
-    ) -> Option<RateEntry>;
+    /// Return the base asset the price is reported in
+    fn base(env: Env) -> Symbol;
+    /// Return all assets quoted by the price feed
+    fn assets(env: Env) -> Vec<Symbol>;
+    /// Return the number of decimals for all assets quoted by the oracle
+    fn decimals(env: Env) -> u32;
+    /// Return default tick period timeframe (in seconds)
+    fn resolution(env: Env) -> u32;
+    /// Get price from source=0 in base asset at specific timestamp
+    fn price(env: Env, asset: Symbol, timestamp: u64) -> Option<PriceData>;
+    /// Get price from source=<source> in base asset at specific timestamp
+    fn price(env: Env, source: u32, asset: Symbol, timestamp: u64) -> Option<PriceData>;
+    /// Get last N price records
+    fn prices(env: Env, asset: Symbol, records: u32) -> Option<Vec<PriceData>>;
+    /// Get the most recent price for an asset
+    fn lastprice(env: Env, asset: Symbol) -> Option<PriceData>;
 
-    fn set_base(env: Env, base: Symbol);
-    fn set_rate(
-        env: Env,
-        asset_code: Symbol,
-        asset_issuer: Option<Bytes>,
-        source: u64,
-        rate: u128,
-        decimals: u128,
-        timestamp: u64,
-    );
-    fn remove_rate(env: Env, asset_code: Symbol, asset_issuer: Option<Bytes>, source: u64);
-    fn remove_all_rates(env: Env);
+    /// Set price of source in base asset at specific timestamp
+    fn set_price(env: Env, source: u32, asset: Symbol, timestamp: u64, price: u128);
+    /// Remove 
+    fn remove_prices(env: Env, source: u32);
+    /// Remove all prices of source
+    fn remove_prices(env: Env, source: u32);
+    //TODO remove price
+    //TODO remove all prices
 }
 
 fn all_rates(env: &Env) -> Map<(Symbol, Option<Bytes>, u64), RateEntry> {
