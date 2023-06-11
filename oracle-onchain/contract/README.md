@@ -14,13 +14,13 @@ cargo build --target wasm32-unknown-unknown --release
 
 soroban contract deploy \
     --wasm target/wasm32-unknown-unknown/release/oracle.wasm \
-    --source SCXNO6G4LFNSGSI4KGE3BL6XMRXZM7G34MNLAFUEIHMN7PUIWVEOITT7 \
+    --source SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW \
     --rpc-url https://rpc-futurenet.stellar.org:443 \
     --network-passphrase 'Test SDF Future Network ; October 2022'
 
 soroban contract invoke \
-    --id 63830c13aafd7bf01dee8e5b2f256d98b59621ddc2007e673dbea1f928508ad9 \
-    --source SCXNO6G4LFNSGSI4KGE3BL6XMRXZM7G34MNLAFUEIHMN7PUIWVEOITT7 \
+    --id <contract id obtained in above step> \
+    --source SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW \
     --rpc-url https://rpc-futurenet.stellar.org:443 \
     --network-passphrase 'Test SDF Future Network ; October 2022' \
     -- \
