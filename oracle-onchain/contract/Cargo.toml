@@ -2,18 +2,20 @@
 name = "oracle"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 [lib]
 crate-type = ["cdylib"]
+doctest = false
 
 [features]
 testutils = ["soroban-sdk/testutils"]
 
 [dependencies]
-soroban-sdk = "0.7.0"
+soroban-sdk = "0.8.4"
 
 [dev_dependencies]
-soroban-sdk = { version = "0.7.0", features = ["testutils"] }
+soroban-sdk = { version = "0.8.4", features = ["testutils"] }
 
 [profile.release]
 opt-level = "z"
