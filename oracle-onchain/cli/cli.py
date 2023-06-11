@@ -13,7 +13,7 @@ from colorama import Style
 from stellar_sdk import Keypair, Network, TransactionBuilder, TransactionEnvelope
 from stellar_sdk import xdr as stellar_xdr
 from stellar_sdk.soroban.server import SorobanServer
-from stellar_sdk.soroban.soroban_rpc import GetTransactionStatus
+from stellar_sdk.soroban.soroban_rpc import GetTransactionStatus, SendTransactionStatus
 from stellar_sdk.soroban.types import Bytes, Symbol, Uint128, Uint64
 from stellar_sdk.xdr.sc_val_type import SCValType
 
@@ -52,21 +52,19 @@ def abort(msg: str):
 
 
 def send_tx(tx: TransactionEnvelope):
-    simulate_transaction_data = state["soroban_server"].simulate_transaction(tx)
     if state["verbose"]:
-        print(f"simulated transaction: {simulate_transaction_data}")
-    if simulate_transaction_data.error:
-        raise RuntimeError("simulated transaction failed")
-
+        print(f"preparing transaction: {tx.to_xdr()}")
+    prepared_tx = state["soroban_server"].prepare_transaction(tx)
     if state["verbose"]:
-        print(f"setting footprint and signing transaction...")
-    assert simulate_transaction_data.results is not None
-    tx.set_footpoint(simulate_transaction_data.results[0].footprint)
-    tx.sign(state["kp"])
+        print(f"prepared transaction: {prepared_tx.to_xdr()}")
 
-    send_transaction_data = state["soroban_server"].send_transaction(tx)
+    prepared_tx.sign(state["kp"])
+
+    send_transaction_data = state["soroban_server"].send_transaction(prepared_tx)
     if state["verbose"]:
         print(f"sent transaction: {send_transaction_data}")
+    if send_transaction_data.status == SendTransactionStatus.ERROR:
+        raise RuntimeError(f"Failed to send transaction: {send_transaction_data}")
 
     return wait_tx(send_transaction_data.hash)
 
@@ -90,7 +88,6 @@ def invoke_contract_function(function_name, parameters=[]):
             state["contract_id"],
             function_name,
             parameters,
-            source=state["kp"].public_key,
         )
         .build()
     )
@@ -115,8 +112,8 @@ def is_tx_success(tx_data):
 def parse_tx_result(tx_data):
     assert tx_data.result_meta_xdr is not None
     transaction_meta = stellar_xdr.TransactionMeta.from_xdr(tx_data.result_meta_xdr)
-    result = transaction_meta.v3.tx_result.result.results[0].tr.invoke_host_function_result.success  # type: ignore
-    return result
+    results = transaction_meta.v3.tx_result.result.results[0].tr.invoke_host_function_result.success  # type: ignore
+    return results[0]
 
 
 def parse_sc_val(sc_val):
