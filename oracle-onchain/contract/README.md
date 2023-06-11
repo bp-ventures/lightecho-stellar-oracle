@@ -24,6 +24,7 @@ soroban contract invoke \
     --rpc-url https://rpc-futurenet.stellar.org:443 \
     --network-passphrase 'Test SDF Future Network ; October 2022' \
     -- \
-    get-price \
-    --to friend
+    get-rate \
+    --asset-code USD \
+    --source 1
 ```
