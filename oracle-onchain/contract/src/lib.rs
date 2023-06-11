@@ -119,7 +119,7 @@ impl OracleTrait for Oracle {
                 let asset_map_result = option.unwrap();
                 match asset_map_result {
                     Ok(asset_map) => {
-                        let price_data = Vec::<PriceData>::new();
+                        let price_data_vec = Vec::<PriceData>::new();
                         for (source, price_data_map) in asset_map.iter() {
                             let timestamps: Vec<u64> = price_data_map.keys();
                             timestamps.sort();
@@ -149,7 +149,8 @@ impl OracleTrait for Oracle {
                             }
                             // Remove all elements after end index
                             timestamps = &mut timestamps[..end_ts_index];
-                            WIP
+                            for timestamp in timestamps {
+                            }
                         }
                     }
                     Err(error) => return Vec::<PriceData>::new(),
