@@ -121,6 +121,9 @@ impl OracleTrait for Oracle {
                     Ok(asset_map) => {
                         let price_data_vec = Vec::<PriceData>::new();
                         for (source, price_data_map) in asset_map.iter() {
+                            //TODO price_data_map could be a Vec instead,
+                            // ordered already by oldest to newest. This
+                            // improves efficiency of operations.
                             let timestamps: Vec<u64> = price_data_map.keys();
                             timestamps.sort();
                             let start_ts_index = timestamps.len();
