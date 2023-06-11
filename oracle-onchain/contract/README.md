@@ -1,3 +1,7 @@
+Lightecho Oracle contract Rust source code.
+
+For more information see docs at https://github.com/bp-ventures/lightecho-stellar-oracle
+
 # Development setup
 
 # Setup Rust and Soroban
