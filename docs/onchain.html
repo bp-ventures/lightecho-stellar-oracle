@@ -232,6 +232,7 @@
                   type="text"
                   placeholder="Asset code"
                   aria-label="Asset code"
+                  defaultValue="USD"
                   onChange={(e) => Set_assetCode(e.target.value)}
                 />
               </div>
@@ -246,7 +247,7 @@
               </div>
               <div className="col-12 col-sm-3 mt-2">
                 <select
-                  defaultValue=""
+                  defaultValue="1 - Binance"
                   className="form-select"
                   aria-label="Default select example"
                   onChange={(e) => Set_source(e.target.value)}
