@@ -1,124 +1,161 @@
 #![no_std]
 
-use soroban_sdk::{contractimpl, contracttype, Bytes, Env, Map, Address, Symbol};
+use soroban_sdk::{contractimpl, contracttype, Address, Env, Map, String, Symbol, Vec};
 
 #[derive(Clone, Copy)]
 #[contracttype]
 #[repr(u32)]
 pub enum DataKey {
-    Base = 0,
-    Rates = 1,
+    Resolution = 0,
+    Assets = 1,
+    Sources = 2,
+}
+
+#[derive(Clone)]
+#[contracttype]
+enum Asset {
+    Stellar(Address),
+    Other(Symbol),
 }
 
 #[derive(Clone, Copy)]
 #[contracttype]
 pub struct PriceData {
-    price: u128,
+    price: i128,
     timestamp: u64,
 }
 
-struct Oracle;
-
 impl PriceData {
-    pub fn new(price: u128, timestamp: u64) -> Self {
+    pub fn new(price: i128, timestamp: u64) -> Self {
         Self { price, timestamp }
     }
 }
 
+struct Oracle;
+
 pub trait OracleTrait {
-    /// Return the base asset the price is reported in
-    fn base(env: Env) -> Symbol;
-    /// Return all assets quoted by the price feed
-    fn assets(env: Env) -> Vec<Symbol>;
-    /// Return the number of decimals for all assets quoted by the oracle
+    /// Return the base asset the price is reported in.
+    fn base(env: Env) -> Asset;
+
+    /// Return all assets quoted by the price feed.
+    fn assets(env: Env) -> Vec<Asset>;
+
+    /// Return all sources
+    fn sources(env: Env) -> Vec<u8>;
+
+    /// Return the number of decimals for all assets quoted by the oracle.
     fn decimals(env: Env) -> u32;
-    /// Return default tick period timeframe (in seconds)
+
+    /// Return default tick period timeframe (in seconds).
     fn resolution(env: Env) -> u32;
-    /// Get price from source=0 in base asset at specific timestamp
-    fn price(env: Env, asset: Symbol, timestamp: u64) -> Option<PriceData>;
-    /// Get price from source=<source> in base asset at specific timestamp
-    fn price(env: Env, source: u32, asset: Symbol, timestamp: u64) -> Option<PriceData>;
+
+    /// Get prices (in base asset) contained in the provided timestamp range,
+    /// ordered by oldest to newest.
+    /// Both timestamps are inclusive, meaning if there's a price exactly at
+    /// `start_timestamp`, it will be included. Same for `end_timestamp`.
+    /// Since there are different price sources, this function calculates and
+    /// returns the average price from all sources:
+    ///   price = average(price_from_source0, price_from_source1, ..., price_from_sourceN)
+    fn prices(env: Env, asset: Asset, start_timestamp: u64, end_timestamp: u64) -> Vec<PriceData>;
+
+    fn prices_by_source(
+        env: Env,
+        source: u8,
+        asset: Asset,
+        start_timestamp: u64,
+        end_timestamp: u64,
+    ) -> Vec<PriceData>;
+
     /// Get last N price records
-    fn prices(env: Env, asset: Symbol, records: u32) -> Option<Vec<PriceData>>;
-    /// Get the most recent price for an asset
-    fn lastprice(env: Env, asset: Symbol) -> Option<PriceData>;
+    fn lastprices(env: Env, asset: Asset, records: u32) -> Vec<PriceData>;
 
-    /// Set price of source in base asset at specific timestamp
-    fn set_price(env: Env, source: u32, asset: Symbol, timestamp: u64, price: u128);
-    /// Remove 
-    fn remove_prices(env: Env, source: u32);
-    /// Remove all prices of source
-    fn remove_prices(env: Env, source: u32);
-    //TODO remove price
-    //TODO remove all prices
-}
+    fn lastprices_by_source(env: Env, source: u8, asset: Asset, records: u32) -> Vec<PriceData>;
 
-fn all_rates(env: &Env) -> Map<(Symbol, Option<Bytes>, u64), RateEntry> {
-    if let Some(rates) = env.storage().get(&DataKey::Rates) {
-        return rates.unwrap();
-    }
+    /// Get latest price in base asset at specific timestamp.
+    /// The price is the result of this calculation:
+    ///   price = average(lastprice_from_source0, lastprice_from_source1, ..., lastprice_from_sourceN)
+    /// Which is an average of all the latest prices provided by different sources.
+    fn lastprice(env: Env, asset: Asset) -> Option<PriceData>;
 
-    return Map::<(Symbol, Option<Bytes>, u64), RateEntry>::new(&env);
+    fn lastprice_by_source(env: Env, source: u8, asset: Asset) -> Option<PriceData>;
+
+    fn add_prices(env: Env, source: u8, asset: Asset, price: i128);
+
+    fn remove_prices(
+        env: Env,
+        sources: Vec<u8>,
+        assets: Vec<Asset>,
+        start_timestamp: Option<u64>,
+        end_timestamp: Option<u64>,
+    );
 }
 
 #[contractimpl]
 impl OracleTrait for Oracle {
-    // Getters
-    fn get_base(env: Env) -> Option<Symbol> {
-        let base = match env.storage().get(&DataKey::Base) {
-            Some(_base) => _base.unwrap(),
-            None => return None,
-        };
-        return Some(base);
+    fn base(env: Env) -> Asset {
+        return Asset::Other(Symbol::new(&env, "USD"));
     }
 
-    fn get_rate(
-        env: Env,
-        asset_code: Symbol,
-        asset_issuer: Option<Bytes>,
-        source: u64,
-    ) -> Option<RateEntry> {
-        let rates = all_rates(&env);
-        let rate = match rates.get((asset_code, asset_issuer, source)) {
-            Some(_rate) => _rate.unwrap(),
-            None => return None,
-        };
-        Some(rate)
+    fn assets(env: Env) -> Vec<Asset> {
+        return env.storage().get(&DataKey::Assets).unwrap().unwrap();
     }
 
-    // Setters
-    fn set_base(env: Env, base: Symbol) {
-        env.storage().set(&DataKey::Base, &base);
+    fn sources(env: Env) -> Vec<u8> {
+        return env.storage().get(&DataKey::Sources).unwrap().unwrap();
     }
 
-    fn set_rate(
-        env: Env,
-        asset_code: Symbol,
-        asset_issuer: Option<Bytes>,
-        source: u64,
-        rate: u128,
-        decimals: u128,
-        timestamp: u64,
-    ) {
-        let mut rates = all_rates(&env);
-        rates.set(
-            (asset_code, asset_issuer, source),
-            RateEntry {
-                rate,
-                decimals,
-                timestamp,
-            },
-        );
-        env.storage().set(&DataKey::Rates, &rates);
+    fn decimals(env: Env) -> u32 {
+        return 18;
     }
 
-    fn remove_rate(env: Env, asset_code: Symbol, asset_issuer: Option<Bytes>, source: u64) {
-        let mut rates = all_rates(&env);
-        rates.remove((asset_code, asset_issuer, source));
-        env.storage().set(&DataKey::Rates, &rates);
+    fn resolution(env: Env) -> u32 {
+        return env.storage().get(&DataKey::Resolution).unwrap().unwrap();
     }
 
-    fn remove_all_rates(env: Env) {
-        env.storage().remove(&DataKey::Rates)
+    fn prices(env: Env, asset: Asset, start_timestamp: u64, end_timestamp: u64) -> Vec<PriceData> {
+        let asset_map_option = env.storage().get(&asset);
+        match asset_map_option {
+            Some(option) => {
+                let asset_map_result = option.unwrap();
+                match asset_map_result {
+                    Ok(asset_map) => {
+                        let price_data = Vec::<PriceData>::new();
+                        for (source, price_data_map) in asset_map.iter() {
+                            let timestamps: Vec<u64> = price_data_map.keys();
+                            timestamps.sort();
+                            let start_ts_index = timestamps.len();
+                            for (index, timestamp_result) in timestamps.iter().enumerate() {
+                                match timestamp_result {
+                                    Ok(timestamp) => {
+                                        if timestamp >= start_timestamp {
+                                            start_ts_index = index;
+                                        }
+                                    }
+                                    Err(error) => break,
+                                }
+                            }
+                            // Remove all elements before start index
+                            timestamps = &mut timestamps[start_ts_index..];
+                            let end_ts_index = timestamps.len();
+                            for (index, timestamp_result) in timestamps.iter().enumerate() {
+                                match timestamp_result {
+                                    Ok(timestamp) => {
+                                        if timestamp > end_timestamp {
+                                            end_ts_index = index;
+                                        }
+                                    }
+                                    Err(error) => break,
+                                }
+                            }
+                            // Remove all elements after end index
+                            timestamps = &mut timestamps[..end_ts_index];
+                            WIP
+                        }
+                    }
+                    Err(error) => return Vec::<PriceData>::new(),
+                }
+            }
+            None => return Vec::<PriceData>::new(),
+        }
     }
 }
