@@ -49,54 +49,35 @@
                   <img src="./assets/lightecho-icon-300x300.png" width="50" />
                   <h3 className="m-0">Lightecho Stellar Oracle</h3>
                 </div>
-                <h6 className="text-center mb-4">
-                  Built on
-                  <a
-                    href="https://soroban.stellar.org/"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="soroban"
-                  >
-                    <img
-                      src="./assets/soroban-inverted.png"
-                      width="20"
-                      className="soroban"
-                    />
-                    oroban
-                  </a>
+                <h6 className="text-center pt-3 fst-italic">
+                  Your Soroban Oracle for off-chain Emerging markets data and
+                  XLM volatility feeds
                 </h6>
-                <h4 className="text-center">Select Oracle</h4>
               </div>
             </div>
-            <div className="row">
-              <div className="col d-flex flex-column border-end">
+            <div className="row justify-content-center">
+              <div className="col col-sm-6 d-flex flex-column">
                 <button
                   className="btn fs-5 p-2 btn-primary mx-3 mt-2"
                   onClick={() => {
                     window.location = "./onchain.html";
                   }}
                 >
-                  On-chain
+                  Click here to open Oracle v1-alpha
                 </button>
-                <p className="fs-6 p-4">
+                <p className="fs-6 px-4 pt-4 pb-1">
                   All rates are stored in the blockchain, and any rate can be
                   retrieved instantly at any time by invoking the&nbsp;
                   <code>get_rate</code> contract function.
                 </p>
-              </div>
-              <div className="col d-flex flex-column border-end">
-                <button
-                  className="btn fs-5 p-2 btn-primary mx-3 mt-2"
-                  onClick={() => onOffchainSelected()}
-                  disabled
-                >
-                  Off-chain
-                </button>
-                <p className="fs-6 p-4">
-                  No rate is stored in the blockchain. Rates are retrieved via a
-                  callback mechanism, where the rate is requested, processed by
-                  a backend aggregator, then returned via a contract function
-                  invocation.
+                <hr />
+                <p className="fs-6 px-4 text-center">
+                  Please feel free to ask questions and provide feedback via the
+                  Discussions page located at:
+                  <br />
+                  <a href="https://github.com/bp-ventures/lightecho-soroban-oracle">
+                    https://github.com/bp-ventures/lightecho-soroban-oracle
+                  </a>
                 </p>
               </div>
             </div>
