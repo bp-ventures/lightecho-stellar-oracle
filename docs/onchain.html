@@ -168,11 +168,11 @@
       return (
         <main>
           <div className="container">
-            <div className="row pt-4 pb-2">
+            <div className="row pt-4 pb-2 align-items-center">
               <div className="col">
                 <div className="d-flex flex-row justify-content-center align-items-center">
-                  <img src="./assets/lightecho-icon-300x300.png" width="50" />
-                  <h3 className="m-0">Lightecho Stellar Oracle</h3>
+                  <img src="./assets/lightecho-icon-300x300.png" width="70" />
+                  <h2 className="m-0">Lightecho Stellar Oracle</h2>
                 </div>
                 <h6 className="text-center mb-4">
                   Built on
@@ -192,14 +192,14 @@
                 </h6>
                 <h4 className="text-center">On-chain Oracle</h4>
               </div>
-              <div className="row pt-2 justify-content-center">
-                <div className="col">
-                  <p className="text-center">
-                    Contract ID:
-                    <br />
-                    <code>{config.contractId}</code>
-                  </p>
-                </div>
+            </div>
+            <div className="row pt-2 justify-content-center">
+              <div className="col">
+                <p className="text-center">
+                  Contract ID:
+                  <br />
+                  <code>{config.contractId}</code>
+                </p>
               </div>
             </div>
             <div className="row justify-content-center">
@@ -209,7 +209,8 @@
                   <br />
                   Asset code: <code>USD</code>
                   <br />
-                  Asset issuer: <code>leave it empty</code>
+                  Asset issuer:{" "}
+                  <code>leave it empty since USD is off-chain</code>
                   <br />
                   Source: <code>1 - Binance</code>
                 </p>
