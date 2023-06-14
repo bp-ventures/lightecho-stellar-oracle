@@ -213,7 +213,6 @@ def build_contract_auth(contract_id, func_name, args, address=None, nounce=None)
 def set_base(base: str):
     func_name = "set_base"
     args = [Symbol(base)]
-    # TODO fix auth error
     contract_auth = build_contract_auth(state["contract_id"], func_name, args)
     invoke_and_output(func_name, args, auth=[contract_auth])
 
@@ -257,7 +256,6 @@ def set_rate(
         Uint64(timestamp),
     ]
     contract_auth = build_contract_auth(state["contract_id"], func_name, args)
-    # TODO fix auth error
     invoke_and_output("set_rate", args, auth=[contract_auth])
 
 
