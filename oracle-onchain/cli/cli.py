@@ -10,11 +10,12 @@ from typing import Optional
 from colorama import init as colorama_init
 from colorama import Fore
 from colorama import Style
-from stellar_sdk import Keypair, Network, TransactionBuilder, TransactionEnvelope
+from stellar_sdk import Keypair, TransactionBuilder, TransactionEnvelope
 from stellar_sdk import xdr as stellar_xdr
+from stellar_sdk.soroban import ContractAuth, AuthorizedInvocation
 from stellar_sdk.soroban.server import SorobanServer
 from stellar_sdk.soroban.soroban_rpc import GetTransactionStatus, SendTransactionStatus
-from stellar_sdk.soroban.types import Bytes, Symbol, Uint128, Uint64
+from stellar_sdk.soroban.types import Address, Bytes, Symbol, Uint128, Uint64
 from stellar_sdk.xdr.sc_val_type import SCValType
 
 import typer
@@ -80,7 +81,7 @@ def wait_tx(tx_hash: str):
     return get_transaction_data
 
 
-def invoke_contract_function(function_name, parameters=[]):
+def invoke_contract_function(function_name, parameters=[], auth=None):
     tx = (
         TransactionBuilder(state["source_acc"], state["network_passphrase"])
         .set_timeout(300)
@@ -88,6 +89,7 @@ def invoke_contract_function(function_name, parameters=[]):
             state["contract_id"],
             function_name,
             parameters,
+            auth=auth,  # type: ignore
         )
         .build()
     )
@@ -111,7 +113,7 @@ def is_tx_success(tx_data):
 
 def parse_tx_result(tx_data):
     assert tx_data.result_meta_xdr is not None
-    transaction_meta = stellar_xdr.TransactionMeta.from_xdr(tx_data.result_meta_xdr)
+    transaction_meta = stellar_xdr.TransactionMeta.from_xdr(tx_data.result_meta_xdr)  # type: ignore
     results = transaction_meta.v3.tx_result.result.results[0].tr.invoke_host_function_result.success  # type: ignore
     return results[0]
 
@@ -155,14 +157,16 @@ def output_tx_data(tx_data):
             print(json.dumps(data, indent=2))
         elif result.type == SCValType.SCV_SYMBOL:
             print(result.sym.sc_symbol.decode())
+        elif result.type == SCValType.SCV_ADDRESS:
+            print(str(result.address))
         else:
             print(f"Unexpected result type: {result.type}")
     else:
         abort(f"Error: {tx_data}")
 
 
-def invoke_and_output(function_name, parameters=[]):
-    tx_data = invoke_contract_function(function_name, parameters)
+def invoke_and_output(function_name, parameters=[], auth=None):
+    tx_data = invoke_contract_function(function_name, parameters, auth)
     output_tx_data(tx_data)
 
 
@@ -171,6 +175,11 @@ def issuer_as_bytes(asset_issuer: Optional[str]) -> Optional[Bytes]:
         return Bytes(asset_issuer.encode())
     else:
         return None
+
+
+@app.command(help="Invoke the initialize() function of the contract")
+def initialize(admin: str, base: str):
+    invoke_and_output("initialize", [Address(admin), Symbol(base)])
 
 
 @app.command(help="Invoke the get_base() function of the contract")
@@ -185,9 +194,28 @@ def get_rate(asset_code: str, asset_issuer: str, source: int):
     )
 
 
+def build_contract_auth(contract_id, func_name, args, address=None, nounce=None):
+    invocation = AuthorizedInvocation(
+        contract_id=contract_id,
+        function_name=func_name,
+        args=args,
+        sub_invocations=[],
+    )
+    contract_auth = ContractAuth(
+        address=address,
+        nonce=nounce,
+        root_invocation=invocation,
+    )
+    return contract_auth
+
+
 @app.command(help="Invoke the set_base() function of the contract")
 def set_base(base: str):
-    invoke_and_output("set_base", [Symbol(base)])
+    func_name = "set_base"
+    args = [Symbol(base)]
+    # TODO fix auth error
+    contract_auth = build_contract_auth(state["contract_id"], func_name, args)
+    invoke_and_output(func_name, args, auth=[contract_auth])
 
 
 @app.command(help="Invoke the set_rate() function of the contract")
@@ -219,17 +247,18 @@ def set_rate(
             decimal_places = decimals
         else:
             decimal_places = 0
-    invoke_and_output(
-        "set_rate",
-        [
-            Symbol(asset_code),
-            issuer_as_bytes(asset_issuer),
-            Uint64(source),
-            Uint128(rate_as_int),
-            Uint128(decimal_places),
-            Uint64(timestamp),
-        ],
-    )
+    func_name = "set_rate"
+    args = [
+        Symbol(asset_code),
+        issuer_as_bytes(asset_issuer),
+        Uint64(source),
+        Uint128(rate_as_int),
+        Uint128(decimal_places),
+        Uint64(timestamp),
+    ]
+    contract_auth = build_contract_auth(state["contract_id"], func_name, args)
+    # TODO fix auth error
+    invoke_and_output("set_rate", args, auth=[contract_auth])
 
 
 @app.callback()
