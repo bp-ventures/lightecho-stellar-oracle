@@ -44,6 +44,8 @@ pub trait OracleTrait {
     /// Return the base asset the price is reported in.
     fn base(env: Env) -> Asset;
 
+    fn admin(env: Env) -> Address;
+
     /// Return all assets quoted by the price feed.
     fn assets(env: Env) -> Vec<Asset>;
 
@@ -98,19 +100,15 @@ impl OracleTrait for Oracle {
     }
 
     fn base(env: Env) -> Asset {
-        return env
-            .storage()
-            .get::<_, Asset>(&DataKey::Base)
-            .unwrap()
-            .unwrap();
+        return env.storage().get_unchecked(&DataKey::Base).unwrap();
+    }
+
+    fn admin(env: Env) -> Address {
+        return env.storage().get_unchecked(&DataKey::Admin).unwrap();
     }
 
     fn assets(env: Env) -> Vec<Asset> {
-        return env
-            .storage()
-            .get::<_, Vec<Asset>>(&DataKey::Assets)
-            .unwrap()
-            .unwrap();
+        return env.storage().get_unchecked(&DataKey::Assets).unwrap();
     }
 
     fn decimals(env: Env) -> u32 {
@@ -118,11 +116,7 @@ impl OracleTrait for Oracle {
     }
 
     fn resolution(env: Env) -> u32 {
-        return env
-            .storage()
-            .get::<_, u32>(&DataKey::Resolution)
-            .unwrap()
-            .unwrap();
+        return env.storage().get_unchecked(&DataKey::Resolution).unwrap();
     }
 
     fn prices(env: Env, asset: Asset, start_timestamp: u64, end_timestamp: u64) -> Vec<PriceData> {
