@@ -10,7 +10,7 @@ def inv_str(price):
     return str(inv)
 
 
-filter_symbols = ["XLMUSDT", "XLMTRY", "XLMBTC", "XLMEUR"]
+filter_symbols = ["XLMUSDT", "XLMTRY", "XLMBTC", "XLMEUR", "XLMBRL"]
 u = "https://api.binance.com/api/v3/ticker/24hr"
 r = requests.get(u)
 df = pd.DataFrame(r.json())
@@ -26,4 +26,8 @@ for index, row in df2.iterrows():
     if row["symbol"] in ["XLMEUR"]:
         # proc = subprocess.Popen([cmd, "set-rate", "EURC", "GDBDEI3NV72XSORX7DNYMGRRNXAXF62RPTGGVEXM2RLXIUIUU5DNZWWH", row['lastPrice'], "1"],
         #    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        pass
+    if row["symbol"] in ["XLMBRL"]:
+        out = check_output(["./cli.py", "set-rate", "BRL", " ", "1", row["lastPrice"]], cwd=cli_dir)
+        print(out)
         pass
