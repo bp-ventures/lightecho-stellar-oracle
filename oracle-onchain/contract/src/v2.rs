@@ -12,7 +12,7 @@ pub enum DataKey {
     Admin = 5,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 #[contracttype]
 pub enum Asset {
     Stellar(Address),
@@ -32,7 +32,7 @@ impl PriceData {
     }
 }
 
-struct Oracle;
+pub struct Oracle;
 
 fn get_admin(env: &Env) -> Address {
     return env.storage().get_unchecked(&DataKey::Admin).unwrap();
@@ -113,8 +113,8 @@ impl OracleTrait for Oracle {
             .unwrap();
     }
 
-    fn decimals(_env: Env) -> u32 {
-        return 18;
+    fn decimals(env: Env) -> u32 {
+        return env.storage().get_unchecked(&DataKey::Decimals).unwrap();
     }
 
     fn resolution(env: Env) -> u32 {
