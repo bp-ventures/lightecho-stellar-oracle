@@ -1,12 +1,35 @@
+import importlib.util
+from pathlib import Path
+import sys
+
 from flask import Flask, request
 from flask import Response
 from flask_cors import CORS
+from flask_httpauth import HTTPBasicAuth
 from stellar_sdk import xdr as stellar_xdr
 from stellar_sdk.xdr.sc_val_type import SCValType
-from stellar_sdk.xdr.uint64 import Uint64
+from werkzeug.security import check_password_hash
+
+mod_spec = importlib.util.spec_from_file_location(
+    "local_settings", Path(__file__).resolve().parent / "local_settings.py"
+)
+assert mod_spec
+local_settings = importlib.util.module_from_spec(mod_spec)
+sys.modules["local_settings"] = local_settings
+assert mod_spec.loader
+mod_spec.loader.exec_module(local_settings)
 
 app = Flask(__name__)
+auth = HTTPBasicAuth()
 CORS(app)
+
+
+@auth.verify_password
+def verify_password(username, password):
+    if username in local_settings.API_USERS and check_password_hash(
+        local_settings.API_USERS.get(username), password
+    ):
+        return username
 
 
 def parse_sc_val(sc_val):
@@ -32,9 +55,16 @@ def parse_sc_val(sc_val):
 
 
 @app.before_request
-def basic_authentication():
+def handle_options():
     if request.method.lower() == "options":
         return Response()
+
+
+@app.route("/soroban/set-rate/", methods=["POST", "OPTIONS"])
+@auth.login_required
+def set_rate():
+    if not request.json:
+        return {"error": "This endpoint requires a JSON payload"}, 400
 
 
 @app.route("/soroban/parse-result-xdr/", methods=["POST", "OPTIONS"])

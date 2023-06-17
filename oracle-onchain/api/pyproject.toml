@@ -11,6 +11,7 @@ flask = "^2.3.2"
 stellar-sdk = { git = "https://github.com/StellarCN/py-stellar-base.git", branch = "soroban" }
 gunicorn = "^20.1.0"
 flask-cors = "^3.0.10"
+flask-httpauth = "^4.8.0"
 
 
 [build-system]
