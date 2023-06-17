@@ -19,7 +19,7 @@ pub enum Asset {
     Other(Symbol),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 #[contracttype]
 pub struct PriceData {
     pub price: i128,
