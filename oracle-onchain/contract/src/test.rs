@@ -2,6 +2,7 @@
 
 use crate::{v2::Asset, v2::Oracle, v2::OracleClient};
 use soroban_sdk::{testutils::Address as _, Address, Env};
+extern crate std;
 
 #[test]
 fn test_admin() {
@@ -53,4 +54,22 @@ fn test_resolution() {
     let resolution = 1;
     client.initialize(&admin, &base, &decimals, &resolution);
     assert_eq!(client.resolution(), resolution);
+}
+
+#[test]
+fn test_lastprice() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, Oracle);
+    let client = OracleClient::new(&env, &contract_id);
+    let admin = Address::random(&env);
+    let base = Asset::Stellar(Address::random(&env));
+    let decimals = 18;
+    let resolution = 1;
+    client.initialize(&admin, &base, &decimals, &resolution);
+    let price: i128 = 12345678;
+    let source: u32 = 0;
+    client.add_price(&source, &base, &price);
+    let lastprice = client.lastprice(&base);
+    assert_eq!(lastprice.unwrap().price, price);
 }
