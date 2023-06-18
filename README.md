@@ -18,28 +18,25 @@ and also contain extra features specific to our implementation.
 ### How to test it
 
 We deployed both v1 and v2 to Stellar Futurenet, which are testable by
-invoking the contract functions directly in the blockchain:
+invoking the contract functions directly in the blockchain.
 
-Deployed contract addresses:
-
-- v1: `225bd2966e21977e99d0360d00663c41db77fe0d2b234b438b8b3eb425f9f22f`
-- v2: `65e9f660742a626bfac85222953bb689345974520afea512f2a500fbc2b5f039`
-
-To make it easy to test and use the contracts, we developed a CLI and a web app,
+To make it easy to test and use the contracts, we developed CLI and a web app,
 as described below.
 
-#### v1
+#### How to test v1
 
 v1 has both a CLI and a web app for testing.
 
 - [v1 CLI](./oracle-onchain/v1/cli)
 - [v1 Web app](https://bp-ventures.github.io/lightecho-stellar-oracle/)
+- v1 deployed contract address: `225bd2966e21977e99d0360d00663c41db77fe0d2b234b438b8b3eb425f9f22f`
 
-#### v2
+#### How to test v2
 
 v2 has a CLI for testing.
 
 - [v2 CLI](./oracle-onchain/v2/cli)
+- v2 deployed contract address: `65e9f660742a626bfac85222953bb689345974520afea512f2a500fbc2b5f039`
 
 ### Source code
 
