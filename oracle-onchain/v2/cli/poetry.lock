@@ -840,7 +840,7 @@ docs = []
 type = "git"
 url = "https://github.com/StellarCN/py-stellar-base.git"
 reference = "soroban"
-resolved_reference = "ef88daa67c95a66e7a13d6eecbd2e430dfbe002d"
+resolved_reference = "1960f2f227fba8fe4a2215116d6713134c894645"
 
 [[package]]
 name = "toml"

@@ -38,6 +38,8 @@ sys.modules["local_settings"] = local_settings
 assert mod_spec.loader
 mod_spec.loader.exec_module(local_settings)
 
+MAX_DECIMAL_PLACES = 18
+
 colorama_init()
 app = typer.Typer()
 state = {
@@ -172,7 +174,7 @@ def output_tx_data(tx_data):
     if is_tx_success(tx_data):
         result = parse_tx_result(tx_data)
         if result.type == SCValType.SCV_VOID:
-            return None
+            print("<void>")
         elif result.type == SCValType.SCV_MAP:
             data = {}
             assert result.map is not None
@@ -368,12 +370,32 @@ def lastprice_by_source(
 
 
 @app.command(help="Invoke the add_price() function of the contract")
-def add_price(source: int, asset_type: AssetType, asset: str, price: int):
+def add_price(source: int, asset_type: AssetType, asset: str, price: str):
+    try:
+        price_d = Decimal(price)
+    except (TypeError, ValueError):
+        abort("Invalid price")
+        return
+    price_d_str = "{:f}".format(price_d)
+    price_parts = price_d_str.split(".")
+    price_as_int = int(price_d_str.replace(".", ""))
+    if len(price_parts) == 2:
+        decimal_places = len(price_parts[1])
+    else:
+        decimal_places = 0
+    zeroes_to_add = MAX_DECIMAL_PLACES - decimal_places
+    if zeroes_to_add >= 0:
+        price_as_int = price_as_int * (10**zeroes_to_add)
+    else:
+        abort(
+            f"Invalid price: no more than {MAX_DECIMAL_PLACES} decimal places are allowed"
+        )
+        return
     func_name = "add_price"
     args = [
         Uint32(source),
         build_asset_enum(asset_type, asset),
-        Int128(price),
+        Int128(price_as_int),
     ]
     contract_auth = build_contract_auth(state["contract_id"], func_name, args)
     invoke_and_output(func_name, args, auth=[contract_auth])
