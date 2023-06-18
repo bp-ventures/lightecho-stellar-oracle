@@ -18,5 +18,5 @@ NETWORK_PASSPHRASE = "Test SDF Future Network ; October 2022"
 ```
 poetry install
 
-./cli.py --help
+./cli --help
 ```
