@@ -24,6 +24,7 @@ from stellar_sdk.soroban.types import (
     Uint128,
     Uint32,
     Uint64,
+    Int128,
 )
 from stellar_sdk.xdr.sc_val_type import SCValType
 import typer
@@ -145,11 +146,25 @@ def parse_sc_val(sc_val):
         uint128 = (high << 64) | low
         return uint128
     if sc_val.i128 is not None:
-        high = sc_val.i128.hi.uint64
+        high = sc_val.i128.hi.int64
         low = sc_val.i128.lo.uint64
-        uint128 = (high << 64) | low
-        return uint128
+        int128 = (high << 64) | low
+        return int128
+    if sc_val.sym is not None:
+        return sc_val.sym.sc_symbol.decode()
+    if sc_val.map is not None:
+        parsed_map = {}
+        for map_entry in sc_val.map.sc_map:
+            parsed_map[parse_sc_val(map_entry.key)] = parse_sc_val(map_entry.val)
+        return parsed_map
     raise ValueError("Could not parse sc_val")
+
+
+def parse_sc_vec(sc_vec):
+    vec = []
+    for val in sc_vec.sc_vec:
+        vec.append(parse_sc_val(val))
+    return vec
 
 
 def output_tx_data(tx_data):
@@ -166,10 +181,20 @@ def output_tx_data(tx_data):
                 value = parse_sc_val(entry.val)
                 data[key] = value
             print(json.dumps(data, indent=2))
-        elif result.type == SCValType.SCV_SYMBOL:
-            print(result.sym.sc_symbol.decode())
+        elif result.type in [
+            SCValType.SCV_U32,
+            SCValType.SCV_I32,
+            SCValType.SCV_U64,
+            SCValType.SCV_I64,
+            SCValType.SCV_U128,
+            SCValType.SCV_I128,
+            SCValType.SCV_SYMBOL,
+        ]:
+            print(parse_sc_val(result))
         elif result.type == SCValType.SCV_ADDRESS:
             print(str(result.address))
+        elif result.type == SCValType.SCV_VEC:
+            print(parse_sc_vec(result.vec))
         else:
             print(f"Unexpected result type: {result.type}")
     else:
@@ -197,11 +222,31 @@ def build_asset_enum(asset_type: AssetType, asset: str):
         return ValueError(f"unexpected asset_type: {asset_type}")
 
 
+def build_contract_auth(contract_id, func_name, args, address=None, nounce=None):
+    invocation = AuthorizedInvocation(
+        contract_id=contract_id,
+        function_name=func_name,
+        args=args,
+        sub_invocations=[],
+    )
+    contract_auth = ContractAuth(
+        address=address,
+        nonce=nounce,
+        root_invocation=invocation,
+    )
+    return contract_auth
+
+
 @app.command(help="Invoke the initialize() function of the contract")
 def initialize(admin: str, base: str, decimals: int, resolution: int):
     invoke_and_output(
         "initialize",
-        [Address(admin), Symbol(base), Uint32(decimals), Uint32(resolution)],
+        [
+            Address(admin),
+            build_asset_enum(AssetType.other, base),
+            Uint32(decimals),
+            Uint32(resolution),
+        ],
     )
 
 
@@ -237,76 +282,95 @@ def prices(asset_type: AssetType, asset: str, start_timestamp: int, end_timestam
     )
 
 
-@app.command(help="Invoke the get_rate() function of the contract")
-def get_rate(asset_code: str, asset_issuer: str, source: int):
-    invoke_and_output(
-        "get_rate", [Symbol(asset_code), issuer_as_bytes(asset_issuer), Uint64(source)]
-    )
-
-
-def build_contract_auth(contract_id, func_name, args, address=None, nounce=None):
-    invocation = AuthorizedInvocation(
-        contract_id=contract_id,
-        function_name=func_name,
-        args=args,
-        sub_invocations=[],
-    )
-    contract_auth = ContractAuth(
-        address=address,
-        nonce=nounce,
-        root_invocation=invocation,
-    )
-    return contract_auth
-
-
-@app.command(help="Invoke the set_base() function of the contract")
-def set_base(base: str):
-    func_name = "set_base"
-    args = [Symbol(base)]
-    contract_auth = build_contract_auth(state["contract_id"], func_name, args)
-    invoke_and_output(func_name, args, auth=[contract_auth])
-
-
-@app.command(help="Invoke the set_rate() function of the contract")
-def set_rate(
-    asset_code: str,
-    asset_issuer: Optional[str],
+@app.command(help="Invoke the prices_by_source() function of the contract")
+def prices_by_source(
     source: int,
-    rate: str,
-    decimals: Optional[int] = None,
-    timestamp: Optional[int] = None,
+    asset_type: AssetType,
+    asset: str,
+    start_timestamp: int,
+    end_timestamp: int,
 ):
-    if timestamp is None:
-        timestamp = int(time.time())
-    try:
-        rate_d = Decimal(rate)
-    except (TypeError, ValueError):
-        abort("Invalid price")
-        return
-    rate_d_str = "{:f}".format(rate_d)
-    rate_parts = rate_d_str.split(".")
-    rate_as_int = int(rate_d_str.replace(".", ""))
-    if len(rate_parts) > 1:
-        if decimals is not None:
-            abort("decimals can only be provided alongside an integer price")
-            return
-        decimal_places = len(rate_parts[1])
-    else:
-        if decimals is not None:
-            decimal_places = decimals
-        else:
-            decimal_places = 0
-    func_name = "set_rate"
+    invoke_and_output(
+        "prices_by_source",
+        [
+            Uint32(source),
+            build_asset_enum(asset_type, asset),
+            Uint64(start_timestamp),
+            Uint64(end_timestamp),
+        ],
+    )
+
+
+@app.command(help="Invoke the lastprices() function of the contract")
+def lastprices(
+    asset_type: AssetType,
+    asset: str,
+    records: int,
+):
+    invoke_and_output(
+        "lastprices",
+        [
+            build_asset_enum(asset_type, asset),
+            Uint32(records),
+        ],
+    )
+
+
+@app.command(help="Invoke the lastprices_by_source() function of the contract")
+def lastprices_by_source(
+    source: int,
+    asset_type: AssetType,
+    asset: str,
+    records: int,
+):
+    invoke_and_output(
+        "lastprices_by_source",
+        [
+            Uint32(source),
+            build_asset_enum(asset_type, asset),
+            Uint32(records),
+        ],
+    )
+
+
+@app.command(help="Invoke the lastprice() function of the contract")
+def lastprice(
+    asset_type: AssetType,
+    asset: str,
+):
+    invoke_and_output(
+        "lastprice",
+        [
+            build_asset_enum(asset_type, asset),
+        ],
+    )
+
+
+@app.command(help="Invoke the lastprice_by_source() function of the contract")
+def lastprice_by_source(
+    source: int,
+    asset_type: AssetType,
+    asset: str,
+):
+    invoke_and_output(
+        "lastprice_by_source",
+        [
+            Uint32(source),
+            build_asset_enum(asset_type, asset),
+        ],
+    )
+
+
+@app.command(help="Invoke the add_price() function of the contract")
+def add_price(source: int, asset_type: AssetType, asset: str, price: int):
+    func_name = "add_price"
     args = [
-        Symbol(asset_code),
-        issuer_as_bytes(asset_issuer),
-        Uint64(source),
-        Uint128(rate_as_int),
-        Uint128(decimal_places),
-        Uint64(timestamp),
+        Uint32(source),
+        build_asset_enum(asset_type, asset),
+        Int128(price),
     ]
     contract_auth = build_contract_auth(state["contract_id"], func_name, args)
-    invoke_and_output("set_rate", args, auth=[contract_auth])
+    invoke_and_output(func_name, args, auth=[contract_auth])
 
 
 @app.callback()
