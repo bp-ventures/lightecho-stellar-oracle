@@ -46,6 +46,7 @@ state = {
     "rpc_server_url": local_settings.RPC_SERVER_URL,
     "contract_id": local_settings.CONTRACT_ID,
     "network_passphrase": local_settings.NETWORK_PASSPHRASE,
+    "horizon_url": "https://horizon-futurenet.stellar.org",
 }
 state["kp"] = Keypair.from_secret(state["source_secret"])
 state["soroban_server"] = SorobanServer(state["rpc_server_url"])
@@ -80,10 +81,11 @@ def send_tx(tx: TransactionEnvelope):
 
     send_transaction_data = state["soroban_server"].send_transaction(prepared_tx)
     vprint(f"sent transaction: {send_transaction_data}")
-    if send_transaction_data.status == SendTransactionStatus.ERROR:
+    if send_transaction_data.status != SendTransactionStatus.PENDING:
         raise RuntimeError(f"Failed to send transaction: {send_transaction_data}")
 
-    return wait_tx(send_transaction_data.hash)
+    tx_hash = send_transaction_data.hash
+    return tx_hash, wait_tx(tx_hash)
 
 
 def wait_tx(tx_hash: str):
@@ -109,15 +111,13 @@ def invoke_contract_function(function_name, parameters=[], auth=None):
         .build()
     )
 
-    tx_data = send_tx(tx)
+    tx_hash, tx_data = send_tx(tx)
     vprint(f"transaction: {tx_data}")
 
-    if tx_data.status == GetTransactionStatus.SUCCESS:
-        vprint("Success")
-    else:
+    if tx_data.status != GetTransactionStatus.SUCCESS:
         abort(f"Error: {tx_data}")
 
-    return tx_data
+    return tx_hash, tx_data
 
 
 def is_tx_success(tx_data):
@@ -172,7 +172,7 @@ def output_tx_data(tx_data):
     if is_tx_success(tx_data):
         result = parse_tx_result(tx_data)
         if result.type == SCValType.SCV_VOID:
-            return
+            return None
         elif result.type == SCValType.SCV_MAP:
             data = {}
             assert result.map is not None
@@ -202,8 +202,14 @@ def output_tx_data(tx_data):
 
 
 def invoke_and_output(function_name, parameters=[], auth=None):
-    tx_data = invoke_contract_function(function_name, parameters, auth)
+    tx_hash, tx_data = invoke_contract_function(function_name, parameters, auth)
+    print("Success!")
+    print()
+    print("Output:")
     output_tx_data(tx_data)
+    print()
+    print("Horizon tx:")
+    print(f"{state['horizon_url']}/transactions/{tx_hash}")
 
 
 def issuer_as_bytes(asset_issuer: Optional[str]) -> Optional[Bytes]:
