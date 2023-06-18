@@ -14,4 +14,4 @@ jobs:
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Generate code coverage
-        run: cd oracle-onchain/contract/v2 && cargo llvm-cov --all-features --fail-under-lines 95
+        run: cd oracle-onchain/v2/contract && cargo llvm-cov --all-features --fail-under-lines 95
