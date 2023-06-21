@@ -19,11 +19,11 @@ pub enum Asset {
     Other(Symbol),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 #[contracttype]
 pub struct PriceData {
-    price: i128,
-    timestamp: u64,
+    pub price: i128,
+    pub timestamp: u64,
 }
 
 impl PriceData {
@@ -208,26 +208,33 @@ impl OracleTrait for Oracle {
 
     fn add_price(env: Env, source: u32, asset: Asset, price: i128) {
         get_admin(&env).require_auth();
-        let source_map: Map<u32, Map<Asset, Vec<PriceData>>> =
-            env.storage().get_unchecked(&DataKey::Prices).unwrap();
+        let storage = env.storage();
+        let mut source_map: Map<u32, Map<Asset, Vec<PriceData>>> =
+            storage.get_unchecked(&DataKey::Prices).unwrap();
         let asset_map_option = source_map.get(source);
+        let mut asset_map;
         match asset_map_option {
             Some(asset_map_result) => {
-                let asset_map = asset_map_result.unwrap();
-                let price_data_vec_option = asset_map.get(asset.clone());
-                let mut price_data_vec;
-                match price_data_vec_option {
-                    Some(price_data_vec_result) => {
-                        price_data_vec = price_data_vec_result.unwrap();
-                    }
-                    None => {
-                        price_data_vec = Vec::<PriceData>::new(&env);
-                    }
-                }
-                let timestamp = env.ledger().timestamp();
-                price_data_vec.push_back(PriceData::new(price, timestamp))
+                asset_map = asset_map_result.unwrap();
             }
-            None => return,
+            None => {
+                asset_map = Map::<Asset, Vec<PriceData>>::new(&env);
+            }
         }
+        let price_data_vec_option = asset_map.get(asset.clone());
+        let mut price_data_vec;
+        match price_data_vec_option {
+            Some(price_data_vec_result) => {
+                price_data_vec = price_data_vec_result.unwrap();
+            }
+            None => {
+                price_data_vec = Vec::<PriceData>::new(&env);
+            }
+        }
+        let timestamp = env.ledger().timestamp();
+        price_data_vec.push_back(PriceData::new(price, timestamp));
+        asset_map.set(asset.clone(), price_data_vec);
+        source_map.set(source, asset_map.clone());
+        storage.set(&DataKey::Prices, &source_map);
     }
 }

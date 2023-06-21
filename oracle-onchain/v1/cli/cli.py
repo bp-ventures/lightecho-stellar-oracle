@@ -83,8 +83,12 @@ def wait_tx(tx_hash: str):
 
 def invoke_contract_function(function_name, parameters=[], auth=None):
     tx = (
-        TransactionBuilder(state["source_acc"], state["network_passphrase"])
-        .set_timeout(300)
+        TransactionBuilder(
+            state["source_acc"],
+            state["network_passphrase"],
+            base_fee=300000,
+        )
+        .set_timeout(30)
         .append_invoke_contract_function_op(
             state["contract_id"],
             function_name,
