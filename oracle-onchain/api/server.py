@@ -59,12 +59,13 @@ def handle_options():
     if request.method.lower() == "options":
         return Response()
 
-
 @app.route("/soroban/set-rate/", methods=["POST", "OPTIONS"])
 @auth.login_required
 def set_rate():
     if not request.json:
         return {"error": "This endpoint requires a JSON payload"}, 400
+    symbol = request.json.get("symbol")
+    parts = symbol.split("XLM")
 
 
 @app.route("/soroban/parse-result-xdr/", methods=["POST", "OPTIONS"])
