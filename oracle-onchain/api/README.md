@@ -3,6 +3,11 @@ Create `local_settings.py`:
 ```
 from werkzeug.security import generate_password_hash
 
+CONTRACTS = {
+  "XLM": "<XLM-based contract id>",
+  "USD": "<USD-based contract id>",
+}
+
 # HTTP Basic authorized users
 API_USERS = {
     "john": generate_password_hash("hello"),

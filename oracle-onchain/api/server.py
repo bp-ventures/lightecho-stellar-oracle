@@ -2,8 +2,7 @@ import importlib.util
 from pathlib import Path
 import sys
 
-from flask import Flask, request
-from flask import Response
+from flask import Flask, request, abort, Response
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 from stellar_sdk import xdr as stellar_xdr
@@ -59,13 +58,27 @@ def handle_options():
     if request.method.lower() == "options":
         return Response()
 
+
+def parse_symbol(symbol: Optional[str] = None):
+    for base in ["XLM", "USD"]
+    xlm_parts = symbol.split("XLM")
+    if len(xlm_parts) == 2:
+        return xlm_parts[0], xlm_parts[1]
+    else:
+        usd_parts = symbol.split("USD")
+        if len(usd_parts) == 2:
+            return usd_parts[0], usd_parts[1]
+        else:
+            abort(400, "Invalid symbol, must begin with XLM or USD")
+
+
 @app.route("/soroban/set-rate/", methods=["POST", "OPTIONS"])
 @auth.login_required
 def set_rate():
     if not request.json:
         return {"error": "This endpoint requires a JSON payload"}, 400
-    symbol = request.json.get("symbol")
-    parts = symbol.split("XLM")
+    base, quote = parse_symbol(request.json.get("symbol"))
+    if base == "XLM":
 
 
 @app.route("/soroban/parse-result-xdr/", methods=["POST", "OPTIONS"])
