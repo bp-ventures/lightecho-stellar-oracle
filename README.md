@@ -42,3 +42,10 @@ v2 has a CLI for testing.
 
 - [v1 source code](./oracle-onchain/v1/contract)
 - [v2 source code](./oracle-onchain/v2/contract)
+
+
+-----------
+
+https://lightecho.io
+
+_Made by BP Ventures_
