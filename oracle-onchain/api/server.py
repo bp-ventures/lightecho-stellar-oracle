@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import sys
+from typing import Optional
 
 from flask import Flask, request, abort, Response
 from flask_cors import CORS
@@ -60,16 +61,18 @@ def handle_options():
 
 
 def parse_symbol(symbol: Optional[str] = None):
-    for base in ["XLM", "USD"]
-    xlm_parts = symbol.split("XLM")
-    if len(xlm_parts) == 2:
-        return xlm_parts[0], xlm_parts[1]
-    else:
-        usd_parts = symbol.split("USD")
-        if len(usd_parts) == 2:
-            return usd_parts[0], usd_parts[1]
+    if symbol is None:
+        abort(400, "Missing payload field 'symbol'")
+    for base in ["XLM", "USD"]:
+        xlm_parts = symbol.split(base)
+        if len(xlm_parts) == 2:
+            return xlm_parts[0], xlm_parts[1]
         else:
-            abort(400, "Invalid symbol, must begin with XLM or USD")
+            usd_parts = symbol.split("USD")
+            if len(usd_parts) == 2:
+                return usd_parts[0], usd_parts[1]
+            else:
+                abort(400, "Invalid symbol, must begin with XLM or USD")
 
 
 @app.route("/soroban/set-rate/", methods=["POST", "OPTIONS"])
