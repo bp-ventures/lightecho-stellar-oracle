@@ -34,6 +34,7 @@ poetry run gunicorn -w 4 server:app
 ## Authentication
 
 Some endpoints require HTTP Basic authentication.  
+The list authorized of users and passwords is defined by the above `API_USERS` setting.  
 See endpoints below for more detailed instructions and examples.
 
 ## Endpoints
