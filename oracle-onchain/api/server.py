@@ -1,9 +1,11 @@
+from decimal import Decimal
 import importlib.util
 from pathlib import Path
+from subprocess import check_output
 import sys
 from typing import Optional
 
-from flask import Flask, request, abort, Response
+from flask import Flask, Response, request
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 from stellar_sdk import xdr as stellar_xdr
@@ -62,26 +64,82 @@ def handle_options():
 
 def parse_symbol(symbol: Optional[str] = None):
     if symbol is None:
-        abort(400, "Missing payload field 'symbol'")
-    for base in ["XLM", "USD"]:
-        xlm_parts = symbol.split(base)
-        if len(xlm_parts) == 2:
-            return xlm_parts[0], xlm_parts[1]
-        else:
-            usd_parts = symbol.split("USD")
-            if len(usd_parts) == 2:
-                return usd_parts[0], usd_parts[1]
-            else:
-                abort(400, "Invalid symbol, must begin with XLM or USD")
+        return None, None, "Missing payload field 'symbol'"
+    bases = local_settings.CONTRACTS.keys()
+    for base in bases:
+        parts = symbol.split(base)
+        if len(parts) == 2:
+            return base, parts[1], None
+    return None, None, "Invalid 'symbol', must begin with one of: {', '.join(bases)}"
 
 
-@app.route("/soroban/set-rate/", methods=["POST", "OPTIONS"])
+def parse_source(source: Optional[str] = None):
+    if source is None:
+        return None, "Missing payload field 'source'"
+    try:
+        int(source)
+        return str(source), None
+    except (ValueError, TypeError):
+        return None, "Invalid 'source', must be an integer"
+
+
+def parse_price(price: Optional[str] = None):
+    if price is None:
+        return None, "Missing payload field 'price'"
+    try:
+        price_d = Decimal(price)
+        return str(price_d), None
+    except (ValueError, TypeError):
+        return None, "Invalid 'source', must be an integer"
+
+
+def parse_asset_type(asset_type: Optional[str] = None):
+    if asset_type is None:
+        return None, "Missing payload field 'asset_type'"
+    supported_asset_types = ["stellar", "other"]
+    if asset_type not in supported_asset_types:
+        return (
+            None,
+            f"Invalid 'asset_type', must be one of: {', '.join(supported_asset_types)}",
+        )
+    return asset_type, None
+
+
+@app.route("/soroban/add-price/", methods=["POST", "OPTIONS"])
 @auth.login_required
 def set_rate():
-    if not request.json:
+    data = request.json
+    if not data:
         return {"error": "This endpoint requires a JSON payload"}, 400
-    base, quote = parse_symbol(request.json.get("symbol"))
-    if base == "XLM":
+    source, err = parse_source(data.get("source"))
+    if err:
+        return {"error": err}
+    asset_type, err = parse_asset_type(data.get("asset_type"))
+    if err:
+        return {"error": err}
+    base, quote, err = parse_symbol(data.get("symbol"))
+    if err:
+        return {"error": err}
+    price, err = parse_price(data.get("price"))
+    if err:
+        return {"error": err}
+    contract_id = local_settings.CONTRACTS[base]
+
+    cli_dir = Path(__file__).parent.parent / "v2" / "cli"
+    cmd = [
+        "./cli",
+        "--contract-id",
+        contract_id,
+        "add-price",
+        source,
+        asset_type,
+        quote,
+        price,
+    ]
+    print(cmd)
+    raw_output = check_output(cmd, cwd=cli_dir)
+    output = raw_output.decode()
+    return {"success": True, "output": output}
 
 
 @app.route("/soroban/parse-result-xdr/", methods=["POST", "OPTIONS"])

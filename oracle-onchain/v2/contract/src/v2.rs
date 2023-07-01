@@ -83,6 +83,8 @@ pub trait OracleTrait {
     fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData>;
 
     fn add_price(env: Env, source: u32, asset: Asset, price: i128);
+
+    //TODO: add remove_price functions
 }
 
 #[contractimpl]

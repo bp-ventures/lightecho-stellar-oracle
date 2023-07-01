@@ -406,9 +406,14 @@ def add_price(source: int, asset_type: AssetType, asset: str, price: str):
 
 
 @app.callback()
-def main(verbose: bool = typer.Option(False, "-v", "--verbose")):
+def main(
+    verbose: bool = typer.Option(False, "-v", "--verbose"),
+    contract_id: Optional[str] = typer.Option(None, "--contract-id"),
+):
     if verbose:
         state["verbose"] = True
+    if contract_id:
+        state["contract_id"] = contract_id
 
 
 if __name__ == "__main__":
