@@ -28,3 +28,26 @@ poetry run flask --app server run --reload
 # or
 poetry run gunicorn -w 4 server:app
 ```
+
+# Using the API
+
+## Authentication
+
+Some endpoints require HTTP Basic authentication.  
+See endpoints below for more detailed instructions and examples.
+
+## Endpoints
+
+### Add prices to a deployed contract
+
+```
+curl -X POST "http://localhost:5000/soroban/add-price/" \
+  -H "Authorization: Basic a2V5OnZhbHVl" \
+  -H "Content-Type: application/json" \
+  --data-raw '{
+    "source": 2,
+    "symbol": "XLMUSDC",
+    "asset_type": "other",
+    "price": "1.2"
+  }'
+```
