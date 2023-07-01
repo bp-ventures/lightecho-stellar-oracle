@@ -21,8 +21,10 @@ sys.modules["local_settings"] = local_settings
 assert mod_spec.loader
 mod_spec.loader.exec_module(local_settings)
 
+
 app = Flask(__name__)
 auth = HTTPBasicAuth()
+auth.error_handler(lambda status: ({"error": "Unauthorized"}, status))
 CORS(app)
 
 
