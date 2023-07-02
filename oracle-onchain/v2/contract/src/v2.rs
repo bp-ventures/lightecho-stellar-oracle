@@ -90,6 +90,16 @@ pub trait OracleTrait {
 #[contractimpl]
 impl OracleTrait for Oracle {
     fn initialize(env: Env, admin: Address, base: Asset, decimals: u32, resolution: u32) {
+        // if an admin is already set, we require admin authentication
+        let admin_option = env.storage().get(&DataKey::Admin);
+        match admin_option {
+            Some(admin_result) => {
+                let admin: Address = admin_result.unwrap();
+                admin.require_auth();
+            }
+            None => {}
+        }
+
         let storage = env.storage();
         storage.set(&DataKey::Base, &base);
         storage.set(&DataKey::Decimals, &decimals);
