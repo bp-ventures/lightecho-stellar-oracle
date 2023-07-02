@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head> </head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lightecho Stellar Oracle</title>
+  <link rel="icon" type="image/x-icon" href="./assets/lightecho-icon.ico" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+    crossorigin="anonymous"
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <body>
+    <div id="root"></div>
+  </body>
+  <!-- This setup is not suitable for production. -->
+  <!-- Only use it in development! -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script
+    async
+    src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"
+  ></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/soroban-client/0.8.0/soroban-client.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/ethereumjs/browser-builds/dist/ethereumjs-tx/ethereumjs-tx-1.3.3.min.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react/": "https://esm.sh/react@18.2.0/",
+        "react-dom": "https://esm.sh/react-dom@18.2.0",
+        "react-dom/": "https://esm.sh/react-dom@18.2.0/"
+      }
+    }
+  </script>
+  <script type="text/babel" data-type="module">
+    import React, { useEffect, createRef, useState, StrictMode } from "react";
+    import { createRoot } from "react-dom/client";
+
+    const config = {
+      sourceSecret: "SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW",
+      rpcServerUrl: "https://rpc-futurenet.stellar.org:443/",
+      contractId:
+        "65e9f660742a626bfac85222953bb689345974520afea512f2a500fbc2b5f039",
+      networkPassphrase: "Test SDF Future Network ; October 2022",
+      fee: 1000,
+      apiUrl: "https://lightecho-stellar-oracle-api.bpventures.us",
+    };
+
+    function numberToScvU32(n) {
+      return SorobanClient.xdr.ScVal.scvU32(source);
+    }
+
+    function numberToScvU64(n) {
+      return SorobanClient.xdr.ScVal.scvU64(
+        new SorobanClient.xdr.Uint64(BigInt.asUintN(64, BigInt(n))) // reiterpret as unsigned
+      );
+    }
+
+    function numberToScvI128(n) {
+      const v = BigInt(n);
+      const hi64 = BigInt.asIntN(64, v >> 64n); // encode top 64 w/ sign bit
+      const lo64 = BigInt.asUintN(64, v); // grab btm 64, encode sign
+
+      return SorobanClient.xdr.ScVal.scvI128(
+        new SorobanClient.xdr.Int128Parts({
+          hi: new SorobanClient.xdr.Int64(hi64),
+          lo: new SorobanClient.xdr.Uint64(lo64),
+        })
+      );
+    }
+
+    const getPrice = async ({
+      source,
+      assetCode,
+      assetIssuer,
+      appendToLog,
+    }) => {
+      appendToLog("Building transaction envelope");
+      const server = new SorobanClient.Server(config.rpcServerUrl);
+      const keypair = SorobanClient.Keypair.fromSecret(config.sourceSecret);
+      const account = await server.getAccount(keypair.publicKey());
+      const contract = new SorobanClient.Contract(config.contractId);
+      if (!assetIssuer) {
+        assetIssuer = " ";
+      }
+      let transaction = new SorobanClient.TransactionBuilder(account, {
+        fee: config.fee,
+        networkPassphrase: config.networkPassphrase,
+      })
+        .addOperation(
+          contract.call(
+            "lastprice_by_source",
+            SorobanClient.xdr.ScVal.scvU32(source),
+            SorobanClient.xdr.ScVal.scvVec([
+              SorobanClient.xdr.ScVal.scvSymbol(
+                ethereumjs.Buffer.Buffer.from("Other", "utf-8")
+              ),
+              SorobanClient.xdr.ScVal.scvSymbol("USDC"),
+            ])
+          )
+        )
+        .setTimeout(30)
+        .build();
+      appendToLog("Preparing transaction");
+      transaction = await server.prepareTransaction(transaction);
+      transaction.sign(keypair);
+      console.log(`xdr: ${transaction.toEnvelope().toXDR("base64")}`);
+      try {
+        appendToLog("Sending transaction");
+        let response = await server.sendTransaction(transaction);
+        const hash = response.hash;
+        appendToLog(`Transaction hash: ${hash}`);
+        while (true) {
+          appendToLog("Awaiting transaction to be confirmed");
+          response = await server.getTransaction(hash);
+          if (response.status !== "NOT_FOUND") {
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+        appendToLog(`Transaction status: ${response.status}`);
+        console.log(JSON.stringify(response));
+        if (response.status === "SUCCESS") {
+          appendToLog("Parsing result");
+          console.log(`resultMetaXdr: ${response.resultMetaXdr}`);
+          const horizonTx = `https://horizon-futurenet.stellar.org/transactions/${hash}`;
+          appendToLog(
+            <>
+              <span>Horizon tx: </span>
+              <span>
+                <a target="_blank" rel="noreferrer" href={horizonTx}>
+                  {horizonTx}
+                </a>
+              </span>
+            </>,
+            true
+          );
+          appendToLog(`Tx Result: ${JSON.stringify(parsedResult.data)}`);
+        }
+      } catch (e) {
+        console.error(e);
+        appendToLog(`An error has occured: ${e}`);
+      }
+    };
+
+    const App = () => {
+      const [running, Set_running] = useState(false);
+      const [source, Set_source] = useState("1");
+      const [assetCode, Set_assetCode] = useState("USD");
+      const [assetIssuer, Set_assetIssuer] = useState(undefined);
+      const [logs, Set_logs] = useState([]);
+      const messagesEndRef = createRef();
+
+      const scrollLogToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      };
+
+      useEffect(() => scrollLogToBottom(), [logs]);
+
+      const appendToLog = (msg, isJsx) => {
+        console.log(msg);
+        if (isJsx) {
+          Set_logs((prev) => [
+            ...prev,
+            <>
+              <span>{`[${new Date().toISOString()}] `}</span>
+              <span>{msg}</span>
+            </>,
+          ]);
+        } else {
+          Set_logs((prev) => [...prev, `[${new Date().toISOString()}] ${msg}`]);
+        }
+      };
+
+      return (
+        <main>
+          <div className="container">
+            <div className="row pt-4 pb-2 align-items-center">
+              <div className="col">
+                <div className="d-flex flex-row justify-content-center align-items-center">
+                  <img src="./assets/lightecho-icon-300x300.png" width="70" />
+                  <h2 className="m-0">Lightecho Stellar Oracle</h2>
+                </div>
+                <h6 className="text-center mb-4">
+                  Built on
+                  <a
+                    href="https://soroban.stellar.org/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="soroban"
+                  >
+                    <img
+                      src="./assets/soroban-inverted.png"
+                      width="20"
+                      className="soroban"
+                    />
+                    oroban
+                  </a>
+                </h6>
+                <h4 className="text-center">On-chain Oracle</h4>
+              </div>
+            </div>
+            <div className="row pt-2 justify-content-center">
+              <div className="col">
+                <p className="text-center">
+                  Contract ID:
+                  <br />
+                  <code>{config.contractId}</code>
+                </p>
+              </div>
+            </div>
+            <div className="row justify-content-center">
+              <div className="col">
+                <p className="text-center">
+                  Example on how to fetch <code>XLM-USD</code> rate:
+                  <br />
+                  Asset code: <code>USD</code>
+                  <br />
+                  Asset issuer:{" "}
+                  <code>leave it empty since USD is off-chain</code>
+                  <br />
+                  Source: <code>1 - Binance</code>
+                </p>
+              </div>
+            </div>
+            <div className="row pt-2 justify-content-center">
+              <div className="col">
+                <p className="text-center">
+                  All rates are based on XLM. E.g. if you get a rate of 4.12, it
+                  means 1 XLM equals 4.12 of the asset you quoted.
+                </p>
+              </div>
+            </div>
+
+            <div className="row pt-2 justify-content-center">
+              <div className="col-12 col-sm-3">
+                <input
+                  className="form-control mt-2"
+                  type="text"
+                  placeholder="Asset code"
+                  aria-label="Asset code"
+                  defaultValue="USD"
+                  onChange={(e) => Set_assetCode(e.target.value)}
+                />
+              </div>
+              <div className="col-12 col-sm-3 mt-2">
+                <input
+                  className="form-control"
+                  type="text"
+                  placeholder="Asset issuer"
+                  aria-label="Asset issuer"
+                  onChange={(e) => Set_assetIssuer(e.target.value)}
+                />
+              </div>
+              <div className="col-12 col-sm-3 mt-2">
+                <select
+                  defaultValue="1"
+                  className="form-select"
+                  aria-label="Default select example"
+                  onChange={(e) => Set_source(e.target.value)}
+                >
+                  <option value="">Select Source</option>
+                  <option value="0">0 - Stellar Classic</option>
+                  <option value="1">1 - Binance</option>
+                  <option value="2">2 - Testing</option>
+                </select>
+              </div>
+              <div className="col-12 col-sm-3 mt-2">
+                <button
+                  className="btn btn-primary w-100"
+                  disabled={!source || running || !assetCode}
+                  onClick={async () => {
+                    if (source) {
+                      Set_running(true);
+                      try {
+                        await getPrice({
+                          source: parseInt(source),
+                          assetCode,
+                          assetIssuer,
+                          appendToLog,
+                        });
+                      } catch (e) {
+                        console.error(e);
+                        appendToLog(
+                          `An error has occured (check console for more details): ${e}`
+                        );
+                      } finally {
+                        Set_running(false);
+                      }
+                    }
+                  }}
+                >
+                  Get Rate
+                </button>
+              </div>
+            </div>
+            <div className="row pt-3 justify-content-center">
+              <div id="logs" className="col-12 col-sm-10 offset-sm-1">
+                <div className="d-flex flex-column">
+                  {logs.map((elem, index) => (
+                    <span key={index}>{elem}</span>
+                  ))}
+                </div>
+                <div
+                  style={{ float: "left", clear: "both" }}
+                  ref={messagesEndRef}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </main>
+      );
+    };
+
+    const root = createRoot(document.getElementById("root"));
+    root.render(
+      <StrictMode>
+        <App />
+      </StrictMode>
+    );
+  </script>
+  <style>
+    body {
+      font-family: Cairo, sans-serif;
+    }
+    main {
+      display: flex;
+      flex-direction: column;
+    }
+    .cursor-pointer {
+      cursor: pointer;
+    }
+    button {
+      border-radius: 0 !important;
+      background-color: #0226b5 !important;
+    }
+    pre {
+      white-space: pre-wrap;
+    }
+    #logs {
+      height: 200px;
+      overflow: auto;
+    }
+    img.soroban {
+      margin-right: -3px;
+      margin-top: -5px;
+    }
+    a.soroban {
+      text-decoration: none;
+      color: black;
+    }
+  </style>
+</html>
