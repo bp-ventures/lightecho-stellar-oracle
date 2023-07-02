@@ -51,7 +51,7 @@ def parse_sc_val(sc_val):
         uint128 = (high << 64) | low
         return uint128
     if sc_val.i128 is not None:
-        high = sc_val.i128.hi.uint64
+        high = sc_val.i128.hi.int64
         low = sc_val.i128.lo.uint64
         uint128 = (high << 64) | low
         return uint128
