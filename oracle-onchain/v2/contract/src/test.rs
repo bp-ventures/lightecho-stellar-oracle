@@ -18,6 +18,19 @@ fn test_initialize() {
 
 #[test]
 #[should_panic]
+fn test_initialize_bad_auth() {
+    let env = Env::default();
+    let contract_id = env.register_contract(None, Oracle);
+    let client = OracleClient::new(&env, &contract_id);
+    let admin = Address::random(&env);
+    let base = Asset::Stellar(Address::random(&env));
+    let decimals = 18;
+    let resolution = 1;
+    client.initialize(&admin, &base, &decimals, &resolution);
+    client.initialize(&admin, &base, &decimals, &resolution);
+}
+
+#[test]
 fn test_initialize_auth() {
     let env = Env::default();
     let contract_id = env.register_contract(None, Oracle);
@@ -27,6 +40,7 @@ fn test_initialize_auth() {
     let decimals = 18;
     let resolution = 1;
     client.initialize(&admin, &base, &decimals, &resolution);
+    env.mock_all_auths();
     client.initialize(&admin, &base, &decimals, &resolution);
 }
 
