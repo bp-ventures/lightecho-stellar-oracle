@@ -7,9 +7,7 @@ pub enum DataKey {
     Base = 0,
     Decimals = 1,
     Resolution = 2,
-    Assets = 3,
-    Prices = 4,
-    Admin = 5,
+    Admin = 3,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -38,6 +36,26 @@ fn get_admin(env: &Env) -> Address {
     return env.storage().get_unchecked(&DataKey::Admin).unwrap();
 }
 
+fn is_u32_in_vec(n: u32, vec: &Vec<u32>) -> bool {
+    for item_result in vec.iter() {
+        let item = item_result.unwrap();
+        if item == n {
+            return true;
+        }
+    }
+    return false;
+}
+
+fn is_asset_in_vec(asset: Asset, vec: &Vec<Asset>) -> bool {
+    for result in vec.iter() {
+        let item = result.unwrap();
+        if item == asset {
+            return true;
+        }
+    }
+    return false;
+}
+
 pub trait OracleTrait {
     fn initialize(env: Env, admin: Address, base: Asset, decimals: u32, resolution: u32);
 
@@ -50,7 +68,7 @@ pub trait OracleTrait {
     fn assets(env: Env) -> Vec<Asset>;
 
     /// Return all sources
-    //fn sources(env: Env) -> Vec<u32>;
+    fn sources(env: Env) -> Vec<u32>;
 
     /// Return the number of decimals for all assets quoted by the oracle.
     fn decimals(env: Env) -> u32;
@@ -84,7 +102,15 @@ pub trait OracleTrait {
 
     fn add_price(env: Env, source: u32, asset: Asset, price: i128);
 
-    //TODO: add remove_price functions
+    //TODO add bulk prices
+
+    fn remove_prices(
+        env: Env,
+        sources: Vec<u32>,
+        assets: Vec<Asset>,
+        start_timestamp: Option<u64>,
+        end_timestamp: Option<u64>,
+    );
 }
 
 #[contractimpl]
@@ -108,6 +134,10 @@ impl OracleTrait for Oracle {
             &DataKey::Prices,
             &Map::<u32, Map<Asset, Vec<PriceData>>>::new(&env),
         );
+        storage.set(
+            &DataKey::LastPrices,
+            &Map::<u32, Map<Asset, PriceData>>::new(&env),
+        );
         storage.set(&DataKey::Admin, &admin);
     }
 
@@ -120,7 +150,23 @@ impl OracleTrait for Oracle {
     }
 
     fn assets(env: Env) -> Vec<Asset> {
-        return env.storage().get_unchecked(&DataKey::Assets).unwrap();
+        let source_map: Map<u32, Map<Asset, Vec<PriceData>>> =
+            env.storage().get_unchecked(&DataKey::Prices).unwrap();
+        let mut asset_vec = Vec::<Asset>::new(&env);
+        for source_result in source_map.iter() {
+            let (_, asset_map) = source_result.unwrap();
+            for asset_result in asset_map.keys() {
+                let asset = asset_result.unwrap();
+                asset_vec.push_back(asset);
+            }
+        }
+        return asset_vec;
+    }
+
+    fn sources(env: Env) -> Vec<u32> {
+        let source_map: Map<u32, Map<Asset, Vec<PriceData>>> =
+            env.storage().get_unchecked(&DataKey::Prices).unwrap();
+        return source_map.keys();
     }
 
     fn decimals(env: Env) -> u32 {
@@ -248,5 +294,65 @@ impl OracleTrait for Oracle {
         asset_map.set(asset.clone(), price_data_vec);
         source_map.set(source, asset_map.clone());
         storage.set(&DataKey::Prices, &source_map);
+    }
+
+    fn remove_prices(
+        env: Env,
+        sources: Vec<u32>,
+        assets: Vec<Asset>,
+        start_timestamp: Option<u64>,
+        end_timestamp: Option<u64>,
+    ) {
+        get_admin(&env).require_auth();
+        let storage = env.storage();
+        let source_map: Map<u32, Map<Asset, Vec<PriceData>>> =
+            storage.get_unchecked(&DataKey::Prices).unwrap();
+        let mut new_source_map = Map::<u32, Map<Asset, Vec<PriceData>>>::new(&env);
+        for source_result in source_map.iter() {
+            let (source, asset_map) = source_result.unwrap();
+            if sources.len() > 0 {
+                if !is_u32_in_vec(source, &sources) {
+                    continue;
+                }
+            }
+            let mut new_asset_map = Map::<Asset, Vec<PriceData>>::new(&env);
+            for asset_result in asset_map.iter() {
+                let (asset, price_data_vec) = asset_result.unwrap();
+                if assets.len() > 0 {
+                    if !is_asset_in_vec(asset.clone(), &assets) {
+                        continue;
+                    }
+                }
+                let mut new_price_data_vec = Vec::<PriceData>::new(&env);
+                for price_data_result in price_data_vec.iter() {
+                    let price_data = price_data_result.unwrap();
+                    match start_timestamp {
+                        Some(t) => {
+                            if t < price_data.timestamp {
+                                new_price_data_vec.push_back(price_data);
+                                continue;
+                            }
+                        }
+                        None => {}
+                    }
+                    match end_timestamp {
+                        Some(t) => {
+                            if t > price_data.timestamp {
+                                new_price_data_vec.push_back(price_data);
+                                continue;
+                            }
+                        }
+                        None => {}
+                    }
+                }
+                if new_price_data_vec.len() > 0 {
+                    new_asset_map.set(asset.clone(), new_price_data_vec)
+                }
+            }
+            if new_asset_map.keys().len() > 0 {
+                new_source_map.set(source, new_asset_map);
+            }
+        }
+        storage.set(&DataKey::Prices, &new_source_map);
     }
 }
