@@ -143,6 +143,13 @@
             </>,
             true
           );
+
+          // We had issues trying to parse the result using SorobanClient,
+          // so we call an external API to parse it.
+          let parsedResult = await axios.post(
+            `${config.apiUrl}/soroban/parse-result-xdr/`,
+            { xdr: response.resultMetaXdr }
+          );
           appendToLog(`Tx Result: ${JSON.stringify(parsedResult.data)}`);
         }
       } catch (e) {
@@ -255,8 +262,8 @@
                 <input
                   className="form-control"
                   type="text"
-                  placeholder="Asset issuer"
-                  aria-label="Asset issuer"
+                  placeholder="Asset issuer pubkey"
+                  aria-label="Asset issuer pubkey"
                   onChange={(e) => Set_assetIssuer(e.target.value)}
                 />
               </div>
