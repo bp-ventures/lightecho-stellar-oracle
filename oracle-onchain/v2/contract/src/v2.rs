@@ -8,6 +8,7 @@ pub enum DataKey {
     Decimals = 1,
     Resolution = 2,
     Admin = 3,
+    Prices = 4,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -37,8 +38,7 @@ fn get_admin(env: &Env) -> Address {
 }
 
 fn is_u32_in_vec(n: u32, vec: &Vec<u32>) -> bool {
-    for item_result in vec.iter() {
-        let item = item_result.unwrap();
+    for item in vec.iter_unchecked() {
         if item == n {
             return true;
         }
@@ -47,8 +47,7 @@ fn is_u32_in_vec(n: u32, vec: &Vec<u32>) -> bool {
 }
 
 fn is_asset_in_vec(asset: Asset, vec: &Vec<Asset>) -> bool {
-    for result in vec.iter() {
-        let item = result.unwrap();
+    for item in vec.iter_unchecked() {
         if item == asset {
             return true;
         }
@@ -59,16 +58,73 @@ fn is_asset_in_vec(asset: Asset, vec: &Vec<Asset>) -> bool {
 pub trait OracleTrait {
     fn initialize(env: Env, admin: Address, base: Asset, decimals: u32, resolution: u32);
 
+    fn admin(env: Env) -> Address;
+
+    /// Return list of all price sources
+    fn sources(env: Env) -> Vec<u32>;
+
+    /// Return list of prices from a given source
+    fn prices_by_source(
+        env: Env,
+        source: u32,
+        asset: Asset,
+        start_timestamp: u64,
+        end_timestamp: u64,
+    ) -> Vec<PriceData>;
+
+    /// Get source=0 last N price records
+    fn lastprices(env: Env, asset: Asset, records: u32) -> Vec<PriceData>;
+
+    /// Get source=<source> last N price records
+    fn lastprices_by_source(env: Env, source: u32, asset: Asset, records: u32) -> Vec<PriceData>;
+
+    /// Get source=<source> last price record
+    fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData>;
+
+    /// Add a price record
+    fn add_price(env: Env, source: u32, asset: Asset, price: i128);
+
+    //TODO add bulk prices
+
+    /// Remove prices matching the given conditions.
+    /// Parameters:
+    ///   sources: a list of sources to match when removing prices. If this is an
+    ///            empty list, all sources are be matched.
+    ///   assets: a list of assets to match when removing prices. If this is an
+    ///            empty list, all assets are matched.
+    ///   start_timestamp: prices with timestamp higher than or equal to
+    ///            start_timestamp will be matched.
+    ///   end_timestamp: prices with timestamp lower than or equal to
+    ///            end_timestamp will be matched.
+    /// Examples:
+    ///   To remove all prices from source=1:
+    ///     remove_prices(env, Vec::<Asset>::from_slice(&env, [&1]), Vec::<Asset>::new(&env), None, None);
+    ///
+    ///   To remove all prices of asset `AssetB` from all sources:
+    ///     remove_prices(env, Vec::<u32>::new(&env), Vec::<Asset>::from_slice(&env, [&AssetB]), None, None);
+    ///
+    ///   To remove all prices of asset `AssetB` from source=1:
+    ///     remove_prices(env, Vec::<u32>::from_slice(&env, [&1]), Vec::<Asset>::from_slice(&env, [&AssetB]), None, None);
+    ///
+    ///   To remove all prices with timestamp higher than `my_timestamp`:
+    ///     remove_prices(env, Vec::<u32>::new(&env), Vec::<Asset>::new(&env), my_timestamp, None);
+    fn remove_prices(
+        env: Env,
+        sources: Vec<u32>,
+        assets: Vec<Asset>,
+        start_timestamp: Option<u64>,
+        end_timestamp: Option<u64>,
+    );
+
+    ///
+    /// SEP-40 functions
+    ///
+
     /// Return the base asset the price is reported in.
     fn base(env: Env) -> Asset;
 
-    fn admin(env: Env) -> Address;
-
     /// Return all assets quoted by the price feed.
     fn assets(env: Env) -> Vec<Asset>;
-
-    /// Return all sources
-    fn sources(env: Env) -> Vec<u32>;
 
     /// Return the number of decimals for all assets quoted by the oracle.
     fn decimals(env: Env) -> u32;
@@ -82,35 +138,8 @@ pub trait OracleTrait {
     ///  `start_timestamp`, it will be included. Same for `end_timestamp`.
     fn prices(env: Env, asset: Asset, start_timestamp: u64, end_timestamp: u64) -> Vec<PriceData>;
 
-    fn prices_by_source(
-        env: Env,
-        source: u32,
-        asset: Asset,
-        start_timestamp: u64,
-        end_timestamp: u64,
-    ) -> Vec<PriceData>;
-
-    /// Get source=0 last N price records
-    fn lastprices(env: Env, asset: Asset, records: u32) -> Vec<PriceData>;
-
-    fn lastprices_by_source(env: Env, source: u32, asset: Asset, records: u32) -> Vec<PriceData>;
-
     /// Get source=0 latest price in base asset
     fn lastprice(env: Env, asset: Asset) -> Option<PriceData>;
-
-    fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData>;
-
-    fn add_price(env: Env, source: u32, asset: Asset, price: i128);
-
-    //TODO add bulk prices
-
-    fn remove_prices(
-        env: Env,
-        sources: Vec<u32>,
-        assets: Vec<Asset>,
-        start_timestamp: Option<u64>,
-        end_timestamp: Option<u64>,
-    );
 }
 
 #[contractimpl]
@@ -134,10 +163,6 @@ impl OracleTrait for Oracle {
             &DataKey::Prices,
             &Map::<u32, Map<Asset, Vec<PriceData>>>::new(&env),
         );
-        storage.set(
-            &DataKey::LastPrices,
-            &Map::<u32, Map<Asset, PriceData>>::new(&env),
-        );
         storage.set(&DataKey::Admin, &admin);
     }
 
@@ -153,8 +178,7 @@ impl OracleTrait for Oracle {
         let source_map: Map<u32, Map<Asset, Vec<PriceData>>> =
             env.storage().get_unchecked(&DataKey::Prices).unwrap();
         let mut asset_vec = Vec::<Asset>::new(&env);
-        for source_result in source_map.iter() {
-            let (_, asset_map) = source_result.unwrap();
+        for (_, asset_map) in source_map.iter_unchecked() {
             for asset_result in asset_map.keys() {
                 let asset = asset_result.unwrap();
                 asset_vec.push_back(asset);
@@ -199,8 +223,7 @@ impl OracleTrait for Oracle {
                 match prices_vec_option {
                     Some(prices_vec_result) => {
                         let prices_vec = prices_vec_result.unwrap();
-                        for price_data_vec_item_result in prices_vec.iter() {
-                            let price_data = price_data_vec_item_result.unwrap();
+                        for price_data in prices_vec.iter_unchecked() {
                             if price_data.timestamp >= start_timestamp
                                 && price_data.timestamp <= end_timestamp
                             {
@@ -233,14 +256,11 @@ impl OracleTrait for Oracle {
                     Some(prices_vec_result) => {
                         let prices_vec = prices_vec_result.unwrap();
                         let starting_index = prices_vec.len().checked_sub(records).unwrap_or(0);
-                        for (index_usize, price_data_vec_item_result) in
-                            prices_vec.iter().enumerate()
-                        {
+                        for (index_usize, price_data) in prices_vec.iter_unchecked().enumerate() {
                             let index: u32 = index_usize.try_into().unwrap();
                             if index < starting_index {
                                 continue;
                             }
-                            let price_data = price_data_vec_item_result.unwrap();
                             prices_within_range.push_back(price_data)
                         }
                     }
@@ -258,8 +278,8 @@ impl OracleTrait for Oracle {
 
     fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData> {
         let prices = Oracle::lastprices_by_source(env, source, asset, 1);
-        for price_data_result in prices.iter() {
-            return Some(price_data_result.unwrap());
+        for price_data in prices.iter_unchecked() {
+            return Some(price_data);
         }
         return None;
     }
@@ -308,24 +328,21 @@ impl OracleTrait for Oracle {
         let source_map: Map<u32, Map<Asset, Vec<PriceData>>> =
             storage.get_unchecked(&DataKey::Prices).unwrap();
         let mut new_source_map = Map::<u32, Map<Asset, Vec<PriceData>>>::new(&env);
-        for source_result in source_map.iter() {
-            let (source, asset_map) = source_result.unwrap();
+        for (source, asset_map) in source_map.iter_unchecked() {
             if sources.len() > 0 {
                 if !is_u32_in_vec(source, &sources) {
                     continue;
                 }
             }
             let mut new_asset_map = Map::<Asset, Vec<PriceData>>::new(&env);
-            for asset_result in asset_map.iter() {
-                let (asset, price_data_vec) = asset_result.unwrap();
+            for (asset, price_data_vec) in asset_map.iter_unchecked() {
                 if assets.len() > 0 {
                     if !is_asset_in_vec(asset.clone(), &assets) {
                         continue;
                     }
                 }
                 let mut new_price_data_vec = Vec::<PriceData>::new(&env);
-                for price_data_result in price_data_vec.iter() {
-                    let price_data = price_data_result.unwrap();
+                for price_data in price_data_vec.iter_unchecked() {
                     match start_timestamp {
                         Some(t) => {
                             if t < price_data.timestamp {
