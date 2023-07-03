@@ -1,7 +1,7 @@
 #![cfg(test)]
 
-use crate::{v2::Asset, v2::Oracle, v2::OracleClient};
-use soroban_sdk::{testutils::Address as _, Address, Env};
+use crate::{Asset, Oracle, OracleClient};
+use soroban_sdk::{testutils::Address as _, Address, Env, Vec};
 extern crate std;
 
 #[test]
@@ -13,6 +13,34 @@ fn test_initialize() {
     let base = Asset::Stellar(Address::random(&env));
     let decimals = 18;
     let resolution = 1;
+    client.initialize(&admin, &base, &decimals, &resolution);
+}
+
+#[test]
+#[should_panic]
+fn test_initialize_bad_auth() {
+    let env = Env::default();
+    let contract_id = env.register_contract(None, Oracle);
+    let client = OracleClient::new(&env, &contract_id);
+    let admin = Address::random(&env);
+    let base = Asset::Stellar(Address::random(&env));
+    let decimals = 18;
+    let resolution = 1;
+    client.initialize(&admin, &base, &decimals, &resolution);
+    client.initialize(&admin, &base, &decimals, &resolution);
+}
+
+#[test]
+fn test_initialize_auth() {
+    let env = Env::default();
+    let contract_id = env.register_contract(None, Oracle);
+    let client = OracleClient::new(&env, &contract_id);
+    let admin = Address::random(&env);
+    let base = Asset::Stellar(Address::random(&env));
+    let decimals = 18;
+    let resolution = 1;
+    client.initialize(&admin, &base, &decimals, &resolution);
+    env.mock_all_auths();
     client.initialize(&admin, &base, &decimals, &resolution);
 }
 
@@ -213,31 +241,98 @@ fn test_lastprice_multiple_sources_assets_prices() {
 }
 
 #[test]
-#[should_panic]
-fn test_initialize_bad_auth() {
+fn test_remove_prices() {
     let env = Env::default();
-    let contract_id = env.register_contract(None, Oracle);
-    let client = OracleClient::new(&env, &contract_id);
-    let admin = Address::random(&env);
-    let base = Asset::Stellar(Address::random(&env));
-    let decimals = 18;
-    let resolution = 1;
-    client.initialize(&admin, &base, &decimals, &resolution);
-    client.initialize(&admin, &base, &decimals, &resolution);
-}
-
-#[test]
-fn test_initialize_auth() {
-    let env = Env::default();
-    let contract_id = env.register_contract(None, Oracle);
-    let client = OracleClient::new(&env, &contract_id);
-    let admin = Address::random(&env);
-    let base = Asset::Stellar(Address::random(&env));
-    let decimals = 18;
-    let resolution = 1;
-    client.initialize(&admin, &base, &decimals, &resolution);
     env.mock_all_auths();
+    let contract_id = env.register_contract(None, Oracle);
+    let client = OracleClient::new(&env, &contract_id);
+    let admin = Address::random(&env);
+    let base = Asset::Stellar(Address::random(&env));
+    let decimals = 18;
+    let resolution = 1;
     client.initialize(&admin, &base, &decimals, &resolution);
+    let source0: u32 = 0;
+    let source1: u32 = 1;
+    let source2: u32 = 2;
+    let asset0 = Asset::Stellar(Address::random(&env));
+    let asset1 = Asset::Stellar(Address::random(&env));
+    let asset2 = Asset::Stellar(Address::random(&env));
+    let asset3 = Asset::Stellar(Address::random(&env));
+    let price0: i128 = 912794;
+    let price1: i128 = 76123918273;
+    let price2: i128 = 871982739102837;
+    let price3: i128 = 12039812309182;
+    let price4: i128 = 9192837192837;
+    let price5: i128 = 182;
+    let price6: i128 = 1;
+    let price7: i128 = 907812630891721023980129383;
+
+    client.add_price(&source0, &asset0, &price0);
+    let mut lastprice = client.lastprice(&asset0);
+    assert_eq!(lastprice.unwrap().price, price0);
+
+    client.add_price(&source0, &asset0, &price1);
+    client.add_price(&source0, &asset1, &price2);
+    lastprice = client.lastprice(&asset0);
+    assert_eq!(lastprice.unwrap().price, price1);
+    lastprice = client.lastprice(&asset1);
+    assert_eq!(lastprice.unwrap().price, price2);
+
+    client.add_price(&source1, &asset1, &price3);
+    lastprice = client.lastprice_by_source(&source1, &asset1);
+    assert_eq!(lastprice.unwrap().price, price3);
+
+    client.add_price(&source1, &asset2, &price4);
+    client.add_price(&source1, &asset2, &price5);
+    client.add_price(&source1, &asset3, &price6);
+    client.add_price(&source1, &asset3, &price7);
+    lastprice = client.lastprice_by_source(&source1, &asset2);
+    assert_eq!(lastprice.unwrap().price, price5);
+    lastprice = client.lastprice_by_source(&source1, &asset3);
+    assert_eq!(lastprice.unwrap().price, price7);
+
+    let start_timestamp: Option<u64> = None;
+    let end_timestamp: Option<u64> = None;
+
+    client.remove_prices(
+        &Vec::<u32>::from_array(&env, [0]),
+        &Vec::<Asset>::from_array(&env, [asset0.clone()]),
+        &start_timestamp,
+        &end_timestamp,
+    );
+
+    lastprice = client.lastprice_by_source(&source0, &asset1);
+    assert_eq!(lastprice.unwrap().price, price2);
+    let assets = client.assets();
+    assert_eq!(assets.len(), 3);
+    for a in assets.iter_unchecked() {
+        if a != asset1 && a != asset2 && a != asset3 {
+            panic!("unexpected asset")
+        }
+    }
+
+    client.remove_prices(
+        &Vec::<u32>::from_array(&env, []),
+        &Vec::<Asset>::from_array(&env, [asset1.clone()]),
+        &start_timestamp,
+        &end_timestamp,
+    );
+
+    let sources = client.sources();
+    assert_eq!(sources.len(), 1);
+    for s in sources.iter_unchecked() {
+        if s != source1 {
+            panic!("unexpected source")
+        }
+    }
+
+    client.add_price(&source0, &asset0, &price1);
+    client.add_price(&source2, &asset1, &price2);
+
+    let assets = client.assets();
+    assert_eq!(assets.len(), 4);
+    let sources = client.sources();
+    assert_eq!(sources.len(), 3);
 }
 
 #[test]
