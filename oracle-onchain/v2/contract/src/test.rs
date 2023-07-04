@@ -4,6 +4,15 @@ use crate::{Asset, Oracle, OracleClient};
 use soroban_sdk::{testutils::Address as _, Address, Env, Vec};
 extern crate std;
 
+fn is_asset_in_vec(asset: Asset, vec: &Vec<Asset>) -> bool {
+    for item in vec.iter_unchecked() {
+        if item == asset {
+            return true;
+        }
+    }
+    return false;
+}
+
 #[test]
 fn test_initialize() {
     let env = Env::default();
@@ -305,11 +314,9 @@ fn test_remove_prices() {
     assert_eq!(lastprice.unwrap().price, price2);
     let assets = client.assets();
     assert_eq!(assets.len(), 3);
-    for a in assets.iter_unchecked() {
-        if a != asset1 && a != asset2 && a != asset3 {
-            panic!("unexpected asset")
-        }
-    }
+    assert_eq!(is_asset_in_vec(asset1.clone(), &assets), true);
+    assert_eq!(is_asset_in_vec(asset2.clone(), &assets), true);
+    assert_eq!(is_asset_in_vec(asset3.clone(), &assets), true);
 
     client.remove_prices(
         &Vec::<u32>::from_array(&env, []),
@@ -331,6 +338,10 @@ fn test_remove_prices() {
 
     let assets = client.assets();
     assert_eq!(assets.len(), 4);
+    assert_eq!(is_asset_in_vec(asset0.clone(), &assets), true);
+    assert_eq!(is_asset_in_vec(asset1.clone(), &assets), true);
+    assert_eq!(is_asset_in_vec(asset2.clone(), &assets), true);
+    assert_eq!(is_asset_in_vec(asset3.clone(), &assets), true);
     let sources = client.sources();
     assert_eq!(sources.len(), 3);
 }
@@ -375,14 +386,8 @@ fn test_assets() {
     client.add_price(&source, &asset2, &price2);
     assets = client.assets();
     assert_eq!(assets.len(), 2);
-    for (index_usize, a) in assets.iter_unchecked().enumerate() {
-        let index: u32 = index_usize.try_into().unwrap();
-        if index == 0 {
-            assert_eq!(a, asset1);
-        } else if index == 1 {
-            assert_eq!(a, asset2);
-        }
-    }
+    assert_eq!(is_asset_in_vec(asset1, &assets), true);
+    assert_eq!(is_asset_in_vec(asset2, &assets), true);
 }
 
 #[test]
