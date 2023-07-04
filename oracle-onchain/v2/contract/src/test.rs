@@ -458,3 +458,52 @@ fn test_prices() {
         break;
     }
 }
+
+#[test]
+fn test_prices_limit() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, Oracle);
+    let client = OracleClient::new(&env, &contract_id);
+    let admin = Address::random(&env);
+    let base = Asset::Stellar(Address::random(&env));
+    let decimals = 18;
+    let resolution = 1;
+    client.initialize(&admin, &base, &decimals, &resolution);
+
+    let source = 0;
+    let asset = Asset::Stellar(Address::random(&env));
+    let price: i128 = 918729481812938171823918237122;
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+
+    let lastprices = client.lastprices_by_source(&source, &asset, &5);
+    assert_eq!(lastprices.len(), 5);
+    let lastprices = client.lastprices_by_source(&source, &asset, &10);
+    assert_eq!(lastprices.len(), 10);
+    let lastprices = client.lastprices_by_source(&source, &asset, &15);
+    assert_eq!(lastprices.len(), 10);
+
+    client.add_price(&source, &asset, &price);
+    let lastprices = client.lastprices_by_source(&source, &asset, &15);
+    assert_eq!(lastprices.len(), 10);
+
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+    client.add_price(&source, &asset, &price);
+
+    client.add_price(&source, &asset, &price);
+    let lastprices = client.lastprices_by_source(&source, &asset, &3);
+    assert_eq!(lastprices.len(), 3);
+    let lastprices = client.lastprices_by_source(&source, &asset, &30);
+    assert_eq!(lastprices.len(), 10);
+}

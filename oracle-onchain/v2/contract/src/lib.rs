@@ -311,6 +311,9 @@ impl OracleTrait for Oracle {
             }
         }
         let timestamp = env.ledger().timestamp();
+        if price_data_vec.len() >= 10 {
+            price_data_vec.pop_front();
+        }
         price_data_vec.push_back(PriceData::new(price, timestamp));
         asset_map.set(asset.clone(), price_data_vec);
         source_map.set(source, asset_map.clone());
