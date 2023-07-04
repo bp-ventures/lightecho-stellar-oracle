@@ -21,28 +21,20 @@ soroban contract deploy \
     --rpc-url https://rpc-futurenet.stellar.org:443 \
     --network-passphrase 'Test SDF Future Network ; October 2022'
 
+# Run on Sandbox
 soroban contract invoke \
-    --id <contract id obtained in above step> \
-    --source SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW \
-    --rpc-url https://rpc-futurenet.stellar.org:443 \
-    --network-passphrase 'Test SDF Future Network ; October 2022' \
+    --wasm target/wasm32-unknown-unknown/release/oracle.wasm \
+    --id 1 \
     -- \
-    get-rate \
-    --asset-code USD \
-    --source 1
+    initialize \
+    --admin GDOOLD2UL3STZ4FLHM5CV3ZFSTYI4EYZHEEGIC4GHL4CJ4BLSSYNN5ER \
+    --base '{"Other":"XLM"}' \
+    --decimals 18 \
+    --resolution 1
 ```
 
 # Production deployment
 
 ```
-cargo build --target wasm32-unknown-unknown --release
-
-soroban contract optimize \
-    --wasm target/wasm32-unknown-unknown/release/oracle.wasm
-
-soroban contract deploy \
-    --wasm target/wasm32-unknown-unknown/release/oracle.optimized.wasm \
-    --source SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW \
-    --rpc-url https://rpc-futurenet.stellar.org:443 \
-    --network-passphrase 'Test SDF Future Network ; October 2022'
+./deploy.sh
 ```

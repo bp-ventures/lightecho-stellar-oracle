@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contractimpl, contracttype, Address, Env, Map, Symbol, Vec};
+use soroban_sdk::{contractimpl, contracttype, Address, Env, Map, Set, Symbol, Vec};
 
 #[derive(Clone, Copy)]
 #[contracttype]
@@ -179,14 +179,13 @@ impl OracleTrait for Oracle {
     fn assets(env: Env) -> Vec<Asset> {
         let source_map: Map<u32, Map<Asset, Vec<PriceData>>> =
             env.storage().get_unchecked(&DataKey::Prices).unwrap();
-        let mut asset_vec = Vec::<Asset>::new(&env);
+        let mut asset_set = Set::<Asset>::new(&env);
         for (_, asset_map) in source_map.iter_unchecked() {
-            for asset_result in asset_map.keys() {
-                let asset = asset_result.unwrap();
-                asset_vec.push_back(asset);
+            for (asset, _) in asset_map.iter_unchecked() {
+                asset_set.insert(asset);
             }
         }
-        return asset_vec;
+        return asset_set.to_vec();
     }
 
     fn sources(env: Env) -> Vec<u32> {
