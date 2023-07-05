@@ -209,13 +209,12 @@ def output_tx_data(tx_data):
 
 def invoke_and_output(function_name, parameters=[], auth=None):
     tx_hash, tx_data = invoke_contract_function(function_name, parameters, auth)
-    print("Success!")
-    print()
     print("Output:")
     output_tx_data(tx_data)
-    print()
     print("Horizon tx:")
     print(f"{state['horizon_url']}/transactions/{tx_hash}")
+    print()
+    print("Success!")
 
 
 def issuer_as_bytes(asset_issuer: Optional[str]) -> Optional[Bytes]:
