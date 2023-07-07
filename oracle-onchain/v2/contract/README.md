@@ -35,6 +35,12 @@ soroban contract invoke \
 
 # Production deployment
 
+[Poetry](https://python-poetry.org/) is required to run the deployment scripts.
+
 ```
-./deploy.sh
+# load stellar source account secret key into environment
+source ./scripts/source_secret.sh
+
+# deploy and initialize contract
+./scripts/deploy.sh <admin> <base> <decimals> <resolution>
 ```

@@ -11,7 +11,7 @@ from typing import Optional
 from colorama import init as colorama_init
 from colorama import Fore
 from colorama import Style
-from stellar_sdk import Keypair, TransactionBuilder, TransactionEnvelope
+from stellar_sdk import Keypair, StrKey, TransactionBuilder, TransactionEnvelope
 from stellar_sdk import xdr as stellar_xdr
 from stellar_sdk.soroban import AuthorizedInvocation, ContractAuth
 from stellar_sdk.soroban.server import SorobanServer
@@ -20,11 +20,10 @@ from stellar_sdk.soroban.types import (
     Address,
     Bytes,
     Enum,
+    Int128,
     Symbol,
-    Uint128,
     Uint32,
     Uint64,
-    Int128,
 )
 from stellar_sdk.xdr.sc_val_type import SCValType
 import typer
@@ -101,6 +100,7 @@ def wait_tx(tx_hash: str):
 
 
 def invoke_contract_function(function_name, parameters=[], auth=None):
+    contract_id = StrKey.decode_contract(state["contract_id"]).hex()
     tx = (
         TransactionBuilder(
             state["source_acc"],
@@ -109,7 +109,7 @@ def invoke_contract_function(function_name, parameters=[], auth=None):
         )
         .set_timeout(30)
         .append_invoke_contract_function_op(
-            state["contract_id"],
+            contract_id,
             function_name,
             parameters,
             auth=auth,  # type: ignore
@@ -261,14 +261,24 @@ def initialize(admin: str, base: str, decimals: int, resolution: int):
     )
 
 
+@app.command(help="Invoke the admin() function of the contract")
+def admin():
+    invoke_and_output("admin")
+
+
 @app.command(help="Invoke the base() function of the contract")
 def base():
     invoke_and_output("base")
 
 
-@app.command(help="Invoke the admin() function of the contract")
-def admin():
-    invoke_and_output("admin")
+@app.command(help="Invoke the sources() function of the contract")
+def sources():
+    invoke_and_output("sources")
+
+
+@app.command(help="Invoke the assets() function of the contract")
+def assets():
+    invoke_and_output("assets")
 
 
 @app.command(help="Invoke the decimals() function of the contract")

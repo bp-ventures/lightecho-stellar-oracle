@@ -22,14 +22,14 @@
   </body>
   <!-- This setup is not suitable for production. -->
   <!-- Only use it in development! -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./js/babel-standalone@7.22.8.min.js"></script>
   <script
     async
     src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"
   ></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/soroban-client/0.8.0/soroban-client.js"></script>
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/ethereumjs/browser-builds/dist/ethereumjs-tx/ethereumjs-tx-1.3.3.min.js"></script>
+  <script src="./js/soroban-client-0.8.1.min.js"></script>
+  <script src="./js/axios.min.js"></script>
+  <script src="./js/ethereumjs-tx-1.3.3.min.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -77,89 +77,9 @@
       );
     }
 
-    const getPrice = async ({
-      source,
-      assetCode,
-      assetIssuer,
-      appendToLog,
-    }) => {
-      appendToLog("Building transaction envelope");
-      const server = new SorobanClient.Server(config.rpcServerUrl);
-      const keypair = SorobanClient.Keypair.fromSecret(config.sourceSecret);
-      const account = await server.getAccount(keypair.publicKey());
-      const contract = new SorobanClient.Contract(config.contractId);
-      if (!assetIssuer) {
-        assetIssuer = " ";
-      }
-      let transaction = new SorobanClient.TransactionBuilder(account, {
-        fee: config.fee,
-        networkPassphrase: config.networkPassphrase,
-      })
-        .addOperation(
-          contract.call(
-            "lastprice_by_source",
-            SorobanClient.xdr.ScVal.scvU32(source),
-            SorobanClient.xdr.ScVal.scvVec([
-              SorobanClient.xdr.ScVal.scvSymbol(
-                ethereumjs.Buffer.Buffer.from("Other", "utf-8")
-              ),
-              SorobanClient.xdr.ScVal.scvSymbol("USDC"),
-            ])
-          )
-        )
-        .setTimeout(30)
-        .build();
-      appendToLog("Preparing transaction");
-      transaction = await server.prepareTransaction(transaction);
-      transaction.sign(keypair);
-      console.log(`xdr: ${transaction.toEnvelope().toXDR("base64")}`);
-      try {
-        appendToLog("Sending transaction");
-        let response = await server.sendTransaction(transaction);
-        const hash = response.hash;
-        appendToLog(`Transaction hash: ${hash}`);
-        while (true) {
-          appendToLog("Awaiting transaction to be confirmed");
-          response = await server.getTransaction(hash);
-          if (response.status !== "NOT_FOUND") {
-            break;
-          }
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-        appendToLog(`Transaction status: ${response.status}`);
-        console.log(JSON.stringify(response));
-        if (response.status === "SUCCESS") {
-          appendToLog("Parsing result");
-          console.log(`resultMetaXdr: ${response.resultMetaXdr}`);
-          const horizonTx = `https://horizon-futurenet.stellar.org/transactions/${hash}`;
-          appendToLog(
-            <>
-              <span>Horizon tx: </span>
-              <span>
-                <a target="_blank" rel="noreferrer" href={horizonTx}>
-                  {horizonTx}
-                </a>
-              </span>
-            </>,
-            true
-          );
-
-          // We had issues trying to parse the result using SorobanClient,
-          // so we call an external API to parse it.
-          let parsedResult = await axios.post(
-            `${config.apiUrl}/soroban/parse-result-xdr/`,
-            { xdr: response.resultMetaXdr }
-          );
-          appendToLog(`Tx Result: ${JSON.stringify(parsedResult.data)}`);
-        }
-      } catch (e) {
-        console.error(e);
-        appendToLog(`An error has occured: ${e}`);
-      }
-    };
-
     const App = () => {
       const [running, Set_running] = useState(false);
+      const [func, Set_func] = useState(undefined);
       const [source, Set_source] = useState("1");
       const [assetCode, Set_assetCode] = useState("USD");
       const [assetIssuer, Set_assetIssuer] = useState(undefined);
@@ -173,7 +93,9 @@
       useEffect(() => scrollLogToBottom(), [logs]);
 
       const appendToLog = (msg, isJsx) => {
-        console.log(msg);
+        if (!isJsx) {
+          console.log(msg);
+        }
         if (isJsx) {
           Set_logs((prev) => [
             ...prev,
@@ -184,6 +106,125 @@
           ]);
         } else {
           Set_logs((prev) => [...prev, `[${new Date().toISOString()}] ${msg}`]);
+        }
+      };
+
+      const submitTx = async (contractOp) => {
+        appendToLog("Building transaction envelope");
+        const server = new SorobanClient.Server(config.rpcServerUrl);
+        const keypair = SorobanClient.Keypair.fromSecret(config.sourceSecret);
+        const account = await server.getAccount(keypair.publicKey());
+        let transaction = new SorobanClient.TransactionBuilder(account, {
+          fee: config.fee,
+          networkPassphrase: config.networkPassphrase,
+        }).addOperation(contractOp).setTimeout(30).build();
+        appendToLog("Preparing transaction");
+        transaction = await server.prepareTransaction(transaction);
+        transaction.sign(keypair);
+        console.log(`xdr: ${transaction.toEnvelope().toXDR("base64")}`);
+        try {
+          appendToLog("Sending transaction");
+          let response = await server.sendTransaction(transaction);
+          const hash = response.hash;
+          appendToLog(`Transaction hash: ${hash}`);
+          while (true) {
+            appendToLog("Awaiting transaction to be confirmed");
+            response = await server.getTransaction(hash);
+            if (response.status !== "NOT_FOUND") {
+              break;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+          appendToLog(`Transaction status: ${response.status}`);
+          console.log(JSON.stringify(response));
+          if (response.status === "SUCCESS") {
+            appendToLog("Parsing result");
+            console.log(`resultMetaXdr: ${response.resultMetaXdr}`);
+            const horizonTx = `https://horizon-futurenet.stellar.org/transactions/${hash}`;
+            appendToLog(
+              <>
+                <span>Horizon tx: </span>
+                <span>
+                  <a target="_blank" rel="noreferrer" href={horizonTx}>
+                    {horizonTx}
+                  </a>
+                </span>
+              </>,
+              true
+            );
+
+            // We had issues trying to parse the result using SorobanClient,
+            // so we call an external API to parse it.
+            let parsedResult = await axios.post(
+              `${config.apiUrl}/soroban/parse-result-xdr/`,
+              { xdr: response.resultMetaXdr }
+            );
+            appendToLog(`Tx Result: ${JSON.stringify(parsedResult.data)}`);
+          }
+        } catch (e) {
+          console.error(e);
+          appendToLog(`An error has occured: ${e}`);
+        }
+      }
+
+      const getAssetEnum = (assetCode, assetIssuer) => {
+        if (assetIssuer) {
+          return SorobanClient.xdr.ScVal.scvVec([
+            SorobanClient.xdr.ScVal.scvSymbol(
+              ethereumjs.Buffer.Buffer.from("Stellar", "utf-8")
+            ),
+            SorobanClient.xdr.ContractId.contractIdFromAsset(
+              new SorobanClient.StellarBase.Asset(assetCode, assetIssuer)
+            )
+          ])
+        }
+        return SorobanClient.xdr.ScVal.scvVec([
+          SorobanClient.xdr.ScVal.scvSymbol(
+            ethereumjs.Buffer.Buffer.from("Other", "utf-8")
+          ),
+          SorobanClient.xdr.ScVal.scvSymbol(assetCode),
+        ])
+      }
+
+      const runFunc = async () => {
+        const contract = new SorobanClient.Contract(config.contractId);
+
+        switch (func) {
+          case "assets":
+            break;
+          case "lastprice":
+            break;
+          case "lastprices":
+            break;
+          case "prices":
+            break;
+          case "sources":
+            break;
+          case "lastprice_by_source":
+            await submitTx(contract.call(
+              "lastprice_by_source",
+              SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
+              getAssetEnum(assetCode, assetIssuer),
+            ))
+            break;
+          case "lastprices_by_source":
+            break;
+          case "prices_by_source":
+            break;
+          case "base":
+            break;
+          case "decimals":
+            break;
+          case "resolution":
+            break;
+          case "admin":
+            break;
+          case "add_price":
+            break;
+          case "remove_prices":
+            break;
+          default:
+            throw new Error(`Invalid func: ${func}`);
         }
       };
 
@@ -246,40 +287,88 @@
                 </p>
               </div>
             </div>
-
             <div className="row pt-2 justify-content-center">
-              <div className="col-12 col-sm-3">
-                <input
-                  className="form-control mt-2"
-                  type="text"
-                  placeholder="Asset code"
-                  aria-label="Asset code"
-                  defaultValue="USD"
-                  onChange={(e) => Set_assetCode(e.target.value)}
-                />
-              </div>
-              <div className="col-12 col-sm-3 mt-2">
-                <input
-                  className="form-control"
-                  type="text"
-                  placeholder="Asset issuer pubkey"
-                  aria-label="Asset issuer pubkey"
-                  onChange={(e) => Set_assetIssuer(e.target.value)}
-                />
-              </div>
               <div className="col-12 col-sm-3 mt-2">
                 <select
                   defaultValue="1"
                   className="form-select"
-                  aria-label="Default select example"
-                  onChange={(e) => Set_source(e.target.value)}
+                  aria-label="Select function"
+                  onChange={(e) => Set_func(e.target.value)}
                 >
-                  <option value="">Select Source</option>
-                  <option value="0">0 - Stellar Classic</option>
-                  <option value="1">1 - Binance</option>
-                  <option value="2">2 - Testing</option>
+                  <option value="">Select function</option>
+                  <option value="assets">assets</option>
+                  <option value="lastprice">lastprice</option>
+                  <option value="lastprices">lastprices</option>
+                  <option value="prices">prices</option>
+                  <option value="sources">sources</option>
+                  <option value="lastprice_by_source">
+                    lastprice_by_source
+                  </option>
+                  <option value="lastprices_by_source">
+                    lastprices_by_source
+                  </option>
+                  <option value="prices_by_source">prices_by_source</option>
+                  <option value="base">base</option>
+                  <option value="decimals">decimals</option>
+                  <option value="resolution">resolution</option>
+                  <option value="admin">admin</option>
+                  <option value="add_price">add_price</option>
+                  <option value="remove_prices">remove_prices</option>
                 </select>
               </div>
+            </div>
+            <div className="row pt-2 justify-content-center">
+              {[
+                "lastprice",
+                "lastprices",
+                "prices",
+                "lastprice_by_source",
+                "lastprices_by_source",
+                "prices_by_source",
+              ].includes(func) && (
+                <>
+                  <div className="col-12 col-sm-3">
+                    <input
+                      className="form-control mt-2"
+                      type="text"
+                      placeholder="Asset code"
+                      aria-label="Asset code"
+                      defaultValue="USD"
+                      onChange={(e) => Set_assetCode(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-12 col-sm-3 mt-2">
+                    <input
+                      className="form-control"
+                      type="text"
+                      placeholder="Asset issuer pubkey"
+                      aria-label="Asset issuer pubkey"
+                      onChange={(e) => Set_assetIssuer(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+              {[
+                "lastprice_by_source",
+                "lastprices_by_source",
+                "prices_by_source",
+              ].includes(func) && (
+                <div className="col-12 col-sm-3 mt-2">
+                  <select
+                    defaultValue="1"
+                    className="form-select"
+                    aria-label="Select source"
+                    onChange={(e) => Set_source(e.target.value)}
+                  >
+                    <option value="">Select Source</option>
+                    <option value="0">0 - Stellar Classic</option>
+                    <option value="1">1 - Binance</option>
+                    <option value="2">2 - Testing</option>
+                  </select>
+                </div>
+              )}
+            </div>
+            <div className="row pt-2 pb-2 justify-content-center">
               <div className="col-12 col-sm-3 mt-2">
                 <button
                   className="btn btn-primary w-100"
@@ -288,12 +377,7 @@
                     if (source) {
                       Set_running(true);
                       try {
-                        await getPrice({
-                          source: parseInt(source),
-                          assetCode,
-                          assetIssuer,
-                          appendToLog,
-                        });
+                        await runFunc();
                       } catch (e) {
                         console.error(e);
                         appendToLog(
@@ -305,11 +389,12 @@
                     }
                   }}
                 >
-                  Get Rate
+                  Run
                 </button>
               </div>
             </div>
-            <div className="row pt-3 justify-content-center">
+            <hr />
+            <div className="row pt-3 pb-3 justify-content-center">
               <div id="logs" className="col-12 col-sm-10 offset-sm-1">
                 <div className="d-flex flex-column">
                   {logs.map((elem, index) => (
