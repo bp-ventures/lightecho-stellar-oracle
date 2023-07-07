@@ -47,8 +47,7 @@
     const config = {
       sourceSecret: "SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW",
       rpcServerUrl: "https://rpc-futurenet.stellar.org:443/",
-      contractId:
-        "65e9f660742a626bfac85222953bb689345974520afea512f2a500fbc2b5f039",
+      contractId: "CA2L3R42XVNZC56IH73VTZO6UNYPLE3RV2CQ4UZPW4J3MPDCE3J6L2N5",
       networkPassphrase: "Test SDF Future Network ; October 2022",
       fee: 1000,
       apiUrl: "https://lightecho-stellar-oracle-api.bpventures.us",
@@ -117,7 +116,10 @@
         let transaction = new SorobanClient.TransactionBuilder(account, {
           fee: config.fee,
           networkPassphrase: config.networkPassphrase,
-        }).addOperation(contractOp).setTimeout(30).build();
+        })
+          .addOperation(contractOp)
+          .setTimeout(30)
+          .build();
         appendToLog("Preparing transaction");
         transaction = await server.prepareTransaction(transaction);
         transaction.sign(keypair);
@@ -165,7 +167,7 @@
           console.error(e);
           appendToLog(`An error has occured: ${e}`);
         }
-      }
+      };
 
       const getAssetEnum = (assetCode, assetIssuer) => {
         if (assetIssuer) {
@@ -175,16 +177,16 @@
             ),
             SorobanClient.xdr.ContractId.contractIdFromAsset(
               new SorobanClient.StellarBase.Asset(assetCode, assetIssuer)
-            )
-          ])
+            ),
+          ]);
         }
         return SorobanClient.xdr.ScVal.scvVec([
           SorobanClient.xdr.ScVal.scvSymbol(
             ethereumjs.Buffer.Buffer.from("Other", "utf-8")
           ),
           SorobanClient.xdr.ScVal.scvSymbol(assetCode),
-        ])
-      }
+        ]);
+      };
 
       const runFunc = async () => {
         const contract = new SorobanClient.Contract(config.contractId);
@@ -201,11 +203,13 @@
           case "sources":
             break;
           case "lastprice_by_source":
-            await submitTx(contract.call(
-              "lastprice_by_source",
-              SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
-              getAssetEnum(assetCode, assetIssuer),
-            ))
+            await submitTx(
+              contract.call(
+                "lastprice_by_source",
+                SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
+                getAssetEnum(assetCode, assetIssuer)
+              )
+            );
             break;
           case "lastprices_by_source":
             break;

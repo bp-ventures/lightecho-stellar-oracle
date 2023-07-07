@@ -151,8 +151,8 @@ impl OracleTrait for Oracle {
         let admin_option = env.storage().get(&DataKey::Admin);
         match admin_option {
             Some(admin_result) => {
-                let admin: Address = admin_result.unwrap();
-                admin.require_auth();
+                let existing_admin: Address = admin_result.unwrap();
+                existing_admin.require_auth();
             }
             None => {}
         }

@@ -45,7 +45,7 @@ state = {
     "verbose": False,
     "source_secret": local_settings.SOURCE_SECRET,
     "rpc_server_url": local_settings.RPC_SERVER_URL,
-    "contract_id": local_settings.CONTRACT_ID,
+    "contract_id": StrKey.decode_contract(local_settings.CONTRACT_ID).hex(),
     "network_passphrase": local_settings.NETWORK_PASSPHRASE,
     "horizon_url": "https://horizon-futurenet.stellar.org",
 }
@@ -100,7 +100,6 @@ def wait_tx(tx_hash: str):
 
 
 def invoke_contract_function(function_name, parameters=[], auth=None):
-    contract_id = StrKey.decode_contract(state["contract_id"]).hex()
     tx = (
         TransactionBuilder(
             state["source_acc"],
@@ -109,7 +108,7 @@ def invoke_contract_function(function_name, parameters=[], auth=None):
         )
         .set_timeout(30)
         .append_invoke_contract_function_op(
-            contract_id,
+            state["contract_id"],
             function_name,
             parameters,
             auth=auth,  # type: ignore
@@ -250,15 +249,15 @@ def build_contract_auth(contract_id, func_name, args, address=None, nounce=None)
 
 @app.command(help="Invoke the initialize() function of the contract")
 def initialize(admin: str, base: str, decimals: int, resolution: int):
-    invoke_and_output(
-        "initialize",
-        [
-            Address(admin),
-            build_asset_enum(AssetType.other, base),
-            Uint32(decimals),
-            Uint32(resolution),
-        ],
-    )
+    func_name = "initialize"
+    args = [
+        Address(admin),
+        build_asset_enum(AssetType.other, base),
+        Uint32(decimals),
+        Uint32(resolution),
+    ]
+    contract_auth = build_contract_auth(state["contract_id"], func_name, args)
+    invoke_and_output(func_name, args, auth=[contract_auth])
 
 
 @app.command(help="Invoke the admin() function of the contract")
