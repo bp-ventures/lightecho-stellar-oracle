@@ -193,14 +193,19 @@
 
         switch (func) {
           case "assets":
+            await submitTx(contract.call("assets"));
             break;
           case "lastprice":
+            await submitTx(
+              contract.call("lastprice", getAssetEnum(assetCode, assetIssuer))
+            );
             break;
           case "lastprices":
             break;
           case "prices":
             break;
           case "sources":
+            await submitTx(contract.call("sources"));
             break;
           case "lastprice_by_source":
             await submitTx(
@@ -216,12 +221,16 @@
           case "prices_by_source":
             break;
           case "base":
+            await submitTx(contract.call("base"));
             break;
           case "decimals":
+            await submitTx(contract.call("decimals"));
             break;
           case "resolution":
+            await submitTx(contract.call("resolution"));
             break;
           case "admin":
+            await submitTx(contract.call("admin"));
             break;
           case "add_price":
             break;
@@ -302,22 +311,26 @@
                   <option value="">Select function</option>
                   <option value="assets">assets</option>
                   <option value="lastprice">lastprice</option>
-                  <option value="lastprices">lastprices</option>
-                  <option value="prices">prices</option>
+                  <option value="lastprices" disabled>
+                    lastprices
+                  </option>
+                  <option value="prices" disabled>
+                    prices
+                  </option>
                   <option value="sources">sources</option>
                   <option value="lastprice_by_source">
                     lastprice_by_source
                   </option>
-                  <option value="lastprices_by_source">
+                  <option value="lastprices_by_source" disabled>
                     lastprices_by_source
                   </option>
-                  <option value="prices_by_source">prices_by_source</option>
+                  <option value="prices_by_source" disabled>prices_by_source</option>
                   <option value="base">base</option>
                   <option value="decimals">decimals</option>
                   <option value="resolution">resolution</option>
                   <option value="admin">admin</option>
-                  <option value="add_price">add_price</option>
-                  <option value="remove_prices">remove_prices</option>
+                  <option value="add_price" disabled>add_price</option>
+                  <option value="remove_prices" disabled>remove_prices</option>
                 </select>
               </div>
             </div>
