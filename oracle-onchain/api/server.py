@@ -59,6 +59,8 @@ def parse_sc_val(sc_val):
         return parse_sc_map(sc_val.map.sc_map)
     if sc_val.vec is not None:
         return parse_sc_vec(sc_val.vec.sc_vec)
+    if sc_val.sym is not None:
+        return sc_val.sym.sc_symbol.decode()
     raise ValueError("Could not parse sc_val")
 
 
