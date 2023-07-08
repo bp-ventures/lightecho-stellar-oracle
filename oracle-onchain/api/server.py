@@ -144,6 +144,13 @@ def set_rate():
     return {"success": True, "output": output}
 
 
+def parse_sc_vec(sc_vec):
+    vec = []
+    for val in sc_vec.sc_vec:
+        vec.append(parse_sc_val(val))
+    return vec
+
+
 @app.route("/soroban/parse-result-xdr/", methods=["POST", "OPTIONS"])
 def soroban_parse_tx_response():
     if not request.json:
@@ -166,8 +173,22 @@ def soroban_parse_tx_response():
             value = parse_sc_val(entry.val)
             data[key] = value
         return {**common_resp, "value": data}
+    elif result.type in [
+        SCValType.SCV_U32,
+        SCValType.SCV_I32,
+        SCValType.SCV_U64,
+        SCValType.SCV_I64,
+        SCValType.SCV_U128,
+        SCValType.SCV_I128,
+        SCValType.SCV_SYMBOL,
+    ]:
+        return {**common_resp, "value": parse_sc_val(result)}
+    elif result.type == SCValType.SCV_ADDRESS:
+        return {**common_resp, "value": str(result.address)}
     elif result.type == SCValType.SCV_SYMBOL:
         return {**common_resp, "value": result.sym.sc_symbol.decode()}
+    elif result.type == SCValType.SCV_VEC:
+        return {**common_resp, "value": parse_sc_vec(result.vec)}
     else:
         return {**common_resp, "error": "Unexpected result type"}, 400
 

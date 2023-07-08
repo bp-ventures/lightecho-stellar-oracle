@@ -82,6 +82,7 @@
       const [source, Set_source] = useState("1");
       const [assetCode, Set_assetCode] = useState("USD");
       const [assetIssuer, Set_assetIssuer] = useState(undefined);
+      const [records, Set_records] = useState(0);
       const [logs, Set_logs] = useState([]);
       const messagesEndRef = createRef();
 
@@ -201,6 +202,13 @@
             );
             break;
           case "lastprices":
+            await submitTx(
+              contract.call(
+                "lastprices",
+                getAssetEnum(assetCode, assetIssuer),
+                SorobanClient.xdr.ScVal.scvU32(parseInt(records))
+              )
+            );
             break;
           case "prices":
             break;
@@ -311,9 +319,7 @@
                   <option value="">Select function</option>
                   <option value="assets">assets</option>
                   <option value="lastprice">lastprice</option>
-                  <option value="lastprices" disabled>
-                    lastprices
-                  </option>
+                  <option value="lastprices">lastprices</option>
                   <option value="prices" disabled>
                     prices
                   </option>
@@ -324,13 +330,19 @@
                   <option value="lastprices_by_source" disabled>
                     lastprices_by_source
                   </option>
-                  <option value="prices_by_source" disabled>prices_by_source</option>
+                  <option value="prices_by_source" disabled>
+                    prices_by_source
+                  </option>
                   <option value="base">base</option>
                   <option value="decimals">decimals</option>
                   <option value="resolution">resolution</option>
                   <option value="admin">admin</option>
-                  <option value="add_price" disabled>add_price</option>
-                  <option value="remove_prices" disabled>remove_prices</option>
+                  <option value="add_price" disabled>
+                    add_price
+                  </option>
+                  <option value="remove_prices" disabled>
+                    remove_prices
+                  </option>
                 </select>
               </div>
             </div>
@@ -364,6 +376,18 @@
                     />
                   </div>
                 </>
+              )}
+              {["lastprices", "lastprices_by_source"].includes(func) && (
+                <div className="col-12 col-sm-3">
+                  <input
+                    className="form-control mt-2"
+                    type="text"
+                    placeholder="Records"
+                    aria-label="Records"
+                    defaultValue="5"
+                    onChange={(e) => Set_records(e.target.value)}
+                  />
+                </div>
               )}
               {[
                 "lastprice_by_source",
