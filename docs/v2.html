@@ -30,6 +30,7 @@
   <script src="./js/soroban-client-0.8.1.min.js"></script>
   <script src="./js/axios.min.js"></script>
   <script src="./js/ethereumjs-tx-1.3.3.min.js"></script>
+  <script src="./js/luxon.min.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -77,12 +78,16 @@
     }
 
     const App = () => {
+      const defaultRecords = 5;
+
       const [running, Set_running] = useState(false);
       const [func, Set_func] = useState(undefined);
       const [source, Set_source] = useState("1");
       const [assetCode, Set_assetCode] = useState("USD");
       const [assetIssuer, Set_assetIssuer] = useState(undefined);
-      const [records, Set_records] = useState(0);
+      const [records, Set_records] = useState(defaultRecords);
+      const [startTimestamp, Set_startTimestamp] = useState(undefined);
+      const [endTimestamp, Set_endTimestamp] = useState(undefined);
       const [logs, Set_logs] = useState([]);
       const messagesEndRef = createRef();
 
@@ -100,12 +105,15 @@
           Set_logs((prev) => [
             ...prev,
             <>
-              <span>{`[${new Date().toISOString()}] `}</span>
+              <span>{`[${luxon.DateTime.now().toISO()}] `}</span>
               <span>{msg}</span>
             </>,
           ]);
         } else {
-          Set_logs((prev) => [...prev, `[${new Date().toISOString()}] ${msg}`]);
+          Set_logs((prev) => [
+            ...prev,
+            `[${luxon.DateTime.now().toISO()}] ${msg}`,
+          ]);
         }
       };
 
@@ -211,6 +219,18 @@
             );
             break;
           case "prices":
+            await submitTx(
+              contract.call(
+                "prices",
+                getAssetEnum(assetCode, assetIssuer),
+                numberToScvU64(
+                  luxon.DateTime.fromISO(startTimestamp).toUnixInteger()
+                ),
+                numberToScvU64(
+                  luxon.DateTime.fromISO(endTimestamp).toUnixInteger()
+                )
+              )
+            );
             break;
           case "sources":
             await submitTx(contract.call("sources"));
@@ -225,8 +245,29 @@
             );
             break;
           case "lastprices_by_source":
+            await submitTx(
+              contract.call(
+                "lastprices_by_source",
+                SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
+                getAssetEnum(assetCode, assetIssuer),
+                SorobanClient.xdr.ScVal.scvU32(parseInt(records))
+              )
+            );
             break;
           case "prices_by_source":
+            await submitTx(
+              contract.call(
+                "prices_by_source",
+                SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
+                getAssetEnum(assetCode, assetIssuer),
+                numberToScvU64(
+                  luxon.DateTime.fromISO(startTimestamp).toUnixInteger()
+                ),
+                numberToScvU64(
+                  luxon.DateTime.fromISO(endTimestamp).toUnixInteger()
+                )
+              )
+            );
             break;
           case "base":
             await submitTx(contract.call("base"));
@@ -320,19 +361,15 @@
                   <option value="assets">assets</option>
                   <option value="lastprice">lastprice</option>
                   <option value="lastprices">lastprices</option>
-                  <option value="prices" disabled>
-                    prices
-                  </option>
+                  <option value="prices">prices</option>
                   <option value="sources">sources</option>
                   <option value="lastprice_by_source">
                     lastprice_by_source
                   </option>
-                  <option value="lastprices_by_source" disabled>
+                  <option value="lastprices_by_source">
                     lastprices_by_source
                   </option>
-                  <option value="prices_by_source" disabled>
-                    prices_by_source
-                  </option>
+                  <option value="prices_by_source">prices_by_source</option>
                   <option value="base">base</option>
                   <option value="decimals">decimals</option>
                   <option value="resolution">resolution</option>
@@ -377,6 +414,34 @@
                   </div>
                 </>
               )}
+              {["prices", "prices_by_source"].includes(func) && (
+                <>
+                  <div className="col-12 col-sm-3">
+                    <input
+                      className="form-control mt-2"
+                      type="text"
+                      type="datetime-local"
+                      step="1"
+                      aria-label="Start timestamp"
+                      onChange={(e) => {
+                        Set_startTimestamp(e.target.value);
+                      }}
+                    />
+                  </div>
+                  <div className="col-12 col-sm-3">
+                    <input
+                      className="form-control mt-2"
+                      type="text"
+                      type="datetime-local"
+                      step="1"
+                      aria-label="End timestamp"
+                      onChange={(e) => {
+                        Set_endTimestamp(e.target.value);
+                      }}
+                    />
+                  </div>
+                </>
+              )}
               {["lastprices", "lastprices_by_source"].includes(func) && (
                 <div className="col-12 col-sm-3">
                   <input
@@ -384,7 +449,7 @@
                     type="text"
                     placeholder="Records"
                     aria-label="Records"
-                    defaultValue="5"
+                    defaultValue={defaultRecords}
                     onChange={(e) => Set_records(e.target.value)}
                   />
                 </div>
