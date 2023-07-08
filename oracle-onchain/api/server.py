@@ -55,6 +55,10 @@ def parse_sc_val(sc_val):
         low = sc_val.i128.lo.uint64
         uint128 = (high << 64) | low
         return uint128
+    if sc_val.map is not None:
+        return parse_sc_map(sc_val.map.sc_map)
+    if sc_val.vec is not None:
+        return parse_sc_vec(sc_val.vec.sc_vec)
     raise ValueError("Could not parse sc_val")
 
 
@@ -151,6 +155,15 @@ def parse_sc_vec(sc_vec):
     return vec
 
 
+def parse_sc_map(sc_map):
+    data = {}
+    for entry in sc_map:
+        key = entry.key.sym.sc_symbol.decode()
+        value = parse_sc_val(entry.val)
+        data[key] = value
+    return data
+
+
 @app.route("/soroban/parse-result-xdr/", methods=["POST", "OPTIONS"])
 def soroban_parse_tx_response():
     if not request.json:
@@ -166,13 +179,8 @@ def soroban_parse_tx_response():
     if result.type == SCValType.SCV_VOID:
         return common_resp
     elif result.type == SCValType.SCV_MAP:
-        data = {}
         assert result.map is not None
-        for entry in result.map.sc_map:
-            key = entry.key.sym.sc_symbol.decode()
-            value = parse_sc_val(entry.val)
-            data[key] = value
-        return {**common_resp, "value": data}
+        return {**common_resp, "value": parse_sc_map(result.map.sc_map)}
     elif result.type in [
         SCValType.SCV_U32,
         SCValType.SCV_I32,
