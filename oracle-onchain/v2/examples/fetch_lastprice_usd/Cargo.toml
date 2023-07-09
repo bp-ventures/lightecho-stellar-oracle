@@ -1,5 +1,5 @@
 [package]
-name = "lastprice_usd"
+name = "fetch_lastprice_usd"
 version = "0.1.0"
 edition = "2021"
 publish = false
