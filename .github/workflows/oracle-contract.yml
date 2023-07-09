@@ -20,4 +20,4 @@ jobs:
       - name: Oracle code coverage
         run: cd oracle-onchain/v2/contract && cargo llvm-cov --all-features --fail-under-lines 95
       - name: Oracle Consumer Lastprice USD code coverage
-        run: cd oracle-onchain/v2/oracle-consumer-examples/lastprice_usd && cargo llvm-cov --all-features --fail-under-lines 95
+        run: cd oracle-onchain/v2/rust-examples/lastprice_usd && cargo llvm-cov --all-features --fail-under-lines 95
