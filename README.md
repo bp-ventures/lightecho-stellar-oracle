@@ -12,7 +12,9 @@ This repository contains:
 - Examples on how to use the Oracle from other contracts
   - [Examples](./oracle-onchain/v2/examples)
 
-#### 
+#### Featured projects
+
+Have a project that uses our Oracle? Feel free to share with us and we'll be happy to list it here!
 
 -----------
 
