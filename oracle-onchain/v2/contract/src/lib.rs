@@ -5,7 +5,7 @@ use soroban_sdk::{contractimpl, contracttype, Address, Env, Map, Set, Symbol, Ve
 #[derive(Clone, Copy)]
 #[contracttype]
 #[repr(u32)]
-pub enum DataKey {
+enum DataKey {
     Base = 0,
     Decimals = 1,
     Resolution = 2,

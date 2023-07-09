@@ -13,7 +13,7 @@ Follow instructions from Stellar docs:
 https://soroban.stellar.org/docs/getting-started/setup
 
 ```
-cargo build --target wasm32-unknown-unknown --release
+make
 
 soroban contract deploy \
     --wasm target/wasm32-unknown-unknown/release/oracle.wasm \

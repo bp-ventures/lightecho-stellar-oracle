@@ -28,7 +28,7 @@ export SOURCE_SECRET
 set -e
 
 echo "➤ Building contract"
-cargo build --target wasm32-unknown-unknown --release
+make
 
 echo "➤ Deploying contract to Futurenet"
 contract_id=$(soroban contract deploy \
