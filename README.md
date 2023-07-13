@@ -9,6 +9,8 @@ This repository contains:
 - A Web-based app for interacting with the deployed contract
   - [Visit web app](https://bp-ventures.github.io/lightecho-stellar-oracle/)
   - [Web app source code](./docs/v2.html)
+- A JS fiddle for testing and debugging the contract calls
+  - [Visit JS fiddle](https://playcode.io/1532409)
 - Examples on how to use the Oracle from other contracts
   - [Examples](./oracle-onchain/v2/examples)
 
