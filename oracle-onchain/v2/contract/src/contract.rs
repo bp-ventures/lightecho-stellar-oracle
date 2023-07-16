@@ -1,8 +1,7 @@
 use soroban_sdk::{contract, contractimpl, Address, Env, Map, Vec};
 
-use crate::admin;
 use crate::metadata;
-use crate::storage_types::{Asset, DataKey, PriceData};
+use crate::storage_types::{Asset, DataKey, PriceData, INSTANCE_BUMP_AMOUNT};
 
 pub trait OracleTrait {
     fn initialize(env: Env, admin: Address, base: Asset, decimals: u32, resolution: u32);
@@ -66,7 +65,7 @@ pub struct Oracle;
 #[contractimpl]
 impl OracleTrait for Oracle {
     fn initialize(env: Env, admin: Address, base: Asset, decimals: u32, resolution: u32) {
-        if admin::has_admin(&env) {
+        if metadata::has_admin(&env) {
             panic!("already initialized")
         }
 
@@ -75,19 +74,50 @@ impl OracleTrait for Oracle {
     }
 
     fn has_admin(env: Env) -> bool {
-        return admin::has_admin(&env);
+        env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
+        return metadata::has_admin(&env);
     }
 
     fn write_admin(env: Env, id: Address) {
-        admin::write_admin(&env, &id);
+        env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
+        metadata::write_admin(&env, &id);
     }
 
     fn read_admin(env: Env) -> Address {
-        return admin::read_admin(&env);
+        env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
+        return metadata::read_admin(&env);
     }
 
     fn add_price(env: Env, source: u32, asset: Asset, price: i128) {
-        return admin::add_price(&env, &source, &asset, &price);
+        metadata::read_admin(&env).require_auth();
+        env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
+        let mut prices = read_prices(&env);
+        let asset_map_option = prices.get(source);
+        let mut asset_map;
+        match asset_map_option {
+            Some(asset_map_result) => asset_map = asset_map_result,
+            None => {
+                asset_map = Map::<Asset, Vec<PriceData>>::new(&env);
+            }
+        }
+        let price_data_vec_option = asset_map.get(asset.clone());
+        let mut price_data_vec;
+        match price_data_vec_option {
+            Some(price_data_vec_result) => {
+                price_data_vec = price_data_vec_result;
+            }
+            None => {
+                price_data_vec = Vec::<PriceData>::new(&env);
+            }
+        }
+        let timestamp = env.ledger().timestamp();
+        if price_data_vec.len() >= 10 {
+            price_data_vec.pop_front();
+        }
+        price_data_vec.push_back(PriceData::new(price, timestamp));
+        asset_map.set(asset.clone(), price_data_vec);
+        prices.set(source, asset_map);
+        write_prices(&env, &prices);
     }
 
     fn remove_prices(
@@ -97,7 +127,8 @@ impl OracleTrait for Oracle {
         start_timestamp: Option<u64>,
         end_timestamp: Option<u64>,
     ) {
-        return admin::remove_prices(&env, &sources, &assets, &start_timestamp, &end_timestamp);
+        env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
+        return remove_prices(&env, &sources, &assets, &start_timestamp, &end_timestamp);
     }
 
     fn base(env: Env) -> Asset {
@@ -204,6 +235,79 @@ impl OracleTrait for Oracle {
         }
         return None;
     }
+}
+
+fn is_u32_in_vec(n: u32, vec: &Vec<u32>) -> bool {
+    for item in vec.iter() {
+        if item == n {
+            return true;
+        }
+    }
+    return false;
+}
+
+fn is_asset_in_vec(asset: Asset, vec: &Vec<Asset>) -> bool {
+    for item in vec.iter() {
+        if item == asset {
+            return true;
+        }
+    }
+    return false;
+}
+
+pub fn remove_prices(
+    env: &Env,
+    sources: &Vec<u32>,
+    assets: &Vec<Asset>,
+    start_timestamp: &Option<u64>,
+    end_timestamp: &Option<u64>,
+) {
+    metadata::read_admin(&env).require_auth();
+    let prices = read_prices(env);
+    let mut new_prices = Map::<u32, Map<Asset, Vec<PriceData>>>::new(&env);
+    let sources_len = sources.len();
+    let assets_len = assets.len();
+    for (source, asset_map) in prices.iter() {
+        if sources_len > 0 && !is_u32_in_vec(source, &sources) {
+            new_prices.set(source, asset_map);
+            continue;
+        }
+        let mut new_asset_map = Map::<Asset, Vec<PriceData>>::new(&env);
+        for (asset, price_data_vec) in asset_map.iter() {
+            if assets_len > 0 && !is_asset_in_vec(asset.clone(), &assets) {
+                new_asset_map.set(asset.clone(), price_data_vec);
+                continue;
+            }
+            let mut new_price_data_vec = Vec::<PriceData>::new(&env);
+            for price_data in price_data_vec.iter() {
+                match start_timestamp {
+                    Some(t) => {
+                        if *t < price_data.timestamp {
+                            new_price_data_vec.push_back(price_data);
+                            continue;
+                        }
+                    }
+                    None => {}
+                }
+                match end_timestamp {
+                    Some(t) => {
+                        if *t > price_data.timestamp {
+                            new_price_data_vec.push_back(price_data);
+                            continue;
+                        }
+                    }
+                    None => {}
+                }
+            }
+            if new_price_data_vec.len() > 0 {
+                new_asset_map.set(asset.clone(), new_price_data_vec)
+            }
+        }
+        if new_asset_map.keys().len() > 0 {
+            new_prices.set(source, new_asset_map);
+        }
+    }
+    write_prices(env, &new_prices);
 }
 
 pub fn read_prices(env: &Env) -> Map<u32, Map<Asset, Vec<PriceData>>> {

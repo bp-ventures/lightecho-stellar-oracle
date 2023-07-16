@@ -1,9 +1,9 @@
 use soroban_sdk::{contracttype, Address, Symbol};
 
 pub(crate) const INSTANCE_BUMP_AMOUNT: u32 = 34560; // 2 days
-pub(crate) const BALANCE_BUMP_AMOUNT: u32 = 518400; // 30 days
+pub(crate) const PERSISTENT_BUMP_AMOUNT: u32 = 518400; // 30 days
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 #[contracttype]
 pub enum DataKey {
     Admin = 0,
@@ -26,7 +26,7 @@ impl PriceData {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 #[contracttype]
 pub enum Asset {
     Stellar(Address),

@@ -41,7 +41,8 @@ fn test_initialize_bad_auth() {
 }
 
 #[test]
-fn test_initialize_auth() {
+#[should_panic]
+fn test_initialize_twice() {
     let env = Env::default();
     let contract_id = env.register_contract(None, Oracle);
     let client = OracleClient::new(&env, &contract_id);

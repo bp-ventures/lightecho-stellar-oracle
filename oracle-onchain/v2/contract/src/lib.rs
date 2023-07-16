@@ -1,7 +1,6 @@
 #![no_std]
 
-mod admin;
-mod metadata;
 mod contract;
+mod metadata;
 mod storage_types;
 mod test;
