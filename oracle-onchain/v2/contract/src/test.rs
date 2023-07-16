@@ -1,11 +1,12 @@
 #![cfg(test)]
 
-use crate::{Asset, Oracle, OracleClient};
+use crate::contract::{Oracle, OracleClient};
+use crate::storage_types::Asset;
 use soroban_sdk::{testutils::Address as _, Address, Env, Vec};
 extern crate std;
 
 fn is_asset_in_vec(asset: Asset, vec: &Vec<Asset>) -> bool {
-    for item in vec.iter_unchecked() {
+    for item in vec.iter() {
         if item == asset {
             return true;
         }
@@ -40,7 +41,8 @@ fn test_initialize_bad_auth() {
 }
 
 #[test]
-fn test_initialize_auth() {
+#[should_panic]
+fn test_initialize_twice() {
     let env = Env::default();
     let contract_id = env.register_contract(None, Oracle);
     let client = OracleClient::new(&env, &contract_id);
@@ -63,7 +65,7 @@ fn test_admin() {
     let decimals = 18;
     let resolution = 1;
     client.initialize(&admin, &base, &decimals, &resolution);
-    assert_eq!(client.admin(), admin);
+    assert_eq!(client.read_admin(), admin);
 }
 
 #[test]
@@ -76,7 +78,7 @@ fn test_sources() {
     let decimals = 18;
     let resolution = 1;
     client.initialize(&admin, &base, &decimals, &resolution);
-    assert_eq!(client.admin(), admin);
+    assert_eq!(client.read_admin(), admin);
     let asset1 = Asset::Stellar(Address::random(&env));
     let asset2 = Asset::Stellar(Address::random(&env));
     let price1: i128 = 13579;
@@ -86,14 +88,14 @@ fn test_sources() {
     client.add_price(&source, &asset1, &price1);
     let sources = client.sources();
     assert_eq!(sources.len(), 1);
-    for s in sources.iter_unchecked() {
+    for s in sources.iter() {
         assert_eq!(s, 2);
     }
     source = 3;
     client.add_price(&source, &asset2, &price2);
     let sources = client.sources();
     assert_eq!(sources.len(), 2);
-    for (index_usize, s) in sources.iter_unchecked().enumerate() {
+    for (index_usize, s) in sources.iter().enumerate() {
         let index: u32 = index_usize.try_into().unwrap();
         if index == 0 {
             assert_eq!(s, 2);
@@ -125,8 +127,7 @@ fn test_lastprices() {
 
     let prices = client.lastprices(&asset, &10);
     assert_eq!(prices.len(), 4);
-    for _p in prices.iter() {
-        let p = _p.unwrap();
+    for p in prices.iter() {
         assert_eq!(p.price, price);
         break;
     }
@@ -327,7 +328,7 @@ fn test_remove_prices() {
 
     let sources = client.sources();
     assert_eq!(sources.len(), 1);
-    for s in sources.iter_unchecked() {
+    for s in sources.iter() {
         if s != source1 {
             panic!("unexpected source")
         }
@@ -369,7 +370,7 @@ fn test_assets() {
     let decimals = 18;
     let resolution = 1;
     client.initialize(&admin, &base, &decimals, &resolution);
-    assert_eq!(client.admin(), admin);
+    assert_eq!(client.read_admin(), admin);
     let asset1 = Asset::Stellar(Address::random(&env));
     let asset2 = Asset::Stellar(Address::random(&env));
     let price1: i128 = 13579;
@@ -379,7 +380,7 @@ fn test_assets() {
     client.add_price(&source, &asset1, &price1);
     let mut assets = client.assets();
     assert_eq!(assets.len(), 1);
-    for a in assets.iter_unchecked() {
+    for a in assets.iter() {
         assert_eq!(a, asset1);
     }
     source = 3;
@@ -442,8 +443,7 @@ fn test_prices() {
     let end_timestamp = start_timestamp;
     let prices = client.prices(&asset, &start_timestamp, &end_timestamp);
     assert_eq!(prices.len(), 1);
-    for _p in prices.iter() {
-        let p = _p.unwrap();
+    for p in prices.iter() {
         assert_eq!(p.price, price);
         break;
     }
@@ -452,8 +452,7 @@ fn test_prices() {
     let end_timestamp = start_timestamp;
     let prices = client.prices_by_source(&0, &asset, &start_timestamp, &end_timestamp);
     assert_eq!(prices.len(), 1);
-    for _p in prices.iter() {
-        let p = _p.unwrap();
+    for p in prices.iter() {
         assert_eq!(p.price, price);
         break;
     }
