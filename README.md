@@ -1,5 +1,9 @@
 Lightecho Oracle - Oracle smart contract for Soroban
 
+**Due to the latest breaking changes to Soroban network, many features are broken at
+this moment. We're actively working on fixing the issues and make our code
+work with the latest Soroban updates**.
+
 This repository contains:
 - Oracle contract implementation for the Soroban Smart Contracts platform
   - [Contract source code](./oracle-onchain/v2/contract)
