@@ -1,7 +1,9 @@
 use soroban_sdk::{contract, contractimpl, Address, Env, Map, Vec};
 
 use crate::metadata;
-use crate::storage_types::{Asset, DataKey, PriceData, INSTANCE_BUMP_AMOUNT};
+use crate::storage_types::{
+    Asset, DataKey, PriceData, INSTANCE_BUMP_AMOUNT, TEMPORARY_BUMP_AMOUNT,
+};
 
 pub trait OracleTrait {
     fn initialize(env: Env, admin: Address, base: Asset, decimals: u32, resolution: u32);
@@ -311,9 +313,13 @@ pub fn remove_prices(
 }
 
 pub fn read_prices(env: &Env) -> Map<u32, Map<Asset, Vec<PriceData>>> {
-    return env.storage().temporary().get(&DataKey::Prices).unwrap();
+    let key = DataKey::Prices;
+    env.storage().temporary().bump(&key, TEMPORARY_BUMP_AMOUNT);
+    return env.storage().temporary().get(&key).unwrap();
 }
 
 pub fn write_prices(env: &Env, prices: &Map<u32, Map<Asset, Vec<PriceData>>>) {
-    return env.storage().temporary().set(&DataKey::Prices, prices);
+    let key = DataKey::Prices;
+    env.storage().temporary().bump(&key, TEMPORARY_BUMP_AMOUNT);
+    return env.storage().temporary().set(&key, prices);
 }
