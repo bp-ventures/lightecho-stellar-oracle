@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contractimpl, Address, Env, Symbol};
+use soroban_sdk::{contract, contractimpl, Address, Env, Symbol};
 
 mod oracle {
     soroban_sdk::contractimport!(
@@ -8,6 +8,7 @@ mod oracle {
     );
 }
 
+#[contract]
 pub struct OracleConsumer;
 
 #[contractimpl]
