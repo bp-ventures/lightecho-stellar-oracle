@@ -11,9 +11,15 @@ from typing import Optional
 from colorama import init as colorama_init
 from colorama import Fore
 from colorama import Style
-from stellar_sdk import Keypair, StrKey, TransactionBuilder, TransactionEnvelope
+from stellar_sdk import (
+    InvokeHostFunction,
+    Keypair,
+    StrKey,
+    TransactionBuilder,
+    TransactionEnvelope,
+)
 from stellar_sdk import xdr as stellar_xdr
-from stellar_sdk.soroban import AuthorizedInvocation, ContractAuth
+from stellar_sdk.soroban.authorization_entry import AuthorizationEntry
 from stellar_sdk.soroban.server import SorobanServer
 from stellar_sdk.soroban.soroban_rpc import GetTransactionStatus, SendTransactionStatus
 from stellar_sdk.soroban.types import (
@@ -73,14 +79,17 @@ def vprint(msg: str):
         print(msg)
 
 
-def send_tx(tx: TransactionEnvelope):
+def send_tx(tx: TransactionEnvelope, sign_func=None):
     vprint(f"preparing transaction: {tx.to_xdr()}")
-    prepared_tx = state["soroban_server"].prepare_transaction(tx)
-    vprint(f"prepared transaction: {prepared_tx.to_xdr()}")
+    tx = state["soroban_server"].prepare_transaction(tx)
+    vprint(f"prepared transaction: {tx.to_xdr()}")
 
-    prepared_tx.sign(state["kp"])
+    if sign_func is not None:
+        sign_func(tx)
 
-    send_transaction_data = state["soroban_server"].send_transaction(prepared_tx)
+    tx.sign(state["kp"])
+
+    send_transaction_data = state["soroban_server"].send_transaction(tx)
     vprint(f"sent transaction: {send_transaction_data}")
     if send_transaction_data.status != SendTransactionStatus.PENDING:
         raise RuntimeError(f"Failed to send transaction: {send_transaction_data}")
@@ -99,7 +108,7 @@ def wait_tx(tx_hash: str):
     return get_transaction_data
 
 
-def invoke_contract_function(function_name, parameters=[], auth=None):
+def invoke_contract_function(function_name, parameters=[], sign_func=None):
     tx = (
         TransactionBuilder(
             state["source_acc"],
@@ -111,12 +120,11 @@ def invoke_contract_function(function_name, parameters=[], auth=None):
             state["contract_id"],
             function_name,
             parameters,
-            auth=auth,  # type: ignore
         )
         .build()
     )
 
-    tx_hash, tx_data = send_tx(tx)
+    tx_hash, tx_data = send_tx(tx, sign_func=sign_func)
     vprint(f"transaction: {tx_data}")
 
     if tx_data.status != GetTransactionStatus.SUCCESS:
@@ -206,8 +214,10 @@ def output_tx_data(tx_data):
         abort(f"Error: {tx_data}")
 
 
-def invoke_and_output(function_name, parameters=[], auth=None):
-    tx_hash, tx_data = invoke_contract_function(function_name, parameters, auth)
+def invoke_and_output(function_name, parameters=[], sign_func=None):
+    tx_hash, tx_data = invoke_contract_function(
+        function_name, parameters, sign_func=sign_func
+    )
     print("Output:")
     output_tx_data(tx_data)
     print("Horizon tx:")
@@ -232,19 +242,16 @@ def build_asset_enum(asset_type: AssetType, asset: str):
         return ValueError(f"unexpected asset_type: {asset_type}")
 
 
-def build_contract_auth(contract_id, func_name, args, address=None, nounce=None):
-    invocation = AuthorizedInvocation(
-        contract_id=contract_id,
-        function_name=func_name,
-        args=args,
-        sub_invocations=[],
-    )
-    contract_auth = ContractAuth(
-        address=address,
-        nonce=nounce,
-        root_invocation=invocation,
-    )
-    return contract_auth
+def gen_sign_func(signer_secret):
+    def sign_f(tx):
+        latest_ledger = state["soroban_server"].get_latest_ledger().sequence
+        op = tx.transaction.operations[0]
+        assert isinstance(op, InvokeHostFunction)
+        authorization_entry: AuthorizationEntry = op.auth[0]
+        authorization_entry.set_signature_expiration_ledger(latest_ledger + 3)
+        authorization_entry.sign(signer_secret, state["network_passphrase"])
+
+    return sign_f
 
 
 @app.command(help="Invoke the initialize() function of the contract")
@@ -256,8 +263,7 @@ def initialize(admin: str, base: str, decimals: int, resolution: int):
         Uint32(decimals),
         Uint32(resolution),
     ]
-    contract_auth = build_contract_auth(state["contract_id"], func_name, args)
-    invoke_and_output(func_name, args, auth=[contract_auth])
+    invoke_and_output(func_name, args, sign_func=gen_sign_func(state["kp"]))
 
 
 @app.command(help="Invoke the admin() function of the contract")
@@ -409,8 +415,7 @@ def add_price(source: int, asset_type: AssetType, asset: str, price: str):
         build_asset_enum(asset_type, asset),
         Int128(price_as_int),
     ]
-    contract_auth = build_contract_auth(state["contract_id"], func_name, args)
-    invoke_and_output(func_name, args, auth=[contract_auth])
+    invoke_and_output(func_name, args, sign_func=gen_sign_func(state["kp"]))
 
 
 @app.callback()
