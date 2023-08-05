@@ -175,6 +175,7 @@ def soroban_parse_tx_response():
         return {"error": "Missing 'xdr' from JSON payload"}, 400
     transaction_meta = stellar_xdr.TransactionMeta.from_xdr(xdr)  # type: ignore
     # TODO handle multiple results[]
+    assert transaction_meta.v3.soroban_meta
     result = transaction_meta.v3.soroban_meta.return_value
     common_resp = {"type": result.type}
     if result.type == SCValType.SCV_VOID:
