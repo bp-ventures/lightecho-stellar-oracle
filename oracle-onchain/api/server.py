@@ -166,6 +166,13 @@ def parse_sc_map(sc_map):
     return data
 
 
+def get_enum_variable_name(enum_class, value):
+    for name, member in enum_class.__members__.items():
+        if member.value == value:
+            return name
+    raise ValueError(f"Value {value} not found in the {enum_class.__name__} IntEnum.")
+
+
 @app.route("/soroban/parse-result-xdr/", methods=["POST", "OPTIONS"])
 def soroban_parse_tx_response():
     if not request.json:
@@ -177,7 +184,7 @@ def soroban_parse_tx_response():
     # TODO handle multiple results[]
     assert transaction_meta.v3.soroban_meta
     result = transaction_meta.v3.soroban_meta.return_value
-    common_resp = {"type": result.type}
+    common_resp = {"type": get_enum_variable_name(SCValType, result.type)}
     if result.type == SCValType.SCV_VOID:
         return common_resp
     elif result.type == SCValType.SCV_MAP:
