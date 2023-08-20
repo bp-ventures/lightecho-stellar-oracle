@@ -81,6 +81,7 @@ def vprint(msg: str):
 
 def send_tx(tx: TransactionEnvelope, sign_func=None):
     vprint(f"preparing transaction: {tx.to_xdr()}")
+    import pdb; pdb.set_trace()
     tx = state["soroban_server"].prepare_transaction(tx)
     vprint(f"prepared transaction: {tx.to_xdr()}")
 
@@ -252,6 +253,97 @@ def gen_sign_func(signer_secret):
         authorization_entry.sign(signer_secret, state["network_passphrase"])
 
     return sign_f
+
+
+@app.command(help="Deploy the contract to Stellar blockchain")
+def deploy():
+    contract_wasm_path = str(
+        (
+            Path(__file__).parent.parent
+            / "contract"
+            / "target"
+            / "wasm32-unknown-unknown"
+            / "release"
+            / "oracle.wasm"
+        ).resolve()
+    )
+    tx = (
+        TransactionBuilder(state["source_acc"], state["network_passphrase"])
+        .set_timeout(300)
+        .append_upload_contract_wasm_op(
+            contract=contract_wasm_path,  # the path to the contract, or binary data
+        )
+        .build()
+    )
+
+    tx = state["soroban_server"].prepare_transaction(tx)
+    tx.sign(state["kp"])
+    send_transaction_data = state["soroban_server"].send_transaction(tx)
+    vprint(f"sent transaction: {send_transaction_data}")
+
+    while True:
+        vprint("waiting for transaction to be confirmed...")
+        get_transaction_data = state["soroban_server"].get_transaction(
+            send_transaction_data.hash
+        )
+        if get_transaction_data.status != GetTransactionStatus.NOT_FOUND:
+            break
+        time.sleep(3)
+
+    vprint(f"transaction: {get_transaction_data}")
+
+    wasm_id = None
+    if get_transaction_data.status == GetTransactionStatus.SUCCESS:
+        assert get_transaction_data.result_meta_xdr is not None
+        transaction_meta = stellar_xdr.TransactionMeta.from_xdr(  # type: ignore
+            get_transaction_data.result_meta_xdr
+        )
+        wasm_id = transaction_meta.v3.soroban_meta.return_value.bytes.sc_bytes.hex()  # type: ignore
+        vprint(f"wasm id: {wasm_id}")
+
+    assert wasm_id, "wasm id should not be empty"
+
+    vprint("creating contract...")
+
+    source = state["soroban_server"].load_account(
+        state["kp"].public_key
+    )  # refresh source account, because the current SDK will increment the sequence number by one after building a transaction
+
+    tx = (
+        TransactionBuilder(source, state["network_passphrase"])
+        .set_timeout(300)
+        .append_create_contract_op(
+            wasm_id=wasm_id,
+        )
+        .build()
+    )
+
+    tx = state["soroban_server"].prepare_transaction(tx)
+    tx.sign(state["kp"])
+
+    send_transaction_data = state["soroban_server"].send_transaction(tx)
+    vprint(f"sent transaction: {send_transaction_data}")
+
+    while True:
+        vprint("waiting for transaction to be confirmed...")
+        get_transaction_data = state["soroban_server"].get_transaction(
+            send_transaction_data.hash
+        )
+        if get_transaction_data.status != GetTransactionStatus.NOT_FOUND:
+            break
+        time.sleep(3)
+
+    vprint(f"transaction: {get_transaction_data}")
+
+    if get_transaction_data.status == GetTransactionStatus.SUCCESS:
+        assert get_transaction_data.result_meta_xdr is not None
+        transaction_meta = stellar_xdr.TransactionMeta.from_xdr(  # type: ignore
+            get_transaction_data.result_meta_xdr
+        )
+        result = transaction_meta.v3.soroban_meta.return_value.address.contract_id.hash  # type: ignore
+        contract_id = StrKey.encode_contract(result)
+        vprint(f"contract id: {contract_id}")
+        print(contract_id)
 
 
 @app.command(help="Invoke the initialize() function of the contract")

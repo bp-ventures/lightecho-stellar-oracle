@@ -37,6 +37,10 @@ contract_id=$(soroban contract deploy \
     --rpc-url https://rpc-futurenet.stellar.org:443 \
     --network-passphrase 'Test SDF Future Network ; October 2022')
 
+if [ -z "$contract_id" ]; then
+    printf "${RED}Failed to deploy contract${NC}\n"
+    exit 1
+fi
 printf "${GREEN}Deployed contract ID: ${contract_id}${NC}\n"
 
 echo "➤ Initializing contract"
