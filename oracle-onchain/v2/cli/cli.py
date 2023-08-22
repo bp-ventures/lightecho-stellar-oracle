@@ -50,12 +50,14 @@ app = typer.Typer()
 state = {
     "verbose": False,
     "source_secret": local_settings.SOURCE_SECRET,
+    "admin_secret": local_settings.ADMIN_SECRET,
     "rpc_server_url": local_settings.RPC_SERVER_URL,
     "contract_id": StrKey.decode_contract(local_settings.CONTRACT_ID).hex(),
     "network_passphrase": local_settings.NETWORK_PASSPHRASE,
     "horizon_url": "https://horizon-futurenet.stellar.org",
 }
 state["kp"] = Keypair.from_secret(state["source_secret"])
+state["admin_kp"] = Keypair.from_secret(state["admin_secret"])
 state["soroban_server"] = SorobanServer(state["rpc_server_url"])
 state["source_acc"] = state["soroban_server"].load_account(state["kp"].public_key)
 
@@ -79,14 +81,22 @@ def vprint(msg: str):
         print(msg)
 
 
-def send_tx(tx: TransactionEnvelope, sign_func=None):
+def sign_tx(tx, signer):
+    latest_ledger = state["soroban_server"].get_latest_ledger().sequence
+    op = tx.transaction.operations[0]
+    assert isinstance(op, InvokeHostFunction)
+    authorization_entry: AuthorizationEntry = op.auth[0]
+    authorization_entry.set_signature_expiration_ledger(latest_ledger + 3)
+    authorization_entry.sign(signer, state["network_passphrase"])
+
+
+def send_tx(tx: TransactionEnvelope, signer=None):
     vprint(f"preparing transaction: {tx.to_xdr()}")
-    import pdb; pdb.set_trace()
     tx = state["soroban_server"].prepare_transaction(tx)
     vprint(f"prepared transaction: {tx.to_xdr()}")
 
-    if sign_func is not None:
-        sign_func(tx)
+    if signer is not None:
+        sign_tx(tx, signer)
 
     tx.sign(state["kp"])
 
@@ -109,7 +119,7 @@ def wait_tx(tx_hash: str):
     return get_transaction_data
 
 
-def invoke_contract_function(function_name, parameters=[], sign_func=None):
+def invoke_contract_function(function_name, parameters=[], signer=None):
     tx = (
         TransactionBuilder(
             state["source_acc"],
@@ -125,7 +135,7 @@ def invoke_contract_function(function_name, parameters=[], sign_func=None):
         .build()
     )
 
-    tx_hash, tx_data = send_tx(tx, sign_func=sign_func)
+    tx_hash, tx_data = send_tx(tx, signer=signer)
     vprint(f"transaction: {tx_data}")
 
     if tx_data.status != GetTransactionStatus.SUCCESS:
@@ -215,9 +225,9 @@ def output_tx_data(tx_data):
         abort(f"Error: {tx_data}")
 
 
-def invoke_and_output(function_name, parameters=[], sign_func=None):
+def invoke_and_output(function_name, parameters=[], signer=None):
     tx_hash, tx_data = invoke_contract_function(
-        function_name, parameters, sign_func=sign_func
+        function_name, parameters, signer=signer
     )
     print("Output:")
     output_tx_data(tx_data)
@@ -241,18 +251,6 @@ def build_asset_enum(asset_type: AssetType, asset: str):
         return Enum("Other", Symbol(asset))
     else:
         return ValueError(f"unexpected asset_type: {asset_type}")
-
-
-def gen_sign_func(signer_secret):
-    def sign_f(tx):
-        latest_ledger = state["soroban_server"].get_latest_ledger().sequence
-        op = tx.transaction.operations[0]
-        assert isinstance(op, InvokeHostFunction)
-        authorization_entry: AuthorizationEntry = op.auth[0]
-        authorization_entry.set_signature_expiration_ledger(latest_ledger + 3)
-        authorization_entry.sign(signer_secret, state["network_passphrase"])
-
-    return sign_f
 
 
 @app.command(help="Deploy the contract to Stellar blockchain")
@@ -355,7 +353,7 @@ def initialize(admin: str, base: str, decimals: int, resolution: int):
         Uint32(decimals),
         Uint32(resolution),
     ]
-    invoke_and_output(func_name, args, sign_func=gen_sign_func(state["kp"]))
+    invoke_and_output(func_name, args, signer=state["admin_kp"])
 
 
 @app.command(help="Invoke the admin() function of the contract")
@@ -507,7 +505,7 @@ def add_price(source: int, asset_type: AssetType, asset: str, price: str):
         build_asset_enum(asset_type, asset),
         Int128(price_as_int),
     ]
-    invoke_and_output(func_name, args, sign_func=gen_sign_func(state["kp"]))
+    invoke_and_output(func_name, args, signer=state["admin_kp"])
 
 
 @app.callback()
