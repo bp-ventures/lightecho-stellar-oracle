@@ -49,7 +49,7 @@
     const config = {
       sourceSecret: "SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW",
       rpcServerUrl: "https://rpc-futurenet.stellar.org:443/",
-      contractId: "CBITAC6DNB55HWKWIWZZOOYGEUWSHEHB7XLDJX7VWL6HLPLI5UOWIO77",
+      contractId: "CA5CBZWZBEOBCKOO4VJTYP54XL5VVNPFMW254I3HV6ZW64LXG7BOXKJJ",
       networkPassphrase: "Test SDF Future Network ; October 2022",
       fee: 1000,
       apiUrl: "https://lightecho-stellar-oracle-api.bpventures.us",
@@ -219,6 +219,7 @@
                 SorobanClient.xdr.ScVal.scvU32(parseInt(resolution))
               )
             );
+            break;
           case "assets":
             await submitTx(contract.call("assets"));
             break;
