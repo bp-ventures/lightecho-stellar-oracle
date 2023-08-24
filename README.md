@@ -1,6 +1,6 @@
 Lightecho Oracle - Oracle smart contract for Soroban
 
-**2023-July-17: Due to the latest breaking changes to Soroban network, many features are broken at
+**2023-Aug-23: Due to the latest breaking changes to Soroban network, many features are broken at
 this moment. We're actively working on fixing the issues and make our code
 work with the latest Soroban updates**.
 
