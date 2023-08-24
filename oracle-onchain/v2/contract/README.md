@@ -41,6 +41,10 @@ soroban contract invoke \
 # load stellar source account secret key into environment
 source ./scripts/source_secret.sh
 
-# deploy and initialize contract
-./scripts/deploy.sh <admin> <base> <decimals> <resolution>
+# deploy the contract to the blockchain
+./scripts/deploy.sh
+
+# initialize the contract
+cd ../cli
+./cli initialize <admin> <base> <decimals> <resolution>
 ```
