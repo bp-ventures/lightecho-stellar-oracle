@@ -151,8 +151,10 @@ def is_tx_success(tx_data):
 def parse_tx_result(tx_data):
     assert tx_data.result_meta_xdr is not None
     transaction_meta = stellar_xdr.TransactionMeta.from_xdr(tx_data.result_meta_xdr)  # type: ignore
-    results = transaction_meta.v3.tx_result.result.results[0].tr.invoke_host_function_result.success  # type: ignore
-    return results[0]  # type: ignore
+    # TODO handle multiple results[]
+    assert transaction_meta.v3.soroban_meta
+    result = transaction_meta.v3.soroban_meta.return_value
+    return result
 
 
 def parse_sc_val(sc_val):
@@ -172,15 +174,14 @@ def parse_sc_val(sc_val):
     if sc_val.i128 is not None:
         high = sc_val.i128.hi.int64
         low = sc_val.i128.lo.uint64
-        int128 = (high << 64) | low
-        return int128
+        uint128 = (high << 64) | low
+        return uint128
+    if sc_val.map is not None:
+        return parse_sc_map(sc_val.map.sc_map)
+    if sc_val.vec is not None:
+        return parse_sc_vec(sc_val.vec)
     if sc_val.sym is not None:
         return sc_val.sym.sc_symbol.decode()
-    if sc_val.map is not None:
-        parsed_map = {}
-        for map_entry in sc_val.map.sc_map:
-            parsed_map[parse_sc_val(map_entry.key)] = parse_sc_val(map_entry.val)
-        return parsed_map
     raise ValueError("Could not parse sc_val")
 
 
@@ -191,6 +192,15 @@ def parse_sc_vec(sc_vec):
     return vec
 
 
+def parse_sc_map(sc_map):
+    data = {}
+    for entry in sc_map:
+        key = entry.key.sym.sc_symbol.decode()
+        value = parse_sc_val(entry.val)
+        data[key] = value
+    return data
+
+
 def output_tx_data(tx_data):
     vprint(f"transaction: {tx_data}")
     if is_tx_success(tx_data):
@@ -198,13 +208,8 @@ def output_tx_data(tx_data):
         if result.type == SCValType.SCV_VOID:
             print("<void>")
         elif result.type == SCValType.SCV_MAP:
-            data = {}
             assert result.map is not None
-            for entry in result.map.sc_map:
-                key = entry.key.sym.sc_symbol.decode()
-                value = parse_sc_val(entry.val)
-                data[key] = value
-            print(json.dumps(data, indent=2))
+            print(parse_sc_map(result.map.sc_map))
         elif result.type in [
             SCValType.SCV_U32,
             SCValType.SCV_I32,
@@ -353,12 +358,12 @@ def initialize(admin: str, base: str, decimals: int, resolution: int):
         Uint32(decimals),
         Uint32(resolution),
     ]
-    invoke_and_output(func_name, args, signer=state["admin_kp"])
+    invoke_and_output(func_name, args)
 
 
-@app.command(help="Invoke the admin() function of the contract")
-def admin():
-    invoke_and_output("admin")
+@app.command(help="Invoke the read_admin() function of the contract")
+def read_admin():
+    invoke_and_output("read_admin")
 
 
 @app.command(help="Invoke the base() function of the contract")
