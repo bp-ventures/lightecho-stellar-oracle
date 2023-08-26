@@ -10,7 +10,16 @@ pub trait OracleTrait {
     fn has_admin(env: Env) -> bool;
     fn write_admin(env: Env, id: Address);
     fn read_admin(env: Env) -> Address;
-    fn add_price(env: Env, source: u32, asset: Asset, price: i128);
+    fn sources(env: Env) -> Vec<u32>;
+    fn prices_by_source(
+        env: Env,
+        source: u32,
+        asset: Asset,
+        records: u32,
+    ) -> Option<Vec<PriceData>>;
+    fn price_by_source(env: Env, source: u32, asset: Asset, timestamp: u64) -> Option<PriceData>;
+    fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData>;
+    fn add_price(env: Env, source: u32, asset: Asset, price: i128, timestamp: u64);
     //TODO add bulk prices
 
     /// Remove prices matching the given conditions.
@@ -42,23 +51,15 @@ pub trait OracleTrait {
         start_timestamp: Option<u64>,
         end_timestamp: Option<u64>,
     );
+
+    // SEP-40
     fn base(env: Env) -> Asset;
+    fn assets(env: Env) -> Vec<Asset>;
     fn decimals(env: Env) -> u32;
     fn resolution(env: Env) -> u32;
-    fn assets(env: Env) -> Vec<Asset>;
-    fn sources(env: Env) -> Vec<u32>;
-    fn prices(env: Env, asset: Asset, start_timestamp: u64, end_timestamp: u64) -> Vec<PriceData>;
+    fn price(env: Env, asset: Asset, timestamp: u64) -> Option<PriceData>;
+    fn prices(env: Env, asset: Asset, records: u32) -> Option<Vec<PriceData>>;
     fn lastprice(env: Env, asset: Asset) -> Option<PriceData>;
-    fn lastprices(env: Env, asset: Asset, records: u32) -> Vec<PriceData>;
-    fn prices_by_source(
-        env: Env,
-        source: u32,
-        asset: Asset,
-        start_timestamp: u64,
-        end_timestamp: u64,
-    ) -> Vec<PriceData>;
-    fn lastprices_by_source(env: Env, source: u32, asset: Asset, records: u32) -> Vec<PriceData>;
-    fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData>;
 }
 
 #[contract]
@@ -90,7 +91,89 @@ impl OracleTrait for Oracle {
         return metadata::read_admin(&env);
     }
 
-    fn add_price(env: Env, source: u32, asset: Asset, price: i128) {
+    fn sources(env: Env) -> Vec<u32> {
+        let prices = read_prices(&env);
+        return prices.keys();
+    }
+
+    fn price_by_source(env: Env, source: u32, asset: Asset, timestamp: u64) -> Option<PriceData> {
+        let prices = read_prices(&env);
+        let asset_map_option = prices.get(source);
+        match asset_map_option {
+            Some(asset_map) => {
+                let prices_vec_option = asset_map.get(asset.clone());
+                match prices_vec_option {
+                    Some(prices_vec) => {
+                        for price_data in prices_vec.iter() {
+                            if price_data.timestamp == timestamp {
+                                return Some(price_data);
+                            }
+                        }
+                    }
+                    None => return None,
+                }
+            }
+            None => return None,
+        }
+        return None;
+    }
+
+    fn prices_by_source(
+        env: Env,
+        source: u32,
+        asset: Asset,
+        records: u32,
+    ) -> Option<Vec<PriceData>> {
+        let prices = read_prices(&env);
+        let mut prices_within_range: Vec<PriceData> = Vec::<PriceData>::new(&env);
+        let asset_map_option = prices.get(source);
+        match asset_map_option {
+            Some(asset_map) => {
+                let prices_vec_option = asset_map.get(asset.clone());
+                match prices_vec_option {
+                    Some(prices_vec) => {
+                        let starting_index = prices_vec.len().checked_sub(records).unwrap_or(0);
+                        for (index_usize, price_data) in prices_vec.iter().enumerate() {
+                            let index: u32 = index_usize.try_into().unwrap();
+                            if index < starting_index {
+                                continue;
+                            }
+                            prices_within_range.push_back(price_data)
+                        }
+                    }
+                    None => return None,
+                }
+            }
+            None => return None,
+        }
+        return Some(prices_within_range);
+    }
+
+    fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData> {
+        let prices = read_prices(&env);
+        let asset_map_option = prices.get(source);
+        match asset_map_option {
+            Some(asset_map) => {
+                let prices_vec_option = asset_map.get(asset.clone());
+                match prices_vec_option {
+                    Some(prices_vec) => {
+                        let end_index = prices_vec.len() - 1;
+                        for (index_usize, price_data) in prices_vec.iter().enumerate() {
+                            let index: u32 = index_usize.try_into().unwrap();
+                            if index == end_index {
+                                return Some(price_data);
+                            }
+                        }
+                    }
+                    None => return None,
+                }
+            }
+            None => return None,
+        }
+        return None;
+    }
+
+    fn add_price(env: Env, source: u32, asset: Asset, price: i128, timestamp: u64) {
         metadata::read_admin(&env).require_auth();
         env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
         let mut prices = read_prices(&env);
@@ -112,7 +195,6 @@ impl OracleTrait for Oracle {
                 price_data_vec = Vec::<PriceData>::new(&env);
             }
         }
-        let timestamp = env.ledger().timestamp();
         if price_data_vec.len() >= 10 {
             price_data_vec.pop_front();
         }
@@ -137,14 +219,6 @@ impl OracleTrait for Oracle {
         return metadata::read_base(&env);
     }
 
-    fn decimals(env: Env) -> u32 {
-        return metadata::read_decimals(&env);
-    }
-
-    fn resolution(env: Env) -> u32 {
-        return metadata::read_resolution(&env);
-    }
-
     fn assets(env: Env) -> Vec<Asset> {
         let prices = read_prices(&env);
         let mut assets_map = Map::<Asset, bool>::new(&env);
@@ -156,86 +230,24 @@ impl OracleTrait for Oracle {
         return assets_map.keys();
     }
 
-    fn sources(env: Env) -> Vec<u32> {
-        let prices = read_prices(&env);
-        return prices.keys();
+    fn decimals(env: Env) -> u32 {
+        return metadata::read_decimals(&env);
     }
 
-    fn prices(env: Env, asset: Asset, start_timestamp: u64, end_timestamp: u64) -> Vec<PriceData> {
-        return Oracle::prices_by_source(env, 0, asset, start_timestamp, end_timestamp);
+    fn resolution(env: Env) -> u32 {
+        return metadata::read_resolution(&env);
+    }
+
+    fn price(env: Env, asset: Asset, timestamp: u64) -> Option<PriceData> {
+        return Oracle::price_by_source(env, 0, asset, timestamp);
+    }
+
+    fn prices(env: Env, asset: Asset, records: u32) -> Option<Vec<PriceData>> {
+        return Oracle::prices_by_source(env, 0, asset, records);
     }
 
     fn lastprice(env: Env, asset: Asset) -> Option<PriceData> {
         return Oracle::lastprice_by_source(env, 0, asset);
-    }
-
-    fn lastprices(env: Env, asset: Asset, records: u32) -> Vec<PriceData> {
-        return Oracle::lastprices_by_source(env, 0, asset, records);
-    }
-
-    fn prices_by_source(
-        env: Env,
-        source: u32,
-        asset: Asset,
-        start_timestamp: u64,
-        end_timestamp: u64,
-    ) -> Vec<PriceData> {
-        let prices = read_prices(&env);
-        let mut prices_within_range: Vec<PriceData> = Vec::<PriceData>::new(&env);
-        let asset_map_option = prices.get(source);
-        match asset_map_option {
-            Some(asset_map) => {
-                let prices_vec_option = asset_map.get(asset.clone());
-                match prices_vec_option {
-                    Some(prices_vec) => {
-                        for price_data in prices_vec.iter() {
-                            if price_data.timestamp >= start_timestamp
-                                && price_data.timestamp <= end_timestamp
-                            {
-                                prices_within_range.push_back(price_data)
-                            }
-                        }
-                    }
-                    None => return prices_within_range,
-                }
-            }
-            None => return prices_within_range,
-        }
-        return prices_within_range;
-    }
-
-    fn lastprices_by_source(env: Env, source: u32, asset: Asset, records: u32) -> Vec<PriceData> {
-        let prices = read_prices(&env);
-        let mut prices_within_range: Vec<PriceData> = Vec::<PriceData>::new(&env);
-        let asset_map_option = prices.get(source);
-        match asset_map_option {
-            Some(asset_map) => {
-                let prices_vec_option = asset_map.get(asset.clone());
-                match prices_vec_option {
-                    Some(prices_vec) => {
-                        let starting_index = prices_vec.len().checked_sub(records).unwrap_or(0);
-                        for (index_usize, price_data) in prices_vec.iter().enumerate() {
-                            let index: u32 = index_usize.try_into().unwrap();
-                            if index < starting_index {
-                                continue;
-                            }
-                            prices_within_range.push_back(price_data)
-                        }
-                    }
-                    None => return prices_within_range,
-                }
-            }
-            None => return prices_within_range,
-        }
-        return prices_within_range;
-    }
-
-    fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData> {
-        let prices = Oracle::lastprices_by_source(env, source, asset, 1);
-        for price_data in prices.iter() {
-            return Some(price_data);
-        }
-        return None;
     }
 }
 
