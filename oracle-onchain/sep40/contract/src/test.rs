@@ -456,6 +456,9 @@ fn test_prices() {
     let price: i128 = 71821892379218;
     let timestamp = timestamp + 1;
     client.add_price(&source, &asset, &price, &timestamp);
+    let prices = client.prices(&asset, &5);
+    assert!(!prices.is_none());
+    let prices = prices.unwrap();
     assert_eq!(prices.len(), 2);
 }
 
