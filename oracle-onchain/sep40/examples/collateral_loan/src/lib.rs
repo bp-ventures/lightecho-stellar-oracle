@@ -8,25 +8,21 @@ mod oracle {
     );
 }
 
-#[derive(Clone, PartialEq, Debug)]
-#[contracttype]
-pub enum Asset {
-    Stellar(Address),
-    Other(Symbol),
-}
-
-#[contracttype]
-pub struct Info {
-    pub loan_available_principal: bool,
-    pub collateral_asset: Asset,
-}
-
 #[contract]
 pub struct CollateralLoan;
 
 #[contractimpl]
 impl CollateralLoan {
-    pub fn info(env: Env) {}
+    pub fn info(env: Env) -> Info {
+        return Info {
+            loan_available_principal: true,
+            collateral_asset: Asset::Other(Symbol::new(&env, "USD")),
+            collateral_rate: 2,
+            collateral_termination_rate: 1,
+        };
+    }
+
+    pub fn request(env: Env) -> Request {}
 }
 
 mod test;
