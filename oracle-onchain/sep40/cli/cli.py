@@ -205,7 +205,9 @@ def output_tx_data(tx_data):
     vprint(f"transaction: {tx_data}")
     if is_tx_success(tx_data):
         result = parse_tx_result(tx_data)
-        if result.type == SCValType.SCV_VOID:
+        if result.type == SCValType.SCV_BOOL:
+            print(result.b)
+        elif result.type == SCValType.SCV_VOID:
             print("<void>")
         elif result.type == SCValType.SCV_MAP:
             assert result.map is not None
@@ -361,14 +363,20 @@ def initialize(admin: str, base: str, decimals: int, resolution: int):
     invoke_and_output(func_name, args)
 
 
+@app.command(help="Invoke the has_admin() function of the contract")
+def has_admin():
+    invoke_and_output("has_admin")
+
+
+@app.command(help="Invoke the write_admin() function of the contract")
+def write_admin():
+    # TODO
+    pass
+
+
 @app.command(help="Invoke the read_admin() function of the contract")
 def read_admin():
     invoke_and_output("read_admin")
-
-
-@app.command(help="Invoke the base() function of the contract")
-def base():
-    invoke_and_output("base")
 
 
 @app.command(help="Invoke the sources() function of the contract")
@@ -376,93 +384,36 @@ def sources():
     invoke_and_output("sources")
 
 
-@app.command(help="Invoke the assets() function of the contract")
-def assets():
-    invoke_and_output("assets")
-
-
-@app.command(help="Invoke the decimals() function of the contract")
-def decimals():
-    invoke_and_output("decimals")
-
-
-@app.command(help="Invoke the resolution() function of the contract")
-def resolution():
-    invoke_and_output("resolution")
-
-
-@app.command(help="Invoke the prices() function of the contract")
-def prices(asset_type: AssetType, asset: str, start_timestamp: int, end_timestamp: int):
-    invoke_and_output(
-        "prices",
-        [
-            build_asset_enum(asset_type, asset),
-            Uint64(start_timestamp),
-            Uint64(end_timestamp),
-        ],
-    )
-
-
 @app.command(help="Invoke the prices_by_source() function of the contract")
 def prices_by_source(
     source: int,
     asset_type: AssetType,
     asset: str,
-    start_timestamp: int,
-    end_timestamp: int,
+    records: int,
 ):
     invoke_and_output(
         "prices_by_source",
         [
             Uint32(source),
             build_asset_enum(asset_type, asset),
-            Uint64(start_timestamp),
-            Uint64(end_timestamp),
-        ],
-    )
-
-
-@app.command(help="Invoke the lastprices() function of the contract")
-def lastprices(
-    asset_type: AssetType,
-    asset: str,
-    records: int,
-):
-    invoke_and_output(
-        "lastprices",
-        [
-            build_asset_enum(asset_type, asset),
             Uint32(records),
         ],
     )
 
 
-@app.command(help="Invoke the lastprices_by_source() function of the contract")
-def lastprices_by_source(
+@app.command(help="Invoke the price_by_source() function of the contract")
+def price_by_source(
     source: int,
     asset_type: AssetType,
     asset: str,
-    records: int,
+    timestamp: int,
 ):
     invoke_and_output(
-        "lastprices_by_source",
+        "price_by_source",
         [
             Uint32(source),
             build_asset_enum(asset_type, asset),
-            Uint32(records),
-        ],
-    )
-
-
-@app.command(help="Invoke the lastprice() function of the contract")
-def lastprice(
-    asset_type: AssetType,
-    asset: str,
-):
-    invoke_and_output(
-        "lastprice",
-        [
-            build_asset_enum(asset_type, asset),
+            Uint32(timestamp),
         ],
     )
 
@@ -483,7 +434,13 @@ def lastprice_by_source(
 
 
 @app.command(help="Invoke the add_price() function of the contract")
-def add_price(source: int, asset_type: AssetType, asset: str, price: str):
+def add_price(
+    source: int,
+    asset_type: AssetType,
+    asset: str,
+    price: str,
+    timestamp: Optional[int] = None,
+):
     try:
         price_d = Decimal(price)
     except (TypeError, ValueError):
@@ -504,13 +461,81 @@ def add_price(source: int, asset_type: AssetType, asset: str, price: str):
             f"Invalid price: no more than {MAX_DECIMAL_PLACES} decimal places are allowed"
         )
         return
+    if timestamp is None:
+        timestamp = int(time.time())
     func_name = "add_price"
     args = [
         Uint32(source),
         build_asset_enum(asset_type, asset),
         Int128(price_as_int),
+        Uint64(timestamp),
     ]
     invoke_and_output(func_name, args, signer=state["admin_kp"])
+
+
+@app.command(help="Invoke the remove_prices() function of the contract")
+def remove_prices():
+    # TODO
+    pass
+
+
+@app.command(help="Invoke the base() function of the contract")
+def base():
+    invoke_and_output("base")
+
+
+@app.command(help="Invoke the assets() function of the contract")
+def assets():
+    invoke_and_output("assets")
+
+
+@app.command(help="Invoke the decimals() function of the contract")
+def decimals():
+    invoke_and_output("decimals")
+
+
+@app.command(help="Invoke the resolution() function of the contract")
+def resolution():
+    invoke_and_output("resolution")
+
+
+@app.command(help="Invoke the price() function of the contract")
+def price(
+    asset_type: AssetType,
+    asset: str,
+    timestamp: int,
+):
+    invoke_and_output(
+        "price",
+        [
+            build_asset_enum(asset_type, asset),
+            Uint64(timestamp),
+        ],
+    )
+
+
+@app.command(help="Invoke the prices() function of the contract")
+def prices(asset_type: AssetType, asset: str, records: int):
+    invoke_and_output(
+        "prices",
+        [
+            build_asset_enum(asset_type, asset),
+            Uint32(records),
+        ],
+    )
+
+
+@app.command(help="Invoke the lastprice() function of the contract")
+def lastprice(
+    asset_type: AssetType,
+    asset: str,
+):
+    invoke_and_output(
+        "lastprice",
+        [
+            build_asset_enum(asset_type, asset),
+        ],
+    )
 
 
 @app.callback()
