@@ -1,15 +1,11 @@
 use crate::metadata;
+use crate::oracle;
 use crate::storage_types::{DataKey, UpDown, TEMPORARY_BUMP_AMOUNT};
 use soroban_sdk::{contract, contractimpl, Address, Env, Map};
 
-mod oracle {
-    soroban_sdk::contractimport!(
-        file = "../../contract/target/wasm32-unknown-unknown/release/oracle.wasm"
-    );
-}
-
 pub trait PriceUpDownTrait {
     fn initialize(env: Env, oracle_contract_id: Address);
+    fn lastprice(env: Env, asset: oracle::Asset) -> Option<oracle::PriceData>;
     fn get_price_up_down(env: Env, asset: oracle::Asset) -> UpDown;
 }
 
@@ -24,6 +20,14 @@ impl PriceUpDownTrait for PriceUpDown {
         }
 
         metadata::write_metadata(&env, &oracle_contract_id);
+        write_prices(&env, &Map::<oracle::Asset, oracle::PriceData>::new(&env));
+    }
+
+    fn lastprice(env: Env, asset: oracle::Asset) -> Option<oracle::PriceData> {
+        let oracle_contract_id = metadata::read_oracle_contract_id(&env);
+        let client = oracle::Client::new(&env, &oracle_contract_id);
+        let lastprice = client.lastprice(&asset);
+        return lastprice;
     }
 
     fn get_price_up_down(env: Env, asset: oracle::Asset) -> UpDown {
@@ -39,22 +43,22 @@ impl PriceUpDownTrait for PriceUpDown {
         }
         let lastprice = lastprice.unwrap();
         let mut prices = read_prices(&env);
+        let stored_price_option = prices.get(asset.clone());
         prices.set(asset.clone(), lastprice.clone());
         write_prices(&env, &prices);
-        let stored_price_option = prices.get(asset.clone());
         match stored_price_option {
             Some(stored_price) => {
                 return UpDown {
-                    up: stored_price.price > lastprice.price,
-                    down: stored_price.price < lastprice.price,
-                    equal: stored_price.price == lastprice.price,
+                    up: lastprice.price > stored_price.price,
+                    down: lastprice.price < stored_price.price,
+                    equal: lastprice.price == stored_price.price,
                 };
             }
             None => {
                 return UpDown {
                     up: false,
                     down: false,
-                    equal: false,
+                    equal: true,
                 };
             }
         }
