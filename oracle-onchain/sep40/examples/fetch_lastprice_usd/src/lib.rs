@@ -13,10 +13,10 @@ pub struct OracleConsumer;
 
 #[contractimpl]
 impl OracleConsumer {
-    pub fn add_price_usd(env: Env, contract: Address, price: i128) {
+    pub fn add_price_usd(env: Env, contract: Address, price: i128, timestamp: u64) {
         let client = oracle::Client::new(&env, &contract);
         let asset = oracle::Asset::Other(Symbol::new(&env, "USD"));
-        return client.add_price(&0, &asset, &price);
+        return client.add_price(&0, &asset, &price, &timestamp);
     }
     pub fn lastprice_usd(env: Env, contract: Address) -> Option<oracle::PriceData> {
         let client = oracle::Client::new(&env, &contract);

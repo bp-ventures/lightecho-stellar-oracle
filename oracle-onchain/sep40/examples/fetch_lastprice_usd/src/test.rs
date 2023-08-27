@@ -18,10 +18,12 @@ fn test_lastprice_usd() {
     let consumer_contract_id = env.register_contract(None, OracleConsumer);
     let client = OracleConsumerClient::new(&env, &consumer_contract_id);
     let lastprice = client.lastprice_usd(&oracle_id);
+    let timestamp = env.ledger().timestamp();
     assert_eq!(lastprice, None);
     let price: i128 = 1234;
     env.mock_all_auths();
-    client.add_price_usd(&oracle_id, &price);
+    client.add_price_usd(&oracle_id, &price, &timestamp);
     let lastprice_data = client.lastprice_usd(&oracle_id).unwrap();
     assert_eq!(lastprice_data.price, price);
+    assert_eq!(lastprice_data.timestamp, timestamp);
 }
