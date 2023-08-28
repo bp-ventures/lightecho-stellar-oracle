@@ -11,25 +11,14 @@ from colorama import init as colorama_init
 from colorama import Fore
 from colorama import Style
 from stellar_sdk import (
-    InvokeHostFunction,
     Keypair,
     StrKey,
     TransactionBuilder,
     TransactionEnvelope,
 )
-from stellar_sdk import xdr as stellar_xdr
-from stellar_sdk.soroban.authorization_entry import AuthorizationEntry
-from stellar_sdk.soroban.server import SorobanServer
-from stellar_sdk.soroban.soroban_rpc import GetTransactionStatus, SendTransactionStatus
-from stellar_sdk.soroban.types import (
-    Address,
-    Bytes,
-    Enum,
-    Int128,
-    Symbol,
-    Uint32,
-    Uint64,
-)
+from stellar_sdk import xdr as stellar_xdr, scval
+from stellar_sdk.soroban_server import SorobanServer
+from stellar_sdk.soroban_rpc import GetTransactionStatus, SendTransactionStatus
 from stellar_sdk.xdr.sc_val_type import SCValType
 import typer
 
@@ -45,13 +34,18 @@ mod_spec.loader.exec_module(local_settings)
 MAX_DECIMAL_PLACES = 18
 
 colorama_init()
+oracle_app = typer.Typer()
+priceupdown_app = typer.Typer()
 app = typer.Typer()
+app.add_typer(oracle_app, name="oracle")
+app.add_typer(priceupdown_app, name="priceupdown")
+
 state = {
     "verbose": False,
     "source_secret": local_settings.SOURCE_SECRET,
     "admin_secret": local_settings.ADMIN_SECRET,
     "rpc_server_url": local_settings.RPC_SERVER_URL,
-    "contract_id": local_settings.CONTRACT_ID,
+    "oracle_contract_id": local_settings.ORACLE_CONTRACT_ID,
     "network_passphrase": local_settings.NETWORK_PASSPHRASE,
     "horizon_url": "https://horizon-futurenet.stellar.org",
 }
@@ -80,23 +74,13 @@ def vprint(msg: str):
         print(msg)
 
 
-def sign_tx(tx, signer):
-    latest_ledger = state["soroban_server"].get_latest_ledger().sequence
-    op = tx.transaction.operations[0]
-    assert isinstance(op, InvokeHostFunction)
-    authorization_entry: AuthorizationEntry = op.auth[0]
-    authorization_entry.set_signature_expiration_ledger(latest_ledger + 3)
-    authorization_entry.sign(signer, state["network_passphrase"])
-
-
 def send_tx(tx: TransactionEnvelope, signer=None):
     vprint(f"preparing transaction: {tx.to_xdr()}")
     tx = state["soroban_server"].prepare_transaction(tx)
     vprint(f"prepared transaction: {tx.to_xdr()}")
 
     if signer is not None:
-        sign_tx(tx, signer)
-
+        tx.sign(signer)
     tx.sign(state["kp"])
 
     send_transaction_data = state["soroban_server"].send_transaction(tx)
@@ -127,7 +111,7 @@ def invoke_contract_function(function_name, parameters=[], signer=None):
         )
         .set_timeout(30)
         .append_invoke_contract_function_op(
-            state["contract_id"],
+            state["oracle_contract_id"],
             function_name,
             parameters,
         )
@@ -243,24 +227,24 @@ def invoke_and_output(function_name, parameters=[], signer=None):
     print("Success!")
 
 
-def issuer_as_bytes(asset_issuer: Optional[str]) -> Optional[Bytes]:
+def issuer_as_bytes(asset_issuer: Optional[str]):
     if asset_issuer:
-        return Bytes(asset_issuer.encode())
+        return scval.to_bytes(asset_issuer.encode())
     else:
         return None
 
 
 def build_asset_enum(asset_type: AssetType, asset: str):
     if asset_type == AssetType.stellar:
-        return Enum("Stellar", Address(asset))
+        return scval.to_enum("Stellar", scval.to_address(asset))
     elif asset_type == AssetType.other:
-        return Enum("Other", Symbol(asset))
+        return scval.to_enum("Other", scval.to_symbol(asset))
     else:
         return ValueError(f"unexpected asset_type: {asset_type}")
 
 
-@app.command(help="Deploy the contract to Stellar blockchain")
-def deploy():
+@oracle_app.command("deploy", help="oracle: deploy contract")
+def oracle_deploy():
     contract_wasm_path = str(
         (
             Path(__file__).parent.parent
@@ -318,6 +302,7 @@ def deploy():
         .set_timeout(300)
         .append_create_contract_op(
             wasm_id=wasm_id,
+            address=state["kp"].public_key,
         )
         .build()
     )
@@ -350,41 +335,40 @@ def deploy():
         print(contract_id)
 
 
-@app.command(help="Invoke the initialize() function of the contract")
-def initialize(admin: str, base: str, decimals: int, resolution: int):
+@oracle_app.command("initialize", help="oracle: invoke initialize()")
+def oracle_initialize(admin: str, base: str, decimals: int, resolution: int):
     func_name = "initialize"
     args = [
-        Address(admin),
+        scval.to_address(admin),
         build_asset_enum(AssetType.other, base),
-        Uint32(decimals),
-        Uint32(resolution),
+        scval.to_uint32(decimals),
+        scval.to_uint32(resolution),
     ]
     invoke_and_output(func_name, args)
 
 
-@app.command(help="Invoke the has_admin() function of the contract")
-def has_admin():
+@oracle_app.command("has_admin", help="oracle: invoke has_admin()")
+def oracle_has_admin():
     invoke_and_output("has_admin")
 
 
-@app.command(help="Invoke the write_admin() function of the contract")
-def write_admin():
-    # TODO
-    pass
+@oracle_app.command("write_admin", help="oracle: invoke write_admin()")
+def oracle_write_admin():
+    raise RuntimeError("This function is not yet available")
 
 
-@app.command(help="Invoke the read_admin() function of the contract")
-def read_admin():
+@oracle_app.command("read_admin", help="oracle: invoke read_admin()")
+def oracle_read_admin():
     invoke_and_output("read_admin")
 
 
-@app.command(help="Invoke the sources() function of the contract")
-def sources():
+@oracle_app.command("sources", help="oracle: invoke sources()")
+def oracle_sources():
     invoke_and_output("sources")
 
 
-@app.command(help="Invoke the prices_by_source() function of the contract")
-def prices_by_source(
+@oracle_app.command("prices_by_source", help="oracle: invoke prices_by_source()")
+def oracle_prices_by_source(
     source: int,
     asset_type: AssetType,
     asset: str,
@@ -393,15 +377,15 @@ def prices_by_source(
     invoke_and_output(
         "prices_by_source",
         [
-            Uint32(source),
+            scval.to_uint32(source),
             build_asset_enum(asset_type, asset),
-            Uint32(records),
+            scval.to_uint32(records),
         ],
     )
 
 
-@app.command(help="Invoke the price_by_source() function of the contract")
-def price_by_source(
+@oracle_app.command("price_by_source", help="oracle: invoke prices_by_source")
+def oracle_price_by_source(
     source: int,
     asset_type: AssetType,
     asset: str,
@@ -410,15 +394,15 @@ def price_by_source(
     invoke_and_output(
         "price_by_source",
         [
-            Uint32(source),
+            scval.to_uint32(source),
             build_asset_enum(asset_type, asset),
-            Uint32(timestamp),
+            scval.to_uint32(timestamp),
         ],
     )
 
 
-@app.command(help="Invoke the lastprice_by_source() function of the contract")
-def lastprice_by_source(
+@oracle_app.command("lastprice_by_source", help="oracle: invoke lastprice_by_source")
+def oracle_lastprice_by_source(
     source: int,
     asset_type: AssetType,
     asset: str,
@@ -426,14 +410,14 @@ def lastprice_by_source(
     invoke_and_output(
         "lastprice_by_source",
         [
-            Uint32(source),
+            scval.to_uint32(source),
             build_asset_enum(asset_type, asset),
         ],
     )
 
 
-@app.command(help="Invoke the add_price() function of the contract")
-def add_price(
+@oracle_app.command("add_price", help="oracle: invoke add_price()")
+def oracle_add_price(
     source: int,
     asset_type: AssetType,
     asset: str,
@@ -464,42 +448,42 @@ def add_price(
         timestamp = int(time.time())
     func_name = "add_price"
     args = [
-        Uint32(source),
+        scval.to_uint32(source),
         build_asset_enum(asset_type, asset),
-        Int128(price_as_int),
-        Uint64(timestamp),
+        scval.to_int128(price_as_int),
+        scval.to_uint64(timestamp),
     ]
     invoke_and_output(func_name, args, signer=state["admin_kp"])
 
 
-@app.command(help="Invoke the remove_prices() function of the contract")
-def remove_prices():
+@oracle_app.command("remove_prices", help="oracle: invoke remove_prices()")
+def oracle_remove_prices():
     # TODO
     pass
 
 
-@app.command(help="Invoke the base() function of the contract")
-def base():
+@oracle_app.command("base", help="oracle: invoke base()")
+def oracle_base():
     invoke_and_output("base")
 
 
-@app.command(help="Invoke the assets() function of the contract")
-def assets():
+@oracle_app.command("assets", help="oracle: invoke assets()")
+def oracle_assets():
     invoke_and_output("assets")
 
 
-@app.command(help="Invoke the decimals() function of the contract")
-def decimals():
+@oracle_app.command("decimals", help="oracle: invoke decimals()")
+def oracle_decimals():
     invoke_and_output("decimals")
 
 
-@app.command(help="Invoke the resolution() function of the contract")
-def resolution():
+@oracle_app.command("resolution", help="oracle: invoke resolution()")
+def oracle_resolution():
     invoke_and_output("resolution")
 
 
-@app.command(help="Invoke the price() function of the contract")
-def price(
+@oracle_app.command("price", help="oracle: invoke price()")
+def oracle_price(
     asset_type: AssetType,
     asset: str,
     timestamp: int,
@@ -508,24 +492,24 @@ def price(
         "price",
         [
             build_asset_enum(asset_type, asset),
-            Uint64(timestamp),
+            scval.to_uint64(timestamp),
         ],
     )
 
 
-@app.command(help="Invoke the prices() function of the contract")
-def prices(asset_type: AssetType, asset: str, records: int):
+@oracle_app.command("prices", help="oracle: invoke prices()")
+def oracle_prices(asset_type: AssetType, asset: str, records: int):
     invoke_and_output(
         "prices",
         [
             build_asset_enum(asset_type, asset),
-            Uint32(records),
+            scval.to_uint32(records),
         ],
     )
 
 
-@app.command(help="Invoke the lastprice() function of the contract")
-def lastprice(
+@oracle_app.command("lastprice", help="oracle: invoke lastprice()")
+def oracle_lastprice(
     asset_type: AssetType,
     asset: str,
 ):
@@ -537,15 +521,58 @@ def lastprice(
     )
 
 
+@priceupdown_app.command("initialize", help="priceupdown: invoke initialize()")
+def priceupdown_initialize(oracle_contract_id: str):
+    invoke_and_output(
+        "initialize",
+        [
+            scval.to_address(oracle_contract_id),
+        ],
+    )
+
+
+@priceupdown_app.command("lastprice", help="priceupdown: invoke lastprice()")
+def priceupdown_lastprice(
+    asset_type: AssetType,
+    asset: str,
+):
+    invoke_and_output(
+        "lastprice",
+        [
+            build_asset_enum(asset_type, asset),
+        ],
+    )
+
+
+@priceupdown_app.command(
+    "get_price_up_down", help="priceupdown: invoke get_price_up_down()"
+)
+def priceupdown_get_price_up_down(
+    asset_type: AssetType,
+    asset: str,
+):
+    invoke_and_output(
+        "get_price_up_down",
+        [
+            build_asset_enum(asset_type, asset),
+        ],
+    )
+
+
 @app.callback()
 def main(
     verbose: bool = typer.Option(False, "-v", "--verbose"),
-    contract_id: Optional[str] = typer.Option(None, "--contract-id"),
+    oracle_contract_id: Optional[str] = typer.Option(None, "--oracle-contract-id"),
+    priceupdown_contract_id: Optional[str] = typer.Option(
+        None, "--priceupdown-contract-id"
+    ),
 ):
     if verbose:
         state["verbose"] = True
-    if contract_id:
-        state["contract_id"] = contract_id
+    if oracle_contract_id:
+        state["oracle_contract_id"] = oracle_contract_id
+    if priceupdown_contract_id:
+        state["priceupdown_contract_id"] = priceupdown_contract_id
 
 
 if __name__ == "__main__":
