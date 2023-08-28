@@ -2,6 +2,7 @@
 from decimal import Decimal
 import enum
 import importlib.util
+import json
 from pathlib import Path
 import sys
 import time
@@ -49,14 +50,12 @@ app = typer.Typer()
 state = {
     "verbose": False,
     "source_secret": local_settings.SOURCE_SECRET,
-    "admin_secret": local_settings.ADMIN_SECRET,
     "rpc_server_url": local_settings.RPC_SERVER_URL,
     "contract_id": local_settings.CONTRACT_ID,
     "network_passphrase": local_settings.NETWORK_PASSPHRASE,
     "horizon_url": "https://horizon-futurenet.stellar.org",
 }
 state["kp"] = Keypair.from_secret(state["source_secret"])
-state["admin_kp"] = Keypair.from_secret(state["admin_secret"])
 state["soroban_server"] = SorobanServer(state["rpc_server_url"])
 state["source_acc"] = state["soroban_server"].load_account(state["kp"].public_key)
 
@@ -351,190 +350,12 @@ def deploy():
 
 
 @app.command(help="Invoke the initialize() function of the contract")
-def initialize(admin: str, base: str, decimals: int, resolution: int):
+def initialize(oracle_contract_id: str):
     func_name = "initialize"
     args = [
-        Address(admin),
-        build_asset_enum(AssetType.other, base),
-        Uint32(decimals),
-        Uint32(resolution),
+        Address(oracle_contract_id),
     ]
     invoke_and_output(func_name, args)
-
-
-@app.command(help="Invoke the has_admin() function of the contract")
-def has_admin():
-    invoke_and_output("has_admin")
-
-
-@app.command(help="Invoke the write_admin() function of the contract")
-def write_admin():
-    # TODO
-    pass
-
-
-@app.command(help="Invoke the read_admin() function of the contract")
-def read_admin():
-    invoke_and_output("read_admin")
-
-
-@app.command(help="Invoke the sources() function of the contract")
-def sources():
-    invoke_and_output("sources")
-
-
-@app.command(help="Invoke the prices_by_source() function of the contract")
-def prices_by_source(
-    source: int,
-    asset_type: AssetType,
-    asset: str,
-    records: int,
-):
-    invoke_and_output(
-        "prices_by_source",
-        [
-            Uint32(source),
-            build_asset_enum(asset_type, asset),
-            Uint32(records),
-        ],
-    )
-
-
-@app.command(help="Invoke the price_by_source() function of the contract")
-def price_by_source(
-    source: int,
-    asset_type: AssetType,
-    asset: str,
-    timestamp: int,
-):
-    invoke_and_output(
-        "price_by_source",
-        [
-            Uint32(source),
-            build_asset_enum(asset_type, asset),
-            Uint32(timestamp),
-        ],
-    )
-
-
-@app.command(help="Invoke the lastprice_by_source() function of the contract")
-def lastprice_by_source(
-    source: int,
-    asset_type: AssetType,
-    asset: str,
-):
-    invoke_and_output(
-        "lastprice_by_source",
-        [
-            Uint32(source),
-            build_asset_enum(asset_type, asset),
-        ],
-    )
-
-
-@app.command(help="Invoke the add_price() function of the contract")
-def add_price(
-    source: int,
-    asset_type: AssetType,
-    asset: str,
-    price: str,
-    timestamp: Optional[int] = None,
-):
-    try:
-        price_d = Decimal(price)
-    except (TypeError, ValueError):
-        abort("Invalid price")
-        return
-    price_d_str = "{:f}".format(price_d)
-    price_parts = price_d_str.split(".")
-    price_as_int = int(price_d_str.replace(".", ""))
-    if len(price_parts) == 2:
-        decimal_places = len(price_parts[1])
-    else:
-        decimal_places = 0
-    zeroes_to_add = MAX_DECIMAL_PLACES - decimal_places
-    if zeroes_to_add >= 0:
-        price_as_int = price_as_int * (10**zeroes_to_add)
-    else:
-        abort(
-            f"Invalid price: no more than {MAX_DECIMAL_PLACES} decimal places are allowed"
-        )
-        return
-    if timestamp is None:
-        timestamp = int(time.time())
-    func_name = "add_price"
-    args = [
-        Uint32(source),
-        build_asset_enum(asset_type, asset),
-        Int128(price_as_int),
-        Uint64(timestamp),
-    ]
-    invoke_and_output(func_name, args, signer=state["admin_kp"])
-
-
-@app.command(help="Invoke the remove_prices() function of the contract")
-def remove_prices():
-    # TODO
-    pass
-
-
-@app.command(help="Invoke the base() function of the contract")
-def base():
-    invoke_and_output("base")
-
-
-@app.command(help="Invoke the assets() function of the contract")
-def assets():
-    invoke_and_output("assets")
-
-
-@app.command(help="Invoke the decimals() function of the contract")
-def decimals():
-    invoke_and_output("decimals")
-
-
-@app.command(help="Invoke the resolution() function of the contract")
-def resolution():
-    invoke_and_output("resolution")
-
-
-@app.command(help="Invoke the price() function of the contract")
-def price(
-    asset_type: AssetType,
-    asset: str,
-    timestamp: int,
-):
-    invoke_and_output(
-        "price",
-        [
-            build_asset_enum(asset_type, asset),
-            Uint64(timestamp),
-        ],
-    )
-
-
-@app.command(help="Invoke the prices() function of the contract")
-def prices(asset_type: AssetType, asset: str, records: int):
-    invoke_and_output(
-        "prices",
-        [
-            build_asset_enum(asset_type, asset),
-            Uint32(records),
-        ],
-    )
-
-
-@app.command(help="Invoke the lastprice() function of the contract")
-def lastprice(
-    asset_type: AssetType,
-    asset: str,
-):
-    invoke_and_output(
-        "lastprice",
-        [
-            build_asset_enum(asset_type, asset),
-        ],
-    )
 
 
 @app.callback()
