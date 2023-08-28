@@ -1,3 +1,8 @@
+This is a Python-based CLI that can be used as an utility to deploy and invoke
+contracts in this repository:
+- `oracle` contract
+- `priceupdown` contract
+
 Create `local_settings.py`:
 
 ```
@@ -5,7 +10,8 @@ SOURCE_SECRET = "SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW"
 ADMIN_SECRET = "SDFWYGBNP5TW4MS7RY5D4FILT65R2IEPWGL34NY2TLSU4DC4BJNXUAMU"
 
 RPC_SERVER_URL = "https://rpc-futurenet.stellar.org:443/"
-CONTRACT_ID = "65e9f660742a626bfac85222953bb689345974520afea512f2a500fbc2b5f039"
+ORACLE_CONTRACT_ID = "<oracle contract id>"
+PRICEUPDOWN_CONTRACT_ID = "<priceupdown contract id>"
 NETWORK_PASSPHRASE = "Test SDF Future Network ; October 2022"
 ```
 
