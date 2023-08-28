@@ -12,7 +12,8 @@ This repository contains:
 - A JS fiddle for testing and debugging the contract calls
   - [Visit JS fiddle](https://playcode.io/1532409)
 - Examples on how to use the Oracle from other contracts
-  - [Examples](./oracle-onchain/v2/examples)
+  - [SEP-40 examples](./oracle-onchain/sep40/examples)
+  - [v2 examples](./oracle-onchain/v2/examples)
 
 #### Featured projects
 
