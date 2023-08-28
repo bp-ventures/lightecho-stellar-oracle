@@ -20,6 +20,7 @@ from stellar_sdk import xdr as stellar_xdr, scval
 from stellar_sdk.soroban_server import SorobanServer
 from stellar_sdk.soroban_rpc import GetTransactionStatus, SendTransactionStatus
 from stellar_sdk.xdr.sc_val_type import SCValType
+from stellar_sdk.exceptions import PrepareTransactionException
 import typer
 
 mod_spec = importlib.util.spec_from_file_location(
@@ -46,6 +47,7 @@ state = {
     "admin_secret": local_settings.ADMIN_SECRET,
     "rpc_server_url": local_settings.RPC_SERVER_URL,
     "oracle_contract_id": local_settings.ORACLE_CONTRACT_ID,
+    "priceupdown_contract_id": local_settings.PRICEUPDOWN_CONTRACT_ID,
     "network_passphrase": local_settings.NETWORK_PASSPHRASE,
     "horizon_url": "https://horizon-futurenet.stellar.org",
 }
@@ -76,7 +78,11 @@ def vprint(msg: str):
 
 def send_tx(tx: TransactionEnvelope, signer=None):
     vprint(f"preparing transaction: {tx.to_xdr()}")
-    tx = state["soroban_server"].prepare_transaction(tx)
+    try:
+        tx = state["soroban_server"].prepare_transaction(tx)
+    except PrepareTransactionException as e:
+        print_error(str(getattr(e, "simulate_transaction_response", "")))
+        raise e
     vprint(f"prepared transaction: {tx.to_xdr()}")
 
     if signer is not None:
@@ -102,7 +108,12 @@ def wait_tx(tx_hash: str):
     return get_transaction_data
 
 
-def invoke_contract_function(function_name, parameters=[], signer=None):
+def invoke_contract_function(
+    function_name, parameters=[], signer=None, contract_id=None
+):
+    if contract_id is None:
+        contract_id = state["oracle_contract_id"]
+
     tx = (
         TransactionBuilder(
             state["source_acc"],
@@ -111,7 +122,7 @@ def invoke_contract_function(function_name, parameters=[], signer=None):
         )
         .set_timeout(30)
         .append_invoke_contract_function_op(
-            state["oracle_contract_id"],
+            contract_id,
             function_name,
             parameters,
         )
@@ -215,7 +226,7 @@ def output_tx_data(tx_data):
         abort(f"Error: {tx_data}")
 
 
-def invoke_and_output(function_name, parameters=[], signer=None):
+def invoke_and_output(function_name, parameters=[], signer=None, contract_id=None):
     tx_hash, tx_data = invoke_contract_function(
         function_name, parameters, signer=signer
     )
@@ -528,6 +539,7 @@ def priceupdown_initialize(oracle_contract_id: str):
         [
             scval.to_address(oracle_contract_id),
         ],
+        contract_id=state["priceupdown_contract_id"],
     )
 
 
@@ -541,6 +553,7 @@ def priceupdown_lastprice(
         [
             build_asset_enum(asset_type, asset),
         ],
+        contract_id=state["priceupdown_contract_id"],
     )
 
 
@@ -556,6 +569,7 @@ def priceupdown_get_price_up_down(
         [
             build_asset_enum(asset_type, asset),
         ],
+        contract_id=state["priceupdown_contract_id"],
     )
 
 

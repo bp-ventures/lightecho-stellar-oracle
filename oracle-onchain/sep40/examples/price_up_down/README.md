@@ -54,8 +54,43 @@ source $REPO_DIR/oracle-onchain/sep40/contract/scripts/source_secret.sh
 
 # deploy the Lightecho Oracle contract to the blockchain
 $REPO_DIR/oracle-onchain/sep40/contract/scripts/deploy.sh
+
+```
+
+### Initialize the Lightecho Oracle
+
+```
+# initialize the oracle
+$REPO_DIR/oracle-onchain/sep40/cli/cli oracle initialize \
+  GDOOLD2UL3STZ4FLHM5CV3ZFSTYI4EYZHEEGIC4GHL4CJ4BLSSYNN5ER \
+  XLM \
+  18 \
+  300
+
+# add a price to the oracle
+$REPO_DIR/oracle-onchain/sep40/cli/cli oracle add_price 0 other USD 5.5
 ```
 
 Deploy this PriceUpDown contract:
 ```
+cd $REPO_DIR/oracle-onchain/sep40/examples/price_up_down
+
+# build and run tests to make sure your toolchain is properly setup
+make test
+
+# load your Stellar secret key (can be any funded Stellar secret key)
+source $REPO_DIR/oracle-onchain/sep40/examples/price_up_down/scripts/source_secret.sh
+
+# deploy the Lightecho Oracle contract to the blockchain
+$REPO_DIR/oracle-onchain/sep40/examples/price_up_down/scripts/deploy.sh
+```
+
+Initialize and invoke this PriceUpDown contract:
+```
+$REPO_DIR/oracle-onchain/sep40/cli/cli priceupdown initialize \
+  <oracle contract id from above>
+
+$REPO_DIR/oracle-onchain/sep40/cli/cli priceupdown get_price_up_down \
+  other \
+  USD
 ```
