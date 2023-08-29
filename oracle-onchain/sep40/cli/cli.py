@@ -228,7 +228,7 @@ def output_tx_data(tx_data):
 
 def invoke_and_output(function_name, parameters=[], signer=None, contract_id=None):
     tx_hash, tx_data = invoke_contract_function(
-        function_name, parameters, signer=signer
+        function_name, parameters, signer=signer, contract_id=contract_id
     )
     print("Output:")
     output_tx_data(tx_data)
