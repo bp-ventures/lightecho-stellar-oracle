@@ -254,18 +254,7 @@ def build_asset_enum(asset_type: AssetType, asset: str):
         return ValueError(f"unexpected asset_type: {asset_type}")
 
 
-@oracle_app.command("deploy", help="oracle: deploy contract")
-def oracle_deploy():
-    contract_wasm_path = str(
-        (
-            Path(__file__).parent.parent
-            / "contract"
-            / "target"
-            / "wasm32-unknown-unknown"
-            / "release"
-            / "oracle.wasm"
-        ).resolve()
-    )
+def deploy(contract_wasm_path: str):
     tx = (
         TransactionBuilder(state["source_acc"], state["network_passphrase"])
         .set_timeout(300)
@@ -344,6 +333,20 @@ def oracle_deploy():
         contract_id = StrKey.encode_contract(result)
         vprint(f"contract id: {contract_id}")
         print(contract_id)
+
+@oracle_app.command("deploy", help="oracle: deploy contract")
+def oracle_deploy():
+    contract_wasm_path = str(
+        (
+            Path(__file__).parent.parent
+            / "contract"
+            / "target"
+            / "wasm32-unknown-unknown"
+            / "release"
+            / "oracle.wasm"
+        ).resolve()
+    )
+    deploy(contract_wasm_path)
 
 
 @oracle_app.command("initialize", help="oracle: invoke initialize()")
@@ -530,6 +533,22 @@ def oracle_lastprice(
             build_asset_enum(asset_type, asset),
         ],
     )
+
+
+@priceupdown_app.command("deploy", help="priceupdown: deploy contract")
+def priceupdown_deploy():
+    contract_wasm_path = str(
+        (
+            Path(__file__).parent.parent
+            / "examples"
+            / "price_up_down"
+            / "target"
+            / "wasm32-unknown-unknown"
+            / "release"
+            / "price_up_down.wasm"
+        ).resolve()
+    )
+    deploy(contract_wasm_path)
 
 
 @priceupdown_app.command("initialize", help="priceupdown: invoke initialize()")
