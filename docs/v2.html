@@ -49,7 +49,7 @@
     const config = {
       sourceSecret: "SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW",
       rpcServerUrl: "https://rpc-futurenet.stellar.org:443/",
-      contractId: "CA5CBZWZBEOBCKOO4VJTYP54XL5VVNPFMW254I3HV6ZW64LXG7BOXKJJ",
+      contractId: "CD557IUYOXHQ6WLXUBWNFI5TIMCRVB2F5NIIEV7RS6QRIVLZCBGNNLA5",
       networkPassphrase: "Test SDF Future Network ; October 2022",
       fee: 1000,
       apiUrl: "https://lightecho-stellar-oracle-api.bpventures.us",
@@ -92,8 +92,9 @@
       const [decimals, Set_decimals] = useState(undefined);
       const [resolution, Set_resolution] = useState(undefined);
       const [records, Set_records] = useState(defaultRecords);
-      const [startTimestamp, Set_startTimestamp] = useState(undefined);
-      const [endTimestamp, Set_endTimestamp] = useState(undefined);
+      const [price, Set_price] = useState(undefined);
+      const [timestamp, Set_timestamp] = useState(undefined);
+      const [adminSecret, Set_adminSecret] = useState(undefined);
       const [logs, Set_logs] = useState([]);
       const messagesEndRef = createRef();
 
@@ -177,6 +178,8 @@
               { xdr: response.resultMetaXdr }
             );
             appendToLog(`Tx Result: ${JSON.stringify(parsedResult.data)}`);
+          } else {
+            console.error(response);
           }
         } catch (e) {
           console.error(e);
@@ -203,6 +206,16 @@
         ]);
       };
 
+      const convertToInt18DecimalPlaces = (n) => {
+        const integerPart = Math.floor(n);
+        const decimalPart = (n - integerPart) * 1e18;
+
+        const customInteger = BigInt(
+          integerPart.toString() + decimalPart.toFixed(0)
+        );
+        return customInteger;
+      };
+
       const runFunc = async () => {
         const contract = new SorobanClient.Contract(config.contractId);
 
@@ -220,39 +233,31 @@
               )
             );
             break;
-          case "assets":
-            await submitTx(contract.call("assets"));
+          case "read_admin":
+            await submitTx(contract.call("read_admin"));
             break;
-          case "lastprice":
-            await submitTx(
-              contract.call("lastprice", getAssetEnum(assetCode, assetIssuer))
-            );
+          case "sources":
+            await submitTx(contract.call("sources"));
             break;
-          case "lastprices":
+          case "prices_by_source":
             await submitTx(
               contract.call(
-                "lastprices",
+                "prices_by_source",
+                SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
                 getAssetEnum(assetCode, assetIssuer),
                 SorobanClient.xdr.ScVal.scvU32(parseInt(records))
               )
             );
             break;
-          case "prices":
+          case "price_by_source":
             await submitTx(
               contract.call(
-                "prices",
+                "price_by_source",
+                SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
                 getAssetEnum(assetCode, assetIssuer),
-                numberToScvU64(
-                  luxon.DateTime.fromISO(startTimestamp).toUnixInteger()
-                ),
-                numberToScvU64(
-                  luxon.DateTime.fromISO(endTimestamp).toUnixInteger()
-                )
+                numberToScvU64(parseInt(timestamp))
               )
             );
-            break;
-          case "sources":
-            await submitTx(contract.call("sources"));
             break;
           case "lastprice_by_source":
             await submitTx(
@@ -263,33 +268,57 @@
               )
             );
             break;
-          case "lastprices_by_source":
-            await submitTx(
-              contract.call(
-                "lastprices_by_source",
-                SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
-                getAssetEnum(assetCode, assetIssuer),
-                SorobanClient.xdr.ScVal.scvU32(parseInt(records))
-              )
+          case "add_price":
+            const args = [
+              SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
+              getAssetEnum(assetCode, assetIssuer),
+              numberToScvI128(convertToInt18DecimalPlaces(parseFloat(price))),
+              numberToScvU64(timestamp),
+            ];
+            const invocation =
+              new SorobanClient.xdr.SorobanAuthorizedInvocation({
+                function:
+                  SorobanClient.xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+                    new SorobanClient.xdr.SorobanAuthorizedContractFunction({
+                      contractAddress: new SorobanClient.StellarBase.Address(
+                        config.contractId
+                      ).toScAddress(),
+                      functionName: "add_price",
+                      args: args,
+                    })
+                  ),
+                subInvocations: [],
+              });
+            const keypair = SorobanClient.Keypair.fromSecret(adminSecret);
+            const entry = SorobanClient.StellarBase.authorizeInvocation(
+              keypair,
+              SorobanClient.StellarBase.Networks.FUTURENET,
+              123,
+              invocation
             );
+            const op = SorobanClient.StellarBase.Operation.invokeHostFunction({
+              func: SorobanClient.xdr.HostFunction.hostFunctionTypeInvokeContract(
+                [
+                  SorobanClient.StellarBase.Address.contract(
+                    SorobanClient.StellarBase.StrKey.decodeContract(
+                      config.contractId
+                    )
+                  ).toScVal(),
+                  SorobanClient.xdr.ScVal.scvSymbol("add_price"),
+                  ...args,
+                ]
+              ),
+              auth: [entry],
+            });
+            await submitTx(op, ...args);
             break;
-          case "prices_by_source":
-            await submitTx(
-              contract.call(
-                "prices_by_source",
-                SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
-                getAssetEnum(assetCode, assetIssuer),
-                numberToScvU64(
-                  luxon.DateTime.fromISO(startTimestamp).toUnixInteger()
-                ),
-                numberToScvU64(
-                  luxon.DateTime.fromISO(endTimestamp).toUnixInteger()
-                )
-              )
-            );
+          case "remove_prices":
             break;
           case "base":
             await submitTx(contract.call("base"));
+            break;
+          case "assets":
+            await submitTx(contract.call("assets"));
             break;
           case "decimals":
             await submitTx(contract.call("decimals"));
@@ -297,12 +326,28 @@
           case "resolution":
             await submitTx(contract.call("resolution"));
             break;
-          case "admin":
-            await submitTx(contract.call("admin"));
+          case "price":
+            await submitTx(
+              contract.call(
+                "prices",
+                getAssetEnum(assetCode, assetIssuer),
+                numberToScvU64(parseInt(timestamp))
+              )
+            );
             break;
-          case "add_price":
+          case "prices":
+            await submitTx(
+              contract.call(
+                "prices",
+                getAssetEnum(assetCode, assetIssuer),
+                SorobanClient.xdr.ScVal.scvU32(parseInt(records))
+              )
+            );
             break;
-          case "remove_prices":
+          case "lastprice":
+            await submitTx(
+              contract.call("lastprice", getAssetEnum(assetCode, assetIssuer))
+            );
             break;
           default:
             throw new Error(`Invalid func: ${func}`);
@@ -394,9 +439,7 @@
                   <option value="decimals">decimals</option>
                   <option value="resolution">resolution</option>
                   <option value="admin">admin</option>
-                  <option value="add_price" disabled>
-                    add_price
-                  </option>
+                  <option value="add_price">add_price</option>
                   <option value="remove_prices" disabled>
                     remove_prices
                   </option>
@@ -404,6 +447,21 @@
               </div>
             </div>
             <div className="row pt-2 justify-content-center">
+              {["add_price"].includes(func) && (
+                <>
+                  <div className="col-12 col-sm-3">
+                    <input
+                      className="form-control mt-2"
+                      type="password"
+                      placeholder="Admin secret"
+                      aria-label="Admin secret"
+                      onChange={(e) => {
+                        Set_adminSecret(e.target.value);
+                      }}
+                    />
+                  </div>
+                </>
+              )}
               {"initialize".includes(func) && (
                 <>
                   <div className="col-12 col-sm-3">
@@ -462,6 +520,7 @@
                 "lastprice_by_source",
                 "lastprices_by_source",
                 "prices_by_source",
+                "add_price",
               ].includes(func) && (
                 <>
                   <div className="col-12 col-sm-3">
@@ -485,29 +544,17 @@
                   </div>
                 </>
               )}
-              {["prices", "prices_by_source"].includes(func) && (
+              {["prices", "prices_by_source", "add_price"].includes(func) && (
                 <>
                   <div className="col-12 col-sm-3">
                     <input
                       className="form-control mt-2"
                       type="text"
-                      type="datetime-local"
                       step="1"
-                      aria-label="Start timestamp"
+                      placeholder="Timestamp in Unix seconds"
+                      aria-label="Timestamp in Unix seconds"
                       onChange={(e) => {
-                        Set_startTimestamp(e.target.value);
-                      }}
-                    />
-                  </div>
-                  <div className="col-12 col-sm-3">
-                    <input
-                      className="form-control mt-2"
-                      type="text"
-                      type="datetime-local"
-                      step="1"
-                      aria-label="End timestamp"
-                      onChange={(e) => {
-                        Set_endTimestamp(e.target.value);
+                        Set_timestamp(e.target.value);
                       }}
                     />
                   </div>
@@ -529,6 +576,7 @@
                 "lastprice_by_source",
                 "lastprices_by_source",
                 "prices_by_source",
+                "add_price",
               ].includes(func) && (
                 <div className="col-12 col-sm-3 mt-2">
                   <select
@@ -542,6 +590,17 @@
                     <option value="1">1 - Binance</option>
                     <option value="2">2 - Testing</option>
                   </select>
+                </div>
+              )}
+              {["add_price"].includes(func) && (
+                <div className="col-12 col-sm-3">
+                  <input
+                    className="form-control mt-2"
+                    type="text"
+                    placeholder="Price"
+                    aria-label="Price"
+                    onChange={(e) => Set_price(e.target.value)}
+                  />
                 </div>
               )}
             </div>
