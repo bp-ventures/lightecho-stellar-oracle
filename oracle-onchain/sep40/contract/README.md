@@ -35,7 +35,19 @@ soroban contract invoke \
 
 # Production deployment
 
-[Poetry](https://python-poetry.org/) is required to run the deployment scripts:
+## Deploy contract
+
+```
+# load stellar source account secret key into environment
+source ./scripts/source_secret.sh
+
+# deploy the contract to the blockchain
+./scripts/deploy.sh
+```
+
+## Initialize contract
+
+[Poetry](https://python-poetry.org/) is required to run the CLI:
 ```
 curl -sSL https://install.python-poetry.org | python3 -
 ```
@@ -43,17 +55,28 @@ curl -sSL https://install.python-poetry.org | python3 -
 Make sure to add `$HOME/.local/bin` to your Shell startup file (e.g. `~/.bashrc`),
 otherwise the `poetry` program might not be found.
 
+Go to CLI dir:
 ```
-# load stellar source account secret key into environment
-source ./scripts/source_secret.sh
-
-# install CLI dependencies
-$REPO_DIR/oracle-onchain/sep40/cli/poetry_install.sh
-
-# deploy the contract to the blockchain
-./scripts/deploy.sh
-
-# initialize the contract
 cd ../cli
-./cli initialize <admin> <base> <decimals> <resolution>
+```
+
+Install CLI dependencies:
+```
+./poetry_install.sh
+```
+
+Create CLI `local_settings.py` file, and edit it with your deployed Oracle contract id:
+```
+SOURCE_SECRET = "<stellar source secret you used above>"
+ADMIN_SECRET = "<stellar secret key of contract admin>"
+ORACLE_CONTRACT_ID = "<oracle contract id you obtained above>"
+PRICEUPDOWN_CONTRACT_ID = "" # leave empty as it's not required for the Oracle contract
+
+RPC_SERVER_URL = "https://rpc-futurenet.stellar.org:443/"
+NETWORK_PASSPHRASE = "Test SDF Future Network ; October 2022"
+```
+
+Initialize the contract:
+```
+./cli oracle initialize <admin> <base> <decimals> <resolution>
 ```
