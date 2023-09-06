@@ -5,6 +5,21 @@ For more information see docs at https://github.com/bp-ventures/lightecho-stella
 - [Development setup](#development-setup)
 - [Production deployment](#production-deployment)
 
+**2023-09-06 Notes:**
+Recently with the recent Soroban updates on the authorization architecture, we've been having problems invoking the contract functions that require authorization (`require_auth()`).
+We tried first with the Python SDK via normal transaction signing (`envelope.sign()`) but we're getting this error:
+```
+RuntimeError: Failed to send transaction: error_result_xdr='AAAAAAACuVH////2AAAAAA==' status=<SendTransactionStatus.ERROR: 'ERROR'> hash='f2cf96817d9b6310e0680e4e921667b1b334e166c030be1c60c96f8a1d206166' latest_ledger=768175 latest_ledger_close_time=1694006823
+```
+
+Then we tried with JS SDK and got this error:
+```
+HostError: Error(Storage, MissingValue)
+DebugInfo not available
+```
+
+Those issues are very likely related to authorization when invoking the contract function, and we're investigating to find the cause. As of right now, it's not possible to call the `add_price` function because of this issue. Every other function is working normally.
+
 # Development setup
 
 # Setup Rust and Soroban
