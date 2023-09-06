@@ -41,6 +41,9 @@ soroban contract invoke \
 # load stellar source account secret key into environment
 source ./scripts/source_secret.sh
 
+# install CLI dependencies
+$REPO_DIR/oracle-onchain/sep40/cli/poetry_install.sh
+
 # deploy the contract to the blockchain
 ./scripts/deploy.sh
 
