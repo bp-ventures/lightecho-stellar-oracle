@@ -35,7 +35,13 @@ soroban contract invoke \
 
 # Production deployment
 
-[Poetry](https://python-poetry.org/) is required to run the deployment scripts.
+[Poetry](https://python-poetry.org/) is required to run the deployment scripts:
+```
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+Make sure to add `$HOME/.local/bin` to your Shell startup file (e.g. `~/.bashrc`),
+otherwise the `poetry` program might not be found.
 
 ```
 # load stellar source account secret key into environment
