@@ -38,7 +38,7 @@ Clone this repository:
 ```
 git clone https://github.com/bp-ventures/lightecho-stellar-oracle.git
 cd lightecho-stellar-oracle
-export $REPO_DIR=$(pwd)
+export REPO_DIR=$(pwd)
 ```
 
 ### Deploy the Lightecho Oracle
