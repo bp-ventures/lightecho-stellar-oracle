@@ -55,6 +55,9 @@ state["kp"] = Keypair.from_secret(state["source_secret"])
 state["admin_kp"] = Keypair.from_secret(state["admin_secret"])
 state["soroban_server"] = SorobanServer(state["rpc_server_url"])
 state["source_acc"] = state["soroban_server"].load_account(state["kp"].public_key)
+state["admin_source_acc"] = state["soroban_server"].load_account(
+    state["admin_kp"].public_key
+)
 
 
 class AssetType(enum.Enum):
@@ -87,7 +90,9 @@ def send_tx(tx: TransactionEnvelope, signer=None):
 
     if signer is not None:
         tx.sign(signer)
-    tx.sign(state["kp"])
+    else:
+        tx.sign(state["kp"])
+    vprint(f"signed xdr: {tx.to_xdr()}")
 
     send_transaction_data = state["soroban_server"].send_transaction(tx)
     vprint(f"sent transaction: {send_transaction_data}")
@@ -109,14 +114,16 @@ def wait_tx(tx_hash: str):
 
 
 def invoke_contract_function(
-    function_name, parameters=[], signer=None, contract_id=None
+    function_name, parameters=[], source_acc=None, signer=None, contract_id=None
 ):
     if contract_id is None:
         contract_id = state["oracle_contract_id"]
+    if source_acc is None:
+        source_acc = state["source_acc"]
 
     tx = (
         TransactionBuilder(
-            state["source_acc"],
+            source_acc,
             state["network_passphrase"],
             base_fee=300000,
         )
@@ -226,9 +233,15 @@ def output_tx_data(tx_data):
         abort(f"Error: {tx_data}")
 
 
-def invoke_and_output(function_name, parameters=[], signer=None, contract_id=None):
+def invoke_and_output(
+    function_name, parameters=[], source_acc=None, signer=None, contract_id=None
+):
     tx_hash, tx_data = invoke_contract_function(
-        function_name, parameters, signer=signer, contract_id=contract_id
+        function_name,
+        parameters,
+        source_acc=source_acc,
+        signer=signer,
+        contract_id=contract_id,
     )
     print("Output:")
     output_tx_data(tx_data)
@@ -333,6 +346,7 @@ def deploy(contract_wasm_path: str):
         contract_id = StrKey.encode_contract(result)
         vprint(f"contract id: {contract_id}")
         print(contract_id)
+
 
 @oracle_app.command("deploy", help="oracle: deploy contract")
 def oracle_deploy():
@@ -467,7 +481,9 @@ def oracle_add_price(
         scval.to_int128(price_as_int),
         scval.to_uint64(timestamp),
     ]
-    invoke_and_output(func_name, args, signer=state["admin_kp"])
+    invoke_and_output(
+        func_name, args, source_acc=state["admin_source_acc"], signer=state["admin_kp"]
+    )
 
 
 @oracle_app.command("remove_prices", help="oracle: invoke remove_prices()")
