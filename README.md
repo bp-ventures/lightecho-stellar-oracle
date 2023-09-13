@@ -1,25 +1,46 @@
-Lightecho Oracle - Oracle smart contract for Soroban
+**Lightecho Oracle - Oracle smart contract for Soroban**
+
+Lightecho is a Stellar Oracle for emerging markets data and XLM volatility feeds.
+
+Currently deployed Lightecho Oracle Contract ID:
+
+```
+CDUXPLBTLQALOKX2IEEGINX5RGBNI7326R7DH24BB6BDGFCXLMYYDR6P
+```
 
 This repository contains:
+
 - Oracle contract implementation for the Soroban Smart Contracts platform
-  - [Contract source code](./oracle-onchain/v2/contract)
+  - [Contract source code](./oracle-onchain/sep40/contract)
   - [SEP-40 specification](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0040.md)
 - A Python-based CLI for interacting with the deployed contract
-  - [CLI instructions](./oracle-onchain/v2/cli)
-- A Web-based app for interacting with the deployed contract
+  - [CLI instructions](./oracle-onchain/sep40/cli)
+- Example on how to use the Oracle from a consumer contract (in Rust) calling using Python
+  - [SEP-40 Consumer Price Up/Down](./oracle-onchain/sep40/examples/price_up_down)
+- [IN-DEV] A Web-based app for interacting with the deployed contract (in JS React)
   - [Visit web app](https://bp-ventures.github.io/lightecho-stellar-oracle/)
   - [Web app source code](./docs/v2.html)
-- A JS fiddle for testing and debugging the contract calls
+- [IN-DEV] A JS fiddle for testing and debugging the contract calls
   - [Visit JS fiddle](https://playcode.io/1532409)
-- Examples on how to use the Oracle from other contracts
-  - [SEP-40 examples](./oracle-onchain/sep40/examples)
-  - [v2 examples](./oracle-onchain/v2/examples)
+
+### Roadmap
+
+- Complete JS examples
+- Improve documentation
+- Deploy market data feeds for XLM/EUR, XLM/USD, XLM/ARS, XLM/BRL, XLM/NGN, XLM/NGN_2 and a test of XLM Vol
+- Confirm prices resolution
+- Improved documentation
+- Uptime monitoring for feeds
+- Diversity of feeds (2+ organizations)
+- Bounty for usage
+- Soroban go live (pilot mode)
+- Soroban Production```
 
 #### Featured projects
 
 Have a project that uses our Oracle? Feel free to share with us and we'll be happy to list it here!
 
------------
+---
 
 https://lightecho.io
 

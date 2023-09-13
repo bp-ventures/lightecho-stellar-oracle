@@ -1,5 +1,8 @@
-This is an example Contract that implements a very simple price up/down checks
-against an Oracle contract.
+# SEP-40 Consumer Contract Example
+
+This is an example implementation of a Soroban contract written in Rust that
+implements a very simple price up/down check against an Oracle contract.  
+To invoke the contract we use our Python CLI.
 
 This contract contains three functions:
 
@@ -41,24 +44,6 @@ cd lightecho-stellar-oracle
 export REPO_DIR=$(pwd)
 ```
 
-### Deploy the Lightecho Oracle
-
-```
-cd $REPO_DIR/oracle-onchain/sep40/contract
-
-# build and run tests to make sure your toolchain is properly setup
-make test
-
-# load your Stellar secret key (can be any funded Stellar secret key)
-source ./scripts/source_secret.sh
-
-# deploy the Lightecho Oracle contract to the blockchain
-./scripts/deploy.sh
-
-```
-
-Now, in order to invoke the deployed contract, we use our Python CLI.
-
 ### Setup the CLI
 
 ```
@@ -85,29 +70,14 @@ Create CLI `local_settings.py`:
 ```
 SOURCE_SECRET = "SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW"
 ADMIN_SECRET = "SDFWYGBNP5TW4MS7RY5D4FILT65R2IEPWGL34NY2TLSU4DC4BJNXUAMU"
-ORACLE_CONTRACT_ID = "<oracle contract id deployed above>"
+ORACLE_CONTRACT_ID = "CDUXPLBTLQALOKX2IEEGINX5RGBNI7326R7DH24BB6BDGFCXLMYYDR6P"
 PRICEUPDOWN_CONTRACT_ID = "" # we'll fill this later below
 
 RPC_SERVER_URL = "https://rpc-futurenet.stellar.org:443/"
 NETWORK_PASSPHRASE = "Test SDF Future Network ; October 2022"
 ```
 
-### Initialize the Lightecho Oracle
-
-```
-./cli oracle initialize \
-  GDOOLD2UL3STZ4FLHM5CV3ZFSTYI4EYZHEEGIC4GHL4CJ4BLSSYNN5ER \
-  XLM \
-  18 \
-  300
-
-# add a price to the oracle
-# NOTE: this is throwing an error due to issues with Stellar authorization, see:
-#    https://github.com/StellarCN/py-stellar-base/issues/773
-./cli oracle add_price 0 other USD 5.5
-```
-
-### Deploy the PriceUpDown contract
+### Deploy the contract
 
 ```
 cd $REPO_DIR/oracle-onchain/sep40/examples/price_up_down
@@ -122,25 +92,32 @@ source ./scripts/source_secret.sh
 ./scripts/deploy.sh
 ```
 
+![Screenshot_20230913_105510](https://github.com/bp-ventures/lightecho-stellar-oracle/assets/26092447/a4156733-cd57-4265-805a-20af12ab38ec)
+
+
 ### Add the contract id to the CLI `local_settings.py`:
+
 ```
 cd $REPO_DIR/oracle-onchain/sep40/cli
 edit local_settings.py
 ```
+
 `local_settings.py`:
+
 ```
 ...
 PRICEUPDOWN_CONTRACT_ID = "<priceupdown contract id deployed above>"
 ...
 ```
 
-### Initialize the PriceUpDown contract
+### Initialize the contract
 
 ```
-./cli priceupdown initialize \
-  <oracle contract id from above>
+./cli priceupdown initialize CDUXPLBTLQALOKX2IEEGINX5RGBNI7326R7DH24BB6BDGFCXLMYYDR6P
+```
 
-./cli priceupdown get_price_up_down \
-  other \
-  USD
+### Get price up/down value
+
+```
+./cli priceupdown get_price_up_down other USD
 ```
