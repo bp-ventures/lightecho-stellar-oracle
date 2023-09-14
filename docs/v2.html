@@ -49,7 +49,7 @@
     const config = {
       sourceSecret: "SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW",
       rpcServerUrl: "https://rpc-futurenet.stellar.org:443/",
-      contractId: "CD557IUYOXHQ6WLXUBWNFI5TIMCRVB2F5NIIEV7RS6QRIVLZCBGNNLA5",
+      contractId: "CDUXPLBTLQALOKX2IEEGINX5RGBNI7326R7DH24BB6BDGFCXLMYYDR6P",
       networkPassphrase: "Test SDF Future Network ; October 2022",
       fee: 1000,
       apiUrl: "https://lightecho-stellar-oracle-api.bpventures.us",
@@ -124,10 +124,13 @@
         }
       };
 
-      const submitTx = async (contractOp) => {
+      const submitTx = async (
+        contractOp,
+        signerSecret = config.sourceSecret
+      ) => {
         appendToLog("Building transaction envelope");
         const server = new SorobanClient.Server(config.rpcServerUrl);
-        const keypair = SorobanClient.Keypair.fromSecret(config.sourceSecret);
+        const keypair = SorobanClient.Keypair.fromSecret(signerSecret);
         const account = await server.getAccount(keypair.publicKey());
         let transaction = new SorobanClient.TransactionBuilder(account, {
           fee: config.fee,
@@ -269,48 +272,16 @@
             );
             break;
           case "add_price":
-            const args = [
-              SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
-              getAssetEnum(assetCode, assetIssuer),
-              numberToScvI128(convertToInt18DecimalPlaces(parseFloat(price))),
-              numberToScvU64(timestamp),
-            ];
-            const invocation =
-              new SorobanClient.xdr.SorobanAuthorizedInvocation({
-                function:
-                  SorobanClient.xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
-                    new SorobanClient.xdr.SorobanAuthorizedContractFunction({
-                      contractAddress: new SorobanClient.StellarBase.Address(
-                        config.contractId
-                      ).toScAddress(),
-                      functionName: "add_price",
-                      args: args,
-                    })
-                  ),
-                subInvocations: [],
-              });
-            const keypair = SorobanClient.Keypair.fromSecret(adminSecret);
-            const entry = SorobanClient.StellarBase.authorizeInvocation(
-              keypair,
-              SorobanClient.StellarBase.Networks.FUTURENET,
-              123,
-              invocation
-            );
-            const op = SorobanClient.StellarBase.Operation.invokeHostFunction({
-              func: SorobanClient.xdr.HostFunction.hostFunctionTypeInvokeContract(
-                [
-                  SorobanClient.StellarBase.Address.contract(
-                    SorobanClient.StellarBase.StrKey.decodeContract(
-                      config.contractId
-                    )
-                  ).toScVal(),
-                  SorobanClient.xdr.ScVal.scvSymbol("add_price"),
-                  ...args,
-                ]
+            await submitTx(
+              contract.call(
+                "add_price",
+                SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
+                getAssetEnum(assetCode, assetIssuer),
+                numberToScvI128(convertToInt18DecimalPlaces(parseFloat(price))),
+                numberToScvU64(timestamp)
               ),
-              auth: [entry],
-            });
-            await submitTx(op, ...args);
+              adminSecret
+            );
             break;
           case "remove_prices":
             break;
