@@ -36,34 +36,6 @@ def verify_password(username, password):
         return username
 
 
-def parse_sc_val(sc_val):
-    if sc_val.u32 is not None:
-        return sc_val.u32.uint32
-    if sc_val.i32 is not None:
-        return sc_val.i32.int32
-    if sc_val.u64 is not None:
-        return sc_val.u64.uint64
-    if sc_val.i64 is not None:
-        return sc_val.i64.int64
-    if sc_val.u128 is not None:
-        high = sc_val.u128.hi.uint64
-        low = sc_val.u128.lo.uint64
-        uint128 = (high << 64) | low
-        return uint128
-    if sc_val.i128 is not None:
-        high = sc_val.i128.hi.int64
-        low = sc_val.i128.lo.uint64
-        uint128 = (high << 64) | low
-        return uint128
-    if sc_val.map is not None:
-        return parse_sc_map(sc_val.map.sc_map)
-    if sc_val.vec is not None:
-        return parse_sc_vec(sc_val.vec.sc_vec)
-    if sc_val.sym is not None:
-        return sc_val.sym.sc_symbol.decode()
-    raise ValueError("Could not parse sc_val")
-
-
 @app.before_request
 def handle_options():
     if request.method.lower() == "options":
@@ -148,6 +120,34 @@ def set_rate():
     raw_output = check_output(cmd, cwd=cli_dir)
     output = raw_output.decode()
     return {"success": True, "output": output}
+
+
+def parse_sc_val(sc_val):
+    if sc_val.u32 is not None:
+        return sc_val.u32.uint32
+    if sc_val.i32 is not None:
+        return sc_val.i32.int32
+    if sc_val.u64 is not None:
+        return sc_val.u64.uint64
+    if sc_val.i64 is not None:
+        return sc_val.i64.int64
+    if sc_val.u128 is not None:
+        high = sc_val.u128.hi.uint64
+        low = sc_val.u128.lo.uint64
+        uint128 = (high << 64) | low
+        return uint128
+    if sc_val.i128 is not None:
+        high = sc_val.i128.hi.int64
+        low = sc_val.i128.lo.uint64
+        uint128 = (high << 64) | low
+        return uint128
+    if sc_val.map is not None:
+        return parse_sc_map(sc_val.map.sc_map)
+    if sc_val.vec is not None:
+        return parse_sc_vec(sc_val.vec)
+    if sc_val.sym is not None:
+        return sc_val.sym.sc_symbol.decode()
+    raise ValueError("Could not parse sc_val")
 
 
 def parse_sc_vec(sc_vec):
