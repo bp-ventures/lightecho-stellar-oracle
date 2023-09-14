@@ -17,11 +17,11 @@ This repository contains:
   - [CLI instructions](./oracle-onchain/sep40/cli)
 - Example on how to use the Oracle from a consumer contract (in Rust) calling using Python
   - [SEP-40 Consumer Price Up/Down](./oracle-onchain/sep40/examples/price_up_down)
-- [IN-DEV] A Web-based app for interacting with the deployed contract (in JS React)
+- A Web-based app for interacting with the deployed contract (in JS React)
   - [Visit web app](https://bp-ventures.github.io/lightecho-stellar-oracle/)
   - [Web app source code](./docs/v2.html)
-- [IN-DEV] A JS fiddle for testing and debugging the contract calls
-  - [Visit JS fiddle](https://playcode.io/1532409)
+- A JS fiddle for testing and debugging the contract calls
+  - [Visit JS fiddle](https://playcode.io/1594911)
 
 ### Roadmap
 
