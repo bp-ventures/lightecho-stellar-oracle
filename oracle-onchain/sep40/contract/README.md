@@ -2,25 +2,66 @@
 
 For more information see docs at https://github.com/bp-ventures/lightecho-stellar-oracle
 
-- [Development setup](#development-setup)
-- [Production deployment](#production-deployment)
-
-Currently deployed Lightecho Oracle Contract ID:
+Official Lightecho Oracle Contract ID:
 
 ```
 CDUXPLBTLQALOKX2IEEGINX5RGBNI7326R7DH24BB6BDGFCXLMYYDR6P
 ```
 
-# Development setup
+Summary:
 
-# Setup Rust and Soroban
+- [Fetching prices from the Oracle](#fetching-prices-from-the-oracle)
+- [Consuming the Oracle from another Soroban contract](#consuming-the-oracle-from-another-soroban-contract)
+- [Deploying a new Oracle instance](#deploying-a-new-oracle-instance)
 
-Follow instructions from Stellar docs:  
-https://soroban.stellar.org/docs/getting-started/setup
+# Fetching prices from the Oracle
 
-# Production deployment
+You can fetch prices from our Oracle by using our Python SDK library:
 
-## Deploy contract
+```
+pip install lightecho-stellar-oracle
+```
+
+```
+from lightecho_stellar_oracle import OracleClient
+
+client = OracleClient(
+  rpc_server_url="https://rpc-futurenet.stellar.org:443/",
+  network_passphrase="Test SDF Future Network ; October 2022",
+  contract_id="CDUXPLBTLQALOKX2IEEGINX5RGBNI7326R7DH24BB6BDGFCXLMYYDR6P",
+)
+lastprice_usd = client.lastprice("Other", "USD")
+print(lastprice_usd)
+```
+
+# Consuming the Oracle from another Soroban contract
+
+See the [PriceUpDown contract example](../examples/price_up_down) on how to consume the Oracle from another
+Soroban contract.
+
+# Deploying a new Oracle instance
+
+These instructions are for deploying a new Oracle instance to the blockchain.  
+Note that if you deploy a new Oracle instance, the instance will not contain
+any price unless you feed the prices yourself. So we highly recommend not
+deploying a new instance, and instead, [fetch prices from our official Oracle contract](#fetching-prices-from-the-oracle).
+
+## Install Soroban Rust toolchain
+
+Follow the instructions in https://soroban.stellar.org/docs/getting-started/setup.
+
+## Install GNU build tools
+
+- For Ubuntu:
+
+```
+sudo apt install build-essential
+```
+
+- For other operating systems, please check the documentation of your specific system.
+  Make sure GNU `make` is available along with its related tools.
+
+## Deploy contract to the blockchain
 
 ```
 # load stellar source account secret key into environment
@@ -30,9 +71,11 @@ source ./scripts/source_secret.sh
 ./scripts/deploy.sh
 ```
 
-## Initialize contract
+## Initialize contract via CLI
 
-[Poetry](https://python-poetry.org/) is required to run the CLI:
+We provide a Python-based CLI for interacting with the deployed contract.
+
+Install [Poetry](https://python-poetry.org/):
 
 ```
 curl -sSL https://install.python-poetry.org | python3 -
@@ -58,8 +101,9 @@ Create CLI `local_settings.py` file, and edit it with your deployed Oracle contr
 ```
 SOURCE_SECRET = "<stellar source secret you used above>"
 ADMIN_SECRET = "<stellar secret key of contract admin>"
+
 ORACLE_CONTRACT_ID = "<oracle contract id you obtained above>"
-PRICEUPDOWN_CONTRACT_ID = "" # leave empty as it's not required for the Oracle contract
+PRICEUPDOWN_CONTRACT_ID = "" # leave empty
 
 RPC_SERVER_URL = "https://rpc-futurenet.stellar.org:443/"
 NETWORK_PASSPHRASE = "Test SDF Future Network ; October 2022"
@@ -69,4 +113,14 @@ Initialize the contract:
 
 ```
 ./cli oracle initialize <admin> <base> <decimals> <resolution>
+```
+
+Example:
+
+```
+./cli oracle initialize \
+    GCDXRFUE3OCQLIUYYCQHOS2TPEZ5VMVSVRXEOBQDUJRRGP67IXRFPS7T
+    XLM
+    18
+    300
 ```
