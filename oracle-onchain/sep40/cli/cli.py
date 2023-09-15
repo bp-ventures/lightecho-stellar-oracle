@@ -159,6 +159,8 @@ def parse_tx_result(tx_data):
 
 
 def parse_sc_val(sc_val):
+    if sc_val.type == SCValType.SCV_BOOL:
+        return sc_val.b
     if sc_val.u32 is not None:
         return sc_val.u32.uint32
     if sc_val.i32 is not None:
