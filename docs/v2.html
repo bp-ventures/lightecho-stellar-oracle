@@ -79,10 +79,10 @@
     }
 
     const App = () => {
-      const defaultRecords = 5;
+      const defaultRecords = "5";
 
       const [running, Set_running] = useState(false);
-      const [func, Set_func] = useState(undefined);
+      const [func, Set_func] = useState("lastprice");
       const [source, Set_source] = useState("1");
       const [admin, Set_admin] = useState(undefined);
       const [baseAssetCode, Set_baseAssetCode] = useState(undefined);
@@ -217,6 +217,64 @@
           integerPart.toString() + decimalPart.toFixed(0)
         );
         return customInteger;
+      };
+
+      const isNotEmpty = (value) => {
+        return value !== undefined && value !== null && value !== "";
+      };
+
+      const isRunEnabled = () => {
+        if (running) {
+          return false;
+        }
+        switch (func) {
+          case "initialize":
+            return (
+              isNotEmpty(admin) &&
+              isNotEmpty(baseAssetCode) &&
+              isNotEmpty(decimals) &&
+              isNotEmpty(resolution)
+            );
+          case "read_admin":
+            return true;
+          case "sources":
+            return true;
+          case "prices_by_source":
+            return isNotEmpty(records);
+          case "price_by_source":
+            return (
+              isNotEmpty(source) &&
+              isNotEmpty(assetCode) &&
+              isNotEmpty(timestamp)
+            );
+          case "lastprice_by_source":
+            return isNotEmpty(source) && isNotEmpty(assetCode);
+          case "add_price":
+            return (
+              isNotEmpty(source) &&
+              isNotEmpty(assetCode) &&
+              isNotEmpty(price) &&
+              isNotEmpty(timestamp)
+            );
+          case "remove_prices":
+            return false;
+          case "base":
+            return true;
+          case "assets":
+            return true;
+          case "decimals":
+            return true;
+          case "resolution":
+            return true;
+          case "price":
+            return isNotEmpty(assetCode) && isNotEmpty(timestamp);
+          case "prices":
+            return isNotEmpty(assetCode) && isNotEmpty(records);
+          case "lastprice":
+            return isNotEmpty(assetCode);
+          default:
+            return false;
+        }
       };
 
       const runFunc = async () => {
@@ -362,20 +420,6 @@
                 </p>
               </div>
             </div>
-            <div className="row justify-content-center">
-              <div className="col">
-                <p className="text-center">
-                  Example on how to fetch <code>XLM-USD</code> rate:
-                  <br />
-                  Asset code: <code>USD</code>
-                  <br />
-                  Asset issuer:{" "}
-                  <code>leave it empty since USD is off-chain</code>
-                  <br />
-                  Source: <code>1 - Binance</code>
-                </p>
-              </div>
-            </div>
             <div className="row pt-2 justify-content-center">
               <div className="col">
                 <p className="text-center">
@@ -387,7 +431,7 @@
             <div className="row pt-2 justify-content-center">
               <div className="col-12 col-sm-3 mt-2">
                 <select
-                  defaultValue="1"
+                  defaultValue="lastprice"
                   className="form-select"
                   aria-label="Select function"
                   onChange={(e) => Set_func(e.target.value)}
@@ -459,8 +503,8 @@
                     <input
                       className="form-control"
                       type="text"
-                      placeholder="Base asset issuer pubkey"
-                      aria-label="Base asset issuer pubkey"
+                      placeholder="(optional) Base asset issuer pubkey"
+                      aria-label="(optional) Base asset issuer pubkey"
                       onChange={(e) => Set_baseAssetIssuer(e.target.value)}
                     />
                   </div>
@@ -508,8 +552,8 @@
                     <input
                       className="form-control"
                       type="text"
-                      placeholder="Asset issuer pubkey"
-                      aria-label="Asset issuer pubkey"
+                      placeholder="(optional) Asset issuer pubkey"
+                      aria-label="(optional) Asset issuer pubkey"
                       onChange={(e) => Set_assetIssuer(e.target.value)}
                     />
                   </div>
@@ -579,7 +623,7 @@
               <div className="col-12 col-sm-3 mt-2">
                 <button
                   className="btn btn-primary w-100"
-                  disabled={!source || running || !assetCode}
+                  disabled={!isRunEnabled()}
                   onClick={async () => {
                     if (source) {
                       Set_running(true);
