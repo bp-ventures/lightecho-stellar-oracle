@@ -20,5 +20,5 @@ cli_dir = pathlib.Path(__file__).parent.resolve()
 for index, row in df2.iterrows():
     if row["symbol"] in ["XLMUSDT"]:
         print(f"adding {row['symbol']} price {row['lastPrice']} to contract")
-        out = check_output(["./cli.py", "add-price", "1", "other", "USD", row["lastPrice"]], cwd=cli_dir)
+        out = check_output(["./cli.py", "oracle", "add_price", "1", "other", "USD", row["lastPrice"]], cwd=cli_dir)
         print(out.decode())
