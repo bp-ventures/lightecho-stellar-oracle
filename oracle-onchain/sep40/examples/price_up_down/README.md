@@ -4,6 +4,10 @@ This is an example implementation of a Soroban contract written in Rust that
 implements a very simple price up/down check against an Oracle contract.  
 To invoke the contract we use our Python CLI.
 
+**Update 2023-Sep-18:**
+Due to the latest Futurenet reset and Soroban SDK updates, most of our codebase is not
+working and we're currently fixing the issues.
+
 This contract contains three functions:
 
 - `initialize`: initialize the contract with an Oracle contract id

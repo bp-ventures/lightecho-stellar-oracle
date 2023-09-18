@@ -2,11 +2,9 @@
 
 For more information see docs at https://github.com/bp-ventures/lightecho-stellar-oracle
 
-Official Lightecho Oracle Contract ID:
-
-```
-CDUXPLBTLQALOKX2IEEGINX5RGBNI7326R7DH24BB6BDGFCXLMYYDR6P
-```
+**Update 2023-Sep-18:**
+Due to the latest Futurenet reset and Soroban SDK updates, most of our codebase is not
+working and we're currently fixing the issues.
 
 Summary:
 
