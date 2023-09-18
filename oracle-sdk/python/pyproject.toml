@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "lightecho-oracle-sdk"
+version = "0.1.0"
+description = "Python SDK for the Lightecho Stellar Oracle"
+authors = ["BP Ventures"]
+readme = "README.md"
+homepage = "https://github.com/bp-ventures/lightecho-stellar-oracle/tree/trunk/oracle-sdk/python"
+packages = [
+    { include = "lightecho_stellar_oracle.py" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+stellar-sdk = { version = "9.0.0-a2" }
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
