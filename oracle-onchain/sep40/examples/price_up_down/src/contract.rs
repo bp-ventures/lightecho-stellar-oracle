@@ -1,6 +1,6 @@
 use crate::metadata;
 use crate::oracle;
-use crate::storage_types::{DataKey, UpDown, TEMPORARY_BUMP_AMOUNT, TEMPORARY_LIFETIME_THRESHOLD};
+use crate::storage_types::{bump_temporary, DataKey, UpDown};
 use soroban_sdk::{contract, contractimpl, Address, Env, Map};
 
 pub trait PriceUpDownTrait {
@@ -67,16 +67,12 @@ impl PriceUpDownTrait for PriceUpDown {
 
 pub fn read_prices(env: &Env) -> Map<oracle::Asset, oracle::PriceData> {
     let key = DataKey::Prices;
-    env.storage()
-        .temporary()
-        .bump(&key, TEMPORARY_LIFETIME_THRESHOLD, TEMPORARY_BUMP_AMOUNT);
+    bump_temporary(env, &key);
     return env.storage().temporary().get(&key).unwrap();
 }
 
 pub fn write_prices(env: &Env, prices: &Map<oracle::Asset, oracle::PriceData>) {
     let key = DataKey::Prices;
-    env.storage()
-        .temporary()
-        .bump(&key, TEMPORARY_LIFETIME_THRESHOLD, TEMPORARY_BUMP_AMOUNT);
-    return env.storage().temporary().set(&key, prices);
+    env.storage().temporary().set(&key, prices);
+    bump_temporary(env, &key);
 }
