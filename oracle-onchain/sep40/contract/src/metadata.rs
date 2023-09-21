@@ -1,64 +1,55 @@
-use crate::storage_types::{Asset, DataKey, PERSISTENT_BUMP_AMOUNT};
+use crate::storage_types::{bump_instance, Asset, DataKey};
 use soroban_sdk::{Address, Env};
 
 pub fn has_admin(env: &Env) -> bool {
-    return env.storage().instance().has(&DataKey::Admin);
+    let key = DataKey::Admin;
+    if let Some(_) = env.storage().persistent().get::<DataKey, i128>(&key) {
+        bump_instance(env);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 pub fn read_admin(env: &Env) -> Address {
-    return env.storage().instance().get(&DataKey::Admin).unwrap();
+    let key = DataKey::Admin;
+    bump_instance(env);
+    return env.storage().persistent().get(&key).unwrap();
 }
 
 pub fn write_admin(env: &Env, id: &Address) {
-    return env.storage().instance().set(&DataKey::Admin, id);
+    env.storage().persistent().set(&DataKey::Admin, id);
+    bump_instance(env);
 }
 
 pub fn write_base(env: &Env, base: &Asset) {
-    let key = DataKey::Base;
-    env.storage().persistent().set(&key, base);
-    env.storage()
-        .persistent()
-        .bump(&key, PERSISTENT_BUMP_AMOUNT);
+    env.storage().persistent().set(&DataKey::Base, base);
 }
 
 pub fn read_base(env: &Env) -> Asset {
-    let key = DataKey::Base;
-    env.storage()
-        .persistent()
-        .bump(&key, PERSISTENT_BUMP_AMOUNT);
-    return env.storage().persistent().get(&key).unwrap();
+    return env.storage().persistent().get(&DataKey::Base).unwrap();
 }
 
 pub fn write_decimals(env: &Env, decimals: &u32) {
-    let key = DataKey::Decimals;
-    env.storage().persistent().set(&key, decimals);
-    env.storage()
-        .persistent()
-        .bump(&key, PERSISTENT_BUMP_AMOUNT);
+    env.storage().persistent().set(&DataKey::Decimals, decimals);
 }
 
 pub fn read_decimals(env: &Env) -> u32 {
-    let key = DataKey::Decimals;
-    env.storage()
-        .persistent()
-        .bump(&key, PERSISTENT_BUMP_AMOUNT);
-    return env.storage().persistent().get(&key).unwrap();
+    return env.storage().persistent().get(&DataKey::Decimals).unwrap();
 }
 
 pub fn write_resolution(env: &Env, resolution: &u32) {
-    let key = DataKey::Resolution;
-    env.storage().persistent().set(&key, resolution);
     env.storage()
         .persistent()
-        .bump(&key, PERSISTENT_BUMP_AMOUNT);
+        .set(&DataKey::Resolution, resolution);
 }
 
 pub fn read_resolution(env: &Env) -> u32 {
-    let key = DataKey::Resolution;
-    env.storage()
+    return env
+        .storage()
         .persistent()
-        .bump(&key, PERSISTENT_BUMP_AMOUNT);
-    return env.storage().persistent().get(&key).unwrap();
+        .get(&DataKey::Resolution)
+        .unwrap();
 }
 
 pub fn write_metadata(env: &Env, admin: &Address, base: &Asset, decimals: &u32, resolution: &u32) {

@@ -1,9 +1,7 @@
 use soroban_sdk::{contract, contractimpl, Address, Env, Map, Vec};
 
 use crate::metadata;
-use crate::storage_types::{
-    Asset, DataKey, PriceData, INSTANCE_BUMP_AMOUNT, TEMPORARY_BUMP_AMOUNT,
-};
+use crate::storage_types::{bump_temporary, Asset, DataKey, PriceData};
 
 pub trait OracleTrait {
     fn initialize(env: Env, admin: Address, base: Asset, decimals: u32, resolution: u32);
@@ -77,27 +75,24 @@ impl OracleTrait for Oracle {
     }
 
     fn has_admin(env: Env) -> bool {
-        env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
         return metadata::has_admin(&env);
     }
 
     fn write_admin(env: Env, id: Address) {
-        env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
         metadata::write_admin(&env, &id);
     }
 
     fn read_admin(env: Env) -> Address {
-        env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
         return metadata::read_admin(&env);
     }
 
     fn sources(env: Env) -> Vec<u32> {
-        let prices = read_prices(&env);
+        let prices = read_prices(&env, true);
         return prices.keys();
     }
 
     fn price_by_source(env: Env, source: u32, asset: Asset, timestamp: u64) -> Option<PriceData> {
-        let prices = read_prices(&env);
+        let prices = read_prices(&env, true);
         let asset_map_option = prices.get(source);
         match asset_map_option {
             Some(asset_map) => {
@@ -124,7 +119,7 @@ impl OracleTrait for Oracle {
         asset: Asset,
         records: u32,
     ) -> Option<Vec<PriceData>> {
-        let prices = read_prices(&env);
+        let prices = read_prices(&env, true);
         let mut prices_within_range: Vec<PriceData> = Vec::<PriceData>::new(&env);
         let asset_map_option = prices.get(source);
         match asset_map_option {
@@ -150,7 +145,7 @@ impl OracleTrait for Oracle {
     }
 
     fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData> {
-        let prices = read_prices(&env);
+        let prices = read_prices(&env, true);
         let asset_map_option = prices.get(source);
         match asset_map_option {
             Some(asset_map) => {
@@ -175,8 +170,7 @@ impl OracleTrait for Oracle {
 
     fn add_price(env: Env, source: u32, asset: Asset, price: i128, timestamp: u64) {
         metadata::read_admin(&env).require_auth();
-        env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
-        let mut prices = read_prices(&env);
+        let mut prices = read_prices(&env, false);
         let asset_map_option = prices.get(source);
         let mut asset_map;
         match asset_map_option {
@@ -211,7 +205,6 @@ impl OracleTrait for Oracle {
         start_timestamp: Option<u64>,
         end_timestamp: Option<u64>,
     ) {
-        env.storage().instance().bump(INSTANCE_BUMP_AMOUNT);
         return remove_prices(&env, &sources, &assets, &start_timestamp, &end_timestamp);
     }
 
@@ -220,7 +213,7 @@ impl OracleTrait for Oracle {
     }
 
     fn assets(env: Env) -> Vec<Asset> {
-        let prices = read_prices(&env);
+        let prices = read_prices(&env, true);
         let mut assets_map = Map::<Asset, bool>::new(&env);
         for (_, asset_map) in prices.iter() {
             for (asset, _) in asset_map.iter() {
@@ -277,7 +270,7 @@ pub fn remove_prices(
     end_timestamp: &Option<u64>,
 ) {
     metadata::read_admin(&env).require_auth();
-    let prices = read_prices(env);
+    let prices = read_prices(env, false);
     let mut new_prices = Map::<u32, Map<Asset, Vec<PriceData>>>::new(&env);
     let sources_len = sources.len();
     let assets_len = assets.len();
@@ -324,14 +317,16 @@ pub fn remove_prices(
     write_prices(env, &new_prices);
 }
 
-pub fn read_prices(env: &Env) -> Map<u32, Map<Asset, Vec<PriceData>>> {
+pub fn read_prices(env: &Env, bump: bool) -> Map<u32, Map<Asset, Vec<PriceData>>> {
     let key = DataKey::Prices;
-    env.storage().temporary().bump(&key, TEMPORARY_BUMP_AMOUNT);
+    if bump {
+        bump_temporary(env, &key);
+    }
     return env.storage().temporary().get(&key).unwrap();
 }
 
 pub fn write_prices(env: &Env, prices: &Map<u32, Map<Asset, Vec<PriceData>>>) {
     let key = DataKey::Prices;
-    env.storage().temporary().bump(&key, TEMPORARY_BUMP_AMOUNT);
-    return env.storage().temporary().set(&key, prices);
+    env.storage().temporary().set(&key, prices);
+    bump_temporary(env, &key);
 }

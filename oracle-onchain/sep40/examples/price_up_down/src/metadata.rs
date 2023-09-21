@@ -1,4 +1,4 @@
-use crate::storage_types::{DataKey, PERSISTENT_BUMP_AMOUNT};
+use crate::storage_types::{DataKey, PERSISTENT_BUMP_AMOUNT, PERSISTENT_LIFETIME_THRESHOLD};
 use soroban_sdk::{Address, Env};
 
 pub fn write_oracle_contract_id(env: &Env, oracle_contract_id: &Address) {
@@ -6,14 +6,14 @@ pub fn write_oracle_contract_id(env: &Env, oracle_contract_id: &Address) {
     env.storage().persistent().set(&key, oracle_contract_id);
     env.storage()
         .persistent()
-        .bump(&key, PERSISTENT_BUMP_AMOUNT);
+        .bump(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
 }
 
 pub fn read_oracle_contract_id(env: &Env) -> Address {
     let key = DataKey::OracleContractId;
     env.storage()
         .persistent()
-        .bump(&key, PERSISTENT_BUMP_AMOUNT);
+        .bump(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
     return env.storage().persistent().get(&key).unwrap();
 }
 
