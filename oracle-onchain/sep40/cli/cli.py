@@ -49,7 +49,7 @@ state = {
     "oracle_contract_id": local_settings.ORACLE_CONTRACT_ID,
     "priceupdown_contract_id": local_settings.PRICEUPDOWN_CONTRACT_ID,
     "network_passphrase": local_settings.NETWORK_PASSPHRASE,
-    "horizon_url": "https://horizon-futurenet.stellar.org",
+    "horizon_url": local_settings.HORIZON_URL,
 }
 state["kp"] = Keypair.from_secret(state["source_secret"])
 state["admin_kp"] = Keypair.from_secret(state["admin_secret"])
