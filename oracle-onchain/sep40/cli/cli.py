@@ -377,6 +377,11 @@ def oracle_initialize(admin: str, base: str, decimals: int, resolution: int):
     invoke_and_output(func_name, args)
 
 
+@oracle_app.command("bump_instance", help="oracle: invoke bump_instance()")
+def oracle_bump_instance():
+    invoke_and_output("bump_instance")
+
+
 @oracle_app.command("has_admin", help="oracle: invoke has_admin()")
 def oracle_has_admin():
     invoke_and_output("has_admin")
