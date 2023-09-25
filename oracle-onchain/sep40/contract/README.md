@@ -2,36 +2,6 @@
 
 For more information see docs at https://github.com/bp-ventures/lightecho-stellar-oracle
 
-**Update 2023-Sep-18:**
-Due to the latest Futurenet reset and Soroban SDK updates, most of our codebase is not
-working and we're currently fixing the issues.
-
-Summary:
-
-- [Fetching prices from the Oracle](#fetching-prices-from-the-oracle)
-- [Consuming the Oracle from another Soroban contract](#consuming-the-oracle-from-another-soroban-contract)
-- [Deploying a new Oracle instance](#deploying-a-new-oracle-instance)
-
-# Fetching prices from the Oracle
-
-You can fetch prices from our Oracle by using our Python SDK library:
-
-```
-pip install lightecho-stellar-oracle
-```
-
-```
-from lightecho_stellar_oracle import OracleClient
-
-client = OracleClient(
-  rpc_server_url="https://rpc-futurenet.stellar.org:443/",
-  network_passphrase="Test SDF Future Network ; October 2022",
-  contract_id="CDUXPLBTLQALOKX2IEEGINX5RGBNI7326R7DH24BB6BDGFCXLMYYDR6P",
-)
-lastprice_usd = client.lastprice("Other", "USD")
-print(lastprice_usd)
-```
-
 # Consuming the Oracle from another Soroban contract
 
 See the [PriceUpDown contract example](../examples/price_up_down) on how to consume the Oracle from another
