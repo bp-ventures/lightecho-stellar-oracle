@@ -1,10 +1,11 @@
 use crate::metadata;
 use crate::oracle;
-use crate::storage_types::{bump_temporary, DataKey, UpDown};
+use crate::storage_types::{bump_instance, DataKey, UpDown};
 use soroban_sdk::{contract, contractimpl, Address, Env, Map};
 
 pub trait PriceUpDownTrait {
     fn initialize(env: Env, oracle_contract_id: Address);
+    fn bump_instance(env: Env);
     fn lastprice(env: Env, asset: oracle::Asset) -> Option<oracle::PriceData>;
     fn get_price_up_down(env: Env, asset: oracle::Asset) -> UpDown;
 }
@@ -23,10 +24,15 @@ impl PriceUpDownTrait for PriceUpDown {
         write_prices(&env, &Map::<oracle::Asset, oracle::PriceData>::new(&env));
     }
 
+    fn bump_instance(env: Env) {
+        bump_instance(&env);
+    }
+
     fn lastprice(env: Env, asset: oracle::Asset) -> Option<oracle::PriceData> {
         let oracle_contract_id = metadata::read_oracle_contract_id(&env);
         let client = oracle::Client::new(&env, &oracle_contract_id);
         let lastprice = client.lastprice(&asset);
+        bump_instance(&env);
         return lastprice;
     }
 
@@ -67,12 +73,10 @@ impl PriceUpDownTrait for PriceUpDown {
 
 pub fn read_prices(env: &Env) -> Map<oracle::Asset, oracle::PriceData> {
     let key = DataKey::Prices;
-    bump_temporary(env, &key);
     return env.storage().temporary().get(&key).unwrap();
 }
 
 pub fn write_prices(env: &Env, prices: &Map<oracle::Asset, oracle::PriceData>) {
     let key = DataKey::Prices;
     env.storage().temporary().set(&key, prices);
-    bump_temporary(env, &key);
 }

@@ -585,6 +585,15 @@ def priceupdown_initialize(oracle_contract_id: str):
     )
 
 
+@priceupdown_app.command("bump_instance", help="priceupdown: invoke bump_instance()")
+def priceupdown_bump_instance():
+    invoke_and_output(
+        "bump_instance",
+        [],
+        contract_id=state["priceupdown_contract_id"],
+    )
+
+
 @priceupdown_app.command("lastprice", help="priceupdown: invoke lastprice()")
 def priceupdown_lastprice(
     asset_type: AssetType,
