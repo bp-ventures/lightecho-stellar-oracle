@@ -178,7 +178,7 @@
             // so we call an external API to parse it.
             let parsedResult = await axios.post(
               `${config.apiUrl}/soroban/parse-result-xdr/`,
-              { xdr: response.resultMetaXdr }
+              { xdr: response.resultMetaXdr.toXDR('base64') }
             );
             appendToLog(`Tx Result: ${JSON.stringify(parsedResult.data)}`);
           } else {
