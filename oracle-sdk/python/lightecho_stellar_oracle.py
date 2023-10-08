@@ -7,7 +7,7 @@ from stellar_sdk import (
     StrKey,
     TransactionBuilder,
     TransactionEnvelope,
-    Network as SdkNetwork,
+    Network as StellarSdkNetwork,
 )
 from stellar_sdk import scval, xdr as stellar_xdr
 from stellar_sdk.soroban_rpc import GetTransactionStatus, SendTransactionStatus
@@ -15,8 +15,8 @@ from stellar_sdk.soroban_server import SorobanServer
 from stellar_sdk.xdr.sc_val_type import SCValType
 
 
-AssetType = Literal["stellar", "other"]
-Network = Literal["futurenet", "testnet", "public"]
+OracleAssetType = Literal["stellar", "other"]
+OracleNetwork = Literal["futurenet", "testnet", "public"]
 
 
 class OracleClient:
@@ -25,19 +25,19 @@ class OracleClient:
         *,
         contract_id: str,
         signer: Keypair,
-        network: Network,
+        network: OracleNetwork,
         wait_tx_interval: int = 3,
         tx_timeout: int = 30,
         decimal_places: int = 18,
     ):
         if network == "futurenet":
-            self.network_passphrase = SdkNetwork.FUTURENET_NETWORK_PASSPHRASE
+            self.network_passphrase = StellarSdkNetwork.FUTURENET_NETWORK_PASSPHRASE
             self.rpc_server_url = "https://rpc-futurenet.stellar.org:443/"
         elif network == "testnet":
-            self.network_passphrase = SdkNetwork.TESTNET_NETWORK_PASSPHRASE
-            self.rpc_server_url = "https://rpc-testnet.stellar.org:443/"
+            self.network_passphrase = StellarSdkNetwork.TESTNET_NETWORK_PASSPHRASE
+            self.rpc_server_url = "https://soroban-testnet.stellar.org:443/"
         elif network == "public":
-            self.network_passphrase = SdkNetwork.PUBLIC_NETWORK_PASSPHRASE
+            self.network_passphrase = StellarSdkNetwork.PUBLIC_NETWORK_PASSPHRASE
             self.rpc_server_url = "https://rpc.stellar.org:443/"
         self.server = SorobanServer(self.rpc_server_url)
         self.contract_id = contract_id
@@ -46,7 +46,7 @@ class OracleClient:
         self.tx_timeout = tx_timeout
         self.decimal_places = decimal_places
 
-    def build_asset_enum(self, asset_type: AssetType, asset: str):
+    def build_asset_enum(self, asset_type: OracleAssetType, asset: str):
         if asset_type == "stellar":
             return scval.to_enum("Stellar", scval.to_address(asset))
         elif asset_type == "other":
@@ -193,7 +193,7 @@ class OracleClient:
     def initialize(
         self,
         admin: str,
-        base_type: AssetType,
+        base_type: OracleAssetType,
         base: str,
         decimals: int,
         resolution: int,
@@ -221,7 +221,7 @@ class OracleClient:
         return self._invoke_and_parse("sources")
 
     def prices_by_source(
-        self, source: int, asset_type: AssetType, asset: str, records: int
+        self, source: int, asset_type: OracleAssetType, asset: str, records: int
     ):
         return self._invoke_and_parse(
             "prices_by_source",
@@ -233,7 +233,7 @@ class OracleClient:
         )
 
     def price_by_source(
-        self, source: int, asset_type: AssetType, asset: str, timestamp: int
+        self, source: int, asset_type: OracleAssetType, asset: str, timestamp: int
     ):
         return self._invoke_and_parse(
             "price_by_source",
@@ -244,7 +244,7 @@ class OracleClient:
             ],
         )
 
-    def lastprice_by_source(self, source: int, asset_type: AssetType, asset: str):
+    def lastprice_by_source(self, source: int, asset_type: OracleAssetType, asset: str):
         return self._invoke_and_parse(
             "lastprice_by_source",
             [
@@ -256,7 +256,7 @@ class OracleClient:
     def add_price(
         self,
         source: int,
-        asset_type: AssetType,
+        asset_type: OracleAssetType,
         asset: str,
         price: str,
         timestamp: Optional[int] = None,
@@ -304,7 +304,7 @@ class OracleClient:
 
     def price(
         self,
-        asset_type: AssetType,
+        asset_type: OracleAssetType,
         asset: str,
         timestamp: int,
     ):
@@ -316,7 +316,7 @@ class OracleClient:
             ],
         )
 
-    def prices(self, asset_type: AssetType, asset: str, records: int):
+    def prices(self, asset_type: OracleAssetType, asset: str, records: int):
         return self._invoke_and_parse(
             "prices",
             [
@@ -327,7 +327,7 @@ class OracleClient:
 
     def lastprice(
         self,
-        asset_type: AssetType,
+        asset_type: OracleAssetType,
         asset: str,
     ):
         return self._invoke_and_parse(
@@ -343,18 +343,18 @@ class OracleDeployer:
         self,
         *,
         signer: Keypair,
-        network: Network,
+        network: OracleNetwork,
         wait_tx_interval: int = 3,
         tx_timeout: int = 30,
     ):
         if network == "futurenet":
-            self.network_passphrase = SdkNetwork.FUTURENET_NETWORK_PASSPHRASE
+            self.network_passphrase = StellarSdkNetwork.FUTURENET_NETWORK_PASSPHRASE
             self.rpc_server_url = "https://rpc-futurenet.stellar.org:443/"
         elif network == "testnet":
-            self.network_passphrase = SdkNetwork.TESTNET_NETWORK_PASSPHRASE
+            self.network_passphrase = StellarSdkNetwork.TESTNET_NETWORK_PASSPHRASE
             self.rpc_server_url = "https://rpc-testnet.stellar.org:443/"
         elif network == "public":
-            self.network_passphrase = SdkNetwork.PUBLIC_NETWORK_PASSPHRASE
+            self.network_passphrase = StellarSdkNetwork.PUBLIC_NETWORK_PASSPHRASE
             self.rpc_server_url = "https://rpc.stellar.org:443/"
         self.server = SorobanServer(self.rpc_server_url)
         self.signer = signer
