@@ -331,3 +331,15 @@ pub fn write_prices(env: &Env, prices: &Map<u32, Map<Asset, Vec<PriceData>>>) {
     let key = DataKey::Prices;
     env.storage().instance().set(&key, prices);
 }
+
+//pub fn read_prices(env: &Env) -> Map<u32, Map<Asset, Vec<PriceData>>> {
+//    let key = DataKey::Prices;
+//    return env.storage().temporary().get(&key).unwrap();
+//}
+//
+//pub fn write_prices(env: &Env, prices: &Map<u32, Map<Asset, Vec<PriceData>>>) {
+//    let key = DataKey::Prices;
+//    let temp_storage = env.storage().temporary();
+//    temp_storage.set(&key, prices);
+//    temp_storage.bump(&key, PRICES_LIFETIME_LEDGERS, PRICES_LIFETIME_LEDGERS);
+//}
