@@ -2,8 +2,10 @@ from decimal import Decimal
 import importlib.util
 from pathlib import Path
 from subprocess import check_output
+from contextlib import contextmanager
 import sys
 from typing import Optional
+import sqlite3
 
 from flask import Flask, Response, request
 from flask_cors import CORS
@@ -22,10 +24,60 @@ assert mod_spec.loader
 mod_spec.loader.exec_module(local_settings)
 
 
-app = Flask(__name__)
 auth = HTTPBasicAuth()
 auth.error_handler(lambda status: ({"error": "Unauthorized"}, status))
-CORS(app)
+db_path = getattr(local_settings, "DB_PATH", None)
+if db_path is None:
+    db_path = Path(__file__).parent.resolve() / "db.sqlite3"
+
+
+@contextmanager
+def cursor_ctx():
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    try:
+        yield cursor
+    except Exception as e:
+        conn.rollback()
+        raise e
+    else:
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def db_create_tables():
+    with cursor_ctx() as cursor:
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS prices (
+                id          INTEGER PRIMARY KEY,
+                created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                updated_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                timeframe   TEXT,
+                status      TEXT,
+                source      INTEGER NOT NULL,
+                asset_type  TEXT NOT NULL,
+                symbol      TEXT NOT NULL,
+                price       TEXT NOT NULL,
+                bid         TEXT NOT NULL,
+                offer       TEXT NOT NULL,
+                sell_asset  TEXT NOT NULL,
+                buy_asset   TEXT NOT NULL
+            )
+        """
+        )
+
+
+def init_app():
+    """Initialize the core application."""
+    app = Flask(__name__)
+    CORS(app)
+    db_create_tables()
+    return app
+
+
+app = init_app()
 
 
 @auth.verify_password
@@ -87,7 +139,7 @@ def parse_asset_type(asset_type: Optional[str] = None):
 
 @app.route("/soroban/add-price/", methods=["POST", "OPTIONS"])
 @auth.login_required
-def set_rate():
+def add_price():
     data = request.json
     if not data:
         return {"error": "This endpoint requires a JSON payload"}, 400
@@ -120,6 +172,60 @@ def set_rate():
     raw_output = check_output(cmd, cwd=cli_dir)
     output = raw_output.decode()
     return {"success": True, "output": output}
+
+
+@app.route("/db/add-prices/", methods=["POST", "OPTIONS"])
+@auth.login_required
+def api_db_add_prices():
+    data = request.json
+    if not data:
+        return {"error": "This endpoint requires a JSON payload"}, 400
+    if not isinstance(data, list):
+        return {
+            "error": "The payload must be a list, each item of the list being a price entry object"
+        }, 400
+    with cursor_ctx() as cursor:
+        for item in data:
+            cursor.execute(
+                """
+            INSERT INTO prices (
+                timeframe,
+                status,
+                source,
+                asset_type,
+                symbol,
+                price,
+                bid,
+                offer,
+                sell_asset,
+                buy_asset
+            ) VALUES (
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?
+            )
+            """,
+                (
+                    item["timeframe"],
+                    item["status"],
+                    item["source"],
+                    item["asset_type"],
+                    item["symbol"],
+                    item["price"],
+                    item["bid"],
+                    item["offer"],
+                    item["sell_asset"],
+                    item["buy_asset"],
+                ),
+            )
+    return {"success": True}
 
 
 def parse_sc_val(sc_val):
