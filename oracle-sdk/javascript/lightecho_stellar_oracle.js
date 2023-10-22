@@ -1,4 +1,7 @@
-class OracleClient {
+var SorobanClient = require('soroban-client');
+var axios = require('axios');
+
+export default class OracleClient {
   constructor(
     contractId,
     rpcServerUrl,
@@ -39,7 +42,7 @@ class OracleClient {
       }
       console.log(JSON.stringify(response));
       if (response.status === "SUCCESS") {
-        console.log(`resultMetaXdr: ${response.resultMetaXdr}`);
+        console.log(response.resultMetaXdr);
         const horizonTx = `https://horizon-futurenet.stellar.org/transactions/${hash}`;
         console.log(horizonTx);
         // We had issues trying to parse the result using SorobanClient,
@@ -61,7 +64,7 @@ class OracleClient {
     if (assetIssuer) {
       return SorobanClient.xdr.ScVal.scvVec([
         SorobanClient.xdr.ScVal.scvSymbol(
-          ethereumjs.Buffer.Buffer.from("Stellar", "utf-8")
+          Buffer.from("Stellar", "utf-8")
         ),
         SorobanClient.xdr.ContractId.contractIdFromAsset(
           new SorobanClient.StellarBase.Asset(assetCode, assetIssuer)
@@ -70,7 +73,7 @@ class OracleClient {
     }
     return SorobanClient.xdr.ScVal.scvVec([
       SorobanClient.xdr.ScVal.scvSymbol(
-        ethereumjs.Buffer.Buffer.from("Other", "utf-8")
+        Buffer.from("Other", "utf-8")
       ),
       SorobanClient.xdr.ScVal.scvSymbol(assetCode),
     ]);

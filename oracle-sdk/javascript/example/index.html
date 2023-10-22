@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script src="./lightecho_stellar_oracle.min.js"></script>
+    <!--
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/soroban-client/1.0.0-beta.2/soroban-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/ethereumjs/browser-builds/dist/ethereumjs-tx/ethereumjs-tx-1.3.3.min.js"></script>
+    -->
+    <script>
+      const client = new OracleClient(
+        "CCQLCSIJA6VXKAIAFIKXF2D24V7CH2VEI6E3SX5ATM2TKXBJNTKJDRE6",
+        "https://soroban-testnet.stellar.org",
+        "Test SDF Network ; September 2015",
+        "SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH",
+        "https://lightecho-stellar-oracle-api.bpventures.us"
+      );
+      //client
+      //  .lastprice("USD", "")
+      //  .then((result) => console.log(result))
+      //  .catch((err) => console.error(err));
+      client
+        .lastprice_by_source(999, "USD", "")
+        .then((result) => console.log(result))
+        .catch((err) => console.error(err));
+    </script>
+  </body>
+</html>

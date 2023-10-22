@@ -1,4 +1,3 @@
-#!/usr/bin/env -S poetry run python
 from decimal import Decimal
 import enum
 import importlib.util

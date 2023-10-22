@@ -3,10 +3,6 @@ contracts in this repository:
 - `oracle` contract
 - `priceupdown` contract
 
-**Update 2023-Sep-18:**
-Due to the latest Futurenet reset and Soroban SDK updates, most of our codebase is not
-working and we're currently fixing the issues.
-
 Create `local_settings.py`:
 
 ```
