@@ -1,9 +1,11 @@
 {
   "name": "lightecho_stellar_oracle",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "Lightecho Stellar Oracle Client",
   "main": "lightecho_stellar_oracle.js",
   "author": "bpventures.us",
+  "git repository": "https://github.com/bp-ventures/lightecho-stellar-oracle/tree/trunk/oracle-sdk/javascript",
+  "license": "https://github.com/bp-ventures/lightecho-stellar-oracle/blob/trunk/LICENSE.md",
   "scripts": {
     "build": "webpack && cp ./dist/lightecho_stellar_oracle.min.js example/"
   },
