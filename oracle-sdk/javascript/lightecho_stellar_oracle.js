@@ -6,13 +6,17 @@ export default class OracleClient {
     rpcServerUrl,
     networkPassphrase,
     sourceSecret,
-    apiUrl
+    apiUrl,
+    options = {
+      baseFee: 50000,
+    }
   ) {
     this.contract = new SorobanClient.Contract(contractId);
     this.networkPassphrase = networkPassphrase;
     this.rpcServerUrl = rpcServerUrl;
     this.sourceSecret = sourceSecret;
     this.apiUrl = apiUrl;
+    this.options = options;
   }
 
   parseScMap(val) {
@@ -37,11 +41,11 @@ export default class OracleClient {
     const hi = attributes["hi"];
     const lo = attributes["lo"];
     const fullInt = (BigInt(hi) << BigInt(32)) + BigInt(lo);
-    return fullInt.toString();
+    return parseInt(fullInt.toString());
   }
 
   parseScU64(val) {
-    return val["_value"];
+    return parseInt(BigInt(val["_value"]).toString());
   }
 
   parseScAddressTypeAccount(val) {
@@ -49,21 +53,26 @@ export default class OracleClient {
     switch (val["_value"]["_switch"]["name"]) {
       case "publicKeyTypeEd25519":
         const _value = val["_value"];
-        const publicKeyHex = Array.from(_value["_value"])
-          .map((byte) => byte.toString(16).padStart(2, "0"))
-          .join("");
-        const keypair =
-          SorobanClient.StellarBase.Keypair.fromPublicKey(publicKeyHex);
-        return keypair.publicKey();
+        throw "TODO: fix this part";
       default:
         throw `Unexpected switch name: ${val["_value"]["_switch"]["name"]}`;
     }
+  }
+
+  parseScVec(val) {
+    let vec = [];
+    for (let value of val["_value"]) {
+      vec.push(this.parseScVal(value));
+    }
+    return vec;
   }
 
   parseScVal(val) {
     switch (val["_switch"]["name"]) {
       case "scvVoid":
         return null;
+      case "scvVec":
+        return this.parseScVec(val);
       case "scvMap":
         return this.parseScMap(val);
       case "scvSymbol":
@@ -87,7 +96,7 @@ export default class OracleClient {
     const keypair = SorobanClient.Keypair.fromSecret(signerSecret);
     const account = await server.getAccount(keypair.publicKey());
     let transaction = new SorobanClient.TransactionBuilder(account, {
-      fee: 50000,
+      fee: this.options.baseFee,
       networkPassphrase: this.networkPassphrase,
     })
       .addOperation(contractOp)
@@ -107,7 +116,6 @@ export default class OracleClient {
     }
 
     if (response.status === "SUCCESS") {
-      console.log(response.returnValue);
       return this.parseScVal(response.returnValue);
       // We had issues trying to parse the result using SorobanClient,
       // so we call an external API to parse it.
@@ -134,6 +142,35 @@ export default class OracleClient {
       SorobanClient.xdr.ScVal.scvSymbol(Buffer.from("Other", "utf-8")),
       SorobanClient.xdr.ScVal.scvSymbol(assetCode),
     ]);
+  }
+
+  numberToScvU64(n) {
+    return SorobanClient.xdr.ScVal.scvU64(
+      new SorobanClient.xdr.Uint64(BigInt.asUintN(64, BigInt(n))) // reiterpret as unsigned
+    );
+  }
+
+  numberToScvI128(n) {
+    const v = BigInt(n);
+    const hi64 = BigInt.asIntN(64, v >> 64n); // encode top 64 w/ sign bit
+    const lo64 = BigInt.asUintN(64, v); // grab btm 64, encode sign
+
+    return SorobanClient.xdr.ScVal.scvI128(
+      new SorobanClient.xdr.Int128Parts({
+        hi: new SorobanClient.xdr.Int64(hi64),
+        lo: new SorobanClient.xdr.Uint64(lo64),
+      })
+    );
+  }
+
+  convertToInt18DecimalPlaces(n) {
+    const integerPart = Math.floor(n);
+    const decimalPart = (n - integerPart) * 1e18;
+
+    const customInteger = BigInt(
+      integerPart.toString() + decimalPart.toFixed(0)
+    );
+    return customInteger;
   }
 
   async initialize(
@@ -217,14 +254,16 @@ export default class OracleClient {
     );
   }
 
-  async add_price(assetCode, assetIssuer, price, timestamp) {
+  async add_price(source, assetCode, assetIssuer, price, timestamp) {
     return await this.submitTx(
       this.contract.call(
         "add_price",
         SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
         this.getAssetEnum(assetCode, assetIssuer),
-        numberToScvI128(convertToInt18DecimalPlaces(parseFloat(price))),
-        numberToScvU64(timestamp)
+        this.numberToScvI128(
+          this.convertToInt18DecimalPlaces(parseFloat(price))
+        ),
+        this.numberToScvU64(parseInt(timestamp))
       )
     );
   }
