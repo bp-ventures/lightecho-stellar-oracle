@@ -11,7 +11,7 @@
         "https://lightecho-stellar-oracle-api.bpventures.us"
       );
       client
-        .price_by_source("999", "USD", "", "1698092421")
+        .decimals()
         .then((result) => console.log(result))
         .catch((err) => console.error(err));
     </script>

@@ -49,14 +49,9 @@ export default class OracleClient {
   }
 
   parseScAddressTypeAccount(val) {
-    //TODO fix
-    switch (val["_value"]["_switch"]["name"]) {
-      case "publicKeyTypeEd25519":
-        const _value = val["_value"];
-        throw "TODO: fix this part";
-      default:
-        throw `Unexpected switch name: ${val["_value"]["_switch"]["name"]}`;
-    }
+    return SorobanClient.StellarBase.Address.account(
+      val["_value"]["_value"]
+    ).toString();
   }
 
   parseScVec(val) {
@@ -65,6 +60,10 @@ export default class OracleClient {
       vec.push(this.parseScVal(value));
     }
     return vec;
+  }
+
+  parseScU32(val) {
+    return parseInt(BigInt(val["_value"]).toString());
   }
 
   parseScVal(val) {
@@ -81,6 +80,8 @@ export default class OracleClient {
         return this.parseScI128(val);
       case "scvU64":
         return this.parseScU64(val);
+      case "scvU32":
+        return this.parseScU32(val);
       case "scvAddress":
         throw "Not implemented yet";
       //return this.parseScVal(val["_value"]);
@@ -239,7 +240,7 @@ export default class OracleClient {
         "price_by_source",
         SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
         this.getAssetEnum(assetCode, assetIssuer),
-        numberToScvU64(parseInt(timestamp))
+        this.numberToScvU64(parseInt(timestamp))
       )
     );
   }
@@ -293,7 +294,7 @@ export default class OracleClient {
       this.contract.call(
         "prices",
         this.getAssetEnum(assetCode, assetIssuer),
-        numberToScvU64(parseInt(timestamp))
+        this.numberToScvU64(parseInt(timestamp))
       )
     );
   }
