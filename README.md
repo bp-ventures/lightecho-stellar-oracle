@@ -2,10 +2,6 @@
 
 Lightecho is a Stellar Oracle for emerging markets data and XLM volatility feeds.
 
-**Update 2023-Sep-18:**
-Due to the latest Futurenet reset and Soroban SDK updates, most of our codebase is not
-working and we're currently fixing the issues.
-
 This repository contains:
 
 - Oracle contract implementation for the Soroban Smart Contracts platform
