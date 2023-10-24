@@ -11,7 +11,7 @@
         "https://lightecho-stellar-oracle-api.bpventures.us"
       );
       client
-        .decimals()
+        .read_admin()
         .then((result) => console.log(result))
         .catch((err) => console.error(err));
     </script>

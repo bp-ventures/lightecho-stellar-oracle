@@ -83,8 +83,7 @@ export default class OracleClient {
       case "scvU32":
         return this.parseScU32(val);
       case "scvAddress":
-        throw "Not implemented yet";
-      //return this.parseScVal(val["_value"]);
+        return this.parseScVal(val["_value"]);
       case "scAddressTypeAccount":
         return this.parseScAddressTypeAccount(val);
       default:
