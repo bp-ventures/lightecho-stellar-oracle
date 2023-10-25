@@ -20,6 +20,7 @@ from stellar_sdk.soroban_server import SorobanServer
 from stellar_sdk.soroban_rpc import GetTransactionStatus, SendTransactionStatus
 from stellar_sdk.xdr.sc_val_type import SCValType
 from stellar_sdk.exceptions import PrepareTransactionException
+from lightecho_stellar_oracle import OracleClient
 import typer
 
 mod_spec = importlib.util.spec_from_file_location(
@@ -155,52 +156,6 @@ def parse_tx_result(tx_data):
     assert transaction_meta.v3.soroban_meta
     result = transaction_meta.v3.soroban_meta.return_value
     return result
-
-
-def parse_sc_val(sc_val):
-    if sc_val.type == SCValType.SCV_BOOL:
-        return sc_val.b
-    if sc_val.u32 is not None:
-        return sc_val.u32.uint32
-    if sc_val.i32 is not None:
-        return sc_val.i32.int32
-    if sc_val.u64 is not None:
-        return sc_val.u64.uint64
-    if sc_val.i64 is not None:
-        return sc_val.i64.int64
-    if sc_val.u128 is not None:
-        high = sc_val.u128.hi.uint64
-        low = sc_val.u128.lo.uint64
-        uint128 = (high << 64) | low
-        return uint128
-    if sc_val.i128 is not None:
-        high = sc_val.i128.hi.int64
-        low = sc_val.i128.lo.uint64
-        uint128 = (high << 64) | low
-        return uint128
-    if sc_val.map is not None:
-        return parse_sc_map(sc_val.map.sc_map)
-    if sc_val.vec is not None:
-        return parse_sc_vec(sc_val.vec)
-    if sc_val.sym is not None:
-        return sc_val.sym.sc_symbol.decode()
-    raise ValueError("Could not parse sc_val")
-
-
-def parse_sc_vec(sc_vec):
-    vec = []
-    for val in sc_vec.sc_vec:
-        vec.append(parse_sc_val(val))
-    return vec
-
-
-def parse_sc_map(sc_map):
-    data = {}
-    for entry in sc_map:
-        key = entry.key.sym.sc_symbol.decode()
-        value = parse_sc_val(entry.val)
-        data[key] = value
-    return data
 
 
 def output_tx_data(tx_data):

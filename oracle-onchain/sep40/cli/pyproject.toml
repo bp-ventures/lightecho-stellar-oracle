@@ -12,6 +12,7 @@ stellar-sdk = "^9.0.0b0"
 colorama = "^0.4.6"
 pandas = "^2.0.1"
 requests = "^2.30.0"
+lightecho_stellar_oracle = { git = "https://github.com/bp-ventures/lightecho-stellar-oracle.git", subdirectory = "oracle-sdk/python" }
 
 
 [build-system]
