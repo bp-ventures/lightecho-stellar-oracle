@@ -33,6 +33,18 @@ assert mod_spec.loader
 mod_spec.loader.exec_module(local_settings)
 
 MAX_DECIMAL_PLACES = 18
+STELLAR_NETWORKS = {
+    "futurenet": {
+        "rpc_server_url": "https://rpc-futurenet.stellar.org:443/",
+        "network_passphrase": "Test SDF Future Network ; October 2022",
+        "horizon_url": "https://horizon-futurenet.stellar.org",
+    },
+    "testnet": {
+        "rpc_server_url": "https://soroban-testnet.stellar.org",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "horizon_url": "https://horizon-testnet.stellar.org",
+    },
+}
 
 colorama_init()
 oracle_app = typer.Typer()
@@ -42,20 +54,20 @@ app.add_typer(oracle_app, name="oracle")
 app.add_typer(priceupdown_app, name="priceupdown")
 
 oracle_client = OracleClient(
-    contract_id="CC2U4QX2U7HLDW5HMK3K5NREWVJMGD5GBTLZSEHHU3FQABSG2OTSPDV6",
-    signer=Keypair.from_secret("SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH"),
-    network="testnet",
+    contract_id=local_settings.ORACLE_CONTRACT_ID,
+    signer=Keypair.from_secret(local_settings.SOURCE_SECRET),
+    network=local_settings.STELLAR_NETWORK,
 )
 
 state = {
     "verbose": False,
     "source_secret": local_settings.SOURCE_SECRET,
     "admin_secret": local_settings.ADMIN_SECRET,
-    "rpc_server_url": local_settings.RPC_SERVER_URL,
+    "rpc_server_url": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK]["rpc_server_url"],
     "oracle_contract_id": local_settings.ORACLE_CONTRACT_ID,
     "priceupdown_contract_id": local_settings.PRICEUPDOWN_CONTRACT_ID,
-    "network_passphrase": local_settings.NETWORK_PASSPHRASE,
-    "horizon_url": local_settings.HORIZON_URL,
+    "network_passphrase": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK]["network_passphrase"],
+    "horizon_url": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK]["horizon_url"],
 }
 state["kp"] = Keypair.from_secret(state["source_secret"])
 state["admin_kp"] = Keypair.from_secret(state["admin_secret"])
