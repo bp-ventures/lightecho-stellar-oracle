@@ -7,15 +7,16 @@ This repository contains:
 - Oracle contract implementation for the Soroban Smart Contracts platform
   - [Contract source code](./oracle-onchain/sep40/contract)
   - [SEP-40 specification](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0040.md)
-- A Python-based CLI for interacting with the deployed contract
-  - [CLI instructions](./oracle-onchain/sep40/cli)
-- Example on how to use the Oracle from a consumer contract (in Rust) calling using Python
-  - [SEP-40 Consumer Price Up/Down](./oracle-onchain/sep40/examples/price_up_down)
-- A Web-based app for interacting with the deployed contract (in JS React)
-  - [Visit web app](https://bp-ventures.github.io/lightecho-stellar-oracle/)
-  - [Web app source code](./docs/v2.html)
-- A JS fiddle for testing and debugging the contract calls
-  - [Visit JS fiddle](https://playcode.io/1594911)
+- Interacting with the Contract (e.g. fetch prices, add prices)
+  - [Python-based CLI](./oracle-onchain/sep40/cli)
+  - Web app
+    - [Visit web app](https://bp-ventures.github.io/lightecho-stellar-oracle/)
+    - [Web app source code](./docs/v2.html)
+  - [A JS fiddle for testing and debugging the contract calls](https://playcode.io/1594911)
+  - [Example on how to use the Oracle from a consumer contract (in Rust) calling using Python](./oracle-onchain/sep40/examples/price_up_down)
+- Developer tools
+  - [Python SDK](./oracle-sdk/python)
+  - [JavaScript SDK](./oracle-sdk/javascript)
 
 ### Roadmap
 
