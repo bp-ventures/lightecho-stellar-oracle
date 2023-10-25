@@ -41,6 +41,12 @@ app = typer.Typer()
 app.add_typer(oracle_app, name="oracle")
 app.add_typer(priceupdown_app, name="priceupdown")
 
+oracle_client = OracleClient(
+    contract_id="CC2U4QX2U7HLDW5HMK3K5NREWVJMGD5GBTLZSEHHU3FQABSG2OTSPDV6",
+    signer=Keypair.from_secret("SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH"),
+    network="testnet",
+)
+
 state = {
     "verbose": False,
     "source_secret": local_settings.SOURCE_SECRET,
@@ -168,7 +174,7 @@ def output_tx_data(tx_data):
             print("<void>")
         elif result.type == SCValType.SCV_MAP:
             assert result.map is not None
-            print(parse_sc_map(result.map.sc_map))
+            print(oracle_client.parse_sc_map(result.map.sc_map))
         elif result.type in [
             SCValType.SCV_U32,
             SCValType.SCV_I32,
@@ -178,11 +184,11 @@ def output_tx_data(tx_data):
             SCValType.SCV_I128,
             SCValType.SCV_SYMBOL,
         ]:
-            print(parse_sc_val(result))
+            print(oracle_client.parse_sc_val(result))
         elif result.type == SCValType.SCV_ADDRESS:
             print(str(result.address))
         elif result.type == SCValType.SCV_VEC:
-            print(parse_sc_vec(result.vec))
+            print(oracle_client.parse_sc_vec(result.vec))
         else:
             print(f"Unexpected result type: {result.type}")
     else:
