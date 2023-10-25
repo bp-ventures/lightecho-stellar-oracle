@@ -9,6 +9,10 @@ jobs:
       CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v3
+      - name: Install Poetry
+        run: python3 -m pip install poetry
+      - name: Oracle Python SDK Tests
+        run: oracle-sdk/python/run_tests.sh
       - name: Install Rust
         run: rustup update stable
       - name: Add target wasm32
