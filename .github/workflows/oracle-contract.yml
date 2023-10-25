@@ -11,6 +11,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Poetry
         run: python3 -m pip install poetry
+      - name: Install Poetry dependencies
+        run: cd oracle-sdk/python && python3 -m poetry install
       - name: Oracle Python SDK Tests
         run: oracle-sdk/python/run_tests.sh
       - name: Install Rust
