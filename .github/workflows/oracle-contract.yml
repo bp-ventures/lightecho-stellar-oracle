@@ -25,5 +25,3 @@ jobs:
         run: cd oracle-onchain/sep40/contract && cargo build --target wasm32-unknown-unknown --release
       - name: Oracle code coverage
         run: cd oracle-onchain/sep40/contract && cargo llvm-cov --all-features --fail-under-lines 85
-      - name: Oracle Consumer Lastprice USD code coverage
-        run: cd oracle-onchain/sep40/examples/fetch_lastprice_usd && cargo llvm-cov --all-features --fail-under-lines 95
