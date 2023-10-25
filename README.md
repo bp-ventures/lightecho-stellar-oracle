@@ -4,9 +4,6 @@ Lightecho is a Stellar Oracle for emerging markets data and XLM volatility feeds
 
 This repository contains:
 
-- Oracle contract implementation for the Soroban Smart Contracts platform
-  - [Contract source code](./oracle-onchain/sep40/contract)
-  - [SEP-40 specification](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0040.md)
 - Interacting with the Contract (e.g. fetch prices, add prices)
   - [Python-based CLI](./oracle-onchain/sep40/cli)
   - Web app
@@ -17,6 +14,9 @@ This repository contains:
 - Developer tools
   - [Python SDK](./oracle-sdk/python)
   - [JavaScript SDK](./oracle-sdk/javascript)
+  - Oracle contract implementation for the Soroban Smart Contracts platform
+    - [Contract source code](./oracle-onchain/sep40/contract)
+    - [SEP-40 specification](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0040.md)
 
 ### Roadmap
 
