@@ -6,7 +6,6 @@ export default class OracleClient {
     rpcServerUrl,
     networkPassphrase,
     sourceSecret,
-    apiUrl,
     options = {
       baseFee: 50000,
     }
@@ -15,7 +14,6 @@ export default class OracleClient {
     this.networkPassphrase = networkPassphrase;
     this.rpcServerUrl = rpcServerUrl;
     this.sourceSecret = sourceSecret;
-    this.apiUrl = apiUrl;
     this.options = options;
   }
 
@@ -117,13 +115,6 @@ export default class OracleClient {
 
     if (response.status === "SUCCESS") {
       return this.parseScVal(response.returnValue);
-      // We had issues trying to parse the result using SorobanClient,
-      // so we call an external API to parse it.
-      //let parsedResult = await axios.post(
-      //  `${this.apiUrl}/soroban/parse-result-xdr/`,
-      //  { xdr: response.resultMetaXdr }
-      //);
-      //return parsedResult;
     } else {
       throw response;
     }
