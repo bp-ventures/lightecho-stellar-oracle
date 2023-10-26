@@ -56,3 +56,6 @@ def read_prices_from_db():
         cursor.execute(query)
         results = cursor.fetchall()
         print(results)
+
+if __name__ == "__main__":
+    read_prices_from_db()
