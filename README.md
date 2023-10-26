@@ -2,6 +2,16 @@
 
 Lightecho is a Stellar Oracle for emerging markets data and XLM volatility feeds.
 
+**TESTNET** Official Contracts:
+- Base `XLM`:
+  ```
+  CDYHDC7OPAWPQ46TGT5PU77C2NWFGERD6IQRKVNBL34HCXHARWO24XWM
+  ```
+- Base `USD`:
+  ```
+  CAC6JWJG22ULRNGY75H2NVDIXQQP5JRJPERTZXXXONJHD2ETMGGEV7WP
+  ```
+
 This repository contains:
 
 - Interacting with the Contract (e.g. fetch prices, add prices)
