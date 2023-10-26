@@ -54,8 +54,14 @@ def read_prices_from_db():
     """
     with cursor_ctx() as cursor:
         cursor.execute(query)
-        results = cursor.fetchall()
-        print(results)
+        prices = []
+        symbols = []
+        for result in cursor.fetchall():
+            result_dict = dict(result)
+            if result_dict['symbol'] not in symbols:
+                symbols.append(result_dict['symbol'])
+                prices.append(result_dict)
+        #TODO do something with prices
 
 if __name__ == "__main__":
     read_prices_from_db()
