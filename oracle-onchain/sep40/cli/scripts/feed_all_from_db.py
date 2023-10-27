@@ -2,8 +2,11 @@
 import sqlite3
 import importlib.util
 import sys
+import math
 from contextlib import contextmanager
 from pathlib import Path
+
+RESOLUTION = 10800
 
 mod_spec = importlib.util.spec_from_file_location(
     "local_settings", Path(__file__).resolve().parent.parent / "local_settings.py"
@@ -20,7 +23,7 @@ if db_path is None:
 
 @contextmanager
 def cursor_ctx():
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     try:
@@ -32,6 +35,13 @@ def cursor_ctx():
         conn.commit()
     finally:
         conn.close()
+
+
+def adjust_timestamp(external_timestamp, resolution):
+    # Calculate the closest future timestamp that preserves the resolution
+    adjusted_timestamp = math.ceil(external_timestamp / resolution) * resolution
+    return adjusted_timestamp
+
 
 def read_prices_from_db():
     query = """
@@ -60,6 +70,8 @@ def read_prices_from_db():
             result_dict = dict(result)
             if result_dict['symbol'] not in symbols:
                 symbols.append(result_dict['symbol'])
+                timestamp_as_unix = int(result_dict['updated_at'].timestamp())
+                result_dict['adjusted_timestamp'] = adjust_timestamp(timestamp_as_unix, RESOLUTION)
                 prices.append(result_dict)
         #TODO do something with prices
 
