@@ -101,7 +101,8 @@ def read_prices_from_db():
                 symbols.append(result_dict['symbol'])
                 timestamp_as_unix = int(result_dict['updated_at'].timestamp())
                 result_dict['adjusted_timestamp'] = adjust_timestamp(timestamp_as_unix, RESOLUTION)
-                prices.append(result_dict)
+                if result_dict['adjusted_timestamp'] <= int(datetime.now().timestamp()):
+                    prices.append(result_dict)
         for price in prices:
             add_price_to_blockchain(price)
 
