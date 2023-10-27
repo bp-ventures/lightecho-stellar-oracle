@@ -2,10 +2,14 @@
 import sqlite3
 import importlib.util
 import sys
+import subprocess
 import math
+import multiprocessing
 from contextlib import contextmanager
 from pathlib import Path
 
+CONTRACT_ID_XLM = "CDYHDC7OPAWPQ46TGT5PU77C2NWFGERD6IQRKVNBL34HCXHARWO24XWM"
+CONTRACT_ID_USD = "CAC6JWJG22ULRNGY75H2NVDIXQQP5JRJPERTZXXXONJHD2ETMGGEV7WP"
 RESOLUTION = 10800
 
 mod_spec = importlib.util.spec_from_file_location(
@@ -20,6 +24,14 @@ mod_spec.loader.exec_module(local_settings)
 db_path = getattr(local_settings, "API_DB_PATH", None)
 if db_path is None:
     db_path = Path(__file__).parent.parent.parent.parent.resolve() / "api" / "db.sqlite3"
+cli_dir = Path(__file__).parent.parent.resolve()
+
+
+def run_cli(cmd: str):
+    return subprocess.check_output(
+        f"./cli {cmd}", shell=True, text=True, cwd=cli_dir
+    )
+
 
 @contextmanager
 def cursor_ctx():
@@ -73,7 +85,18 @@ def read_prices_from_db():
                 timestamp_as_unix = int(result_dict['updated_at'].timestamp())
                 result_dict['adjusted_timestamp'] = adjust_timestamp(timestamp_as_unix, RESOLUTION)
                 prices.append(result_dict)
-        #TODO do something with prices
+        for price in prices:
+            if price['sell_asset'] == "XLM":
+                contract_id = CONTRACT_ID_XLM
+            elif price['sell_asset'] == 'USD':
+                contract_id = CONTRACT_ID_USD
+            else:
+                raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
+            output = run_cli(
+                    f"--oracle-contract-id {contract_id} oracle add_price 1 other {price['buy_asset']} {price['price']}"
+            )
+            print(output)
 
 if __name__ == "__main__":
     read_prices_from_db()
+
