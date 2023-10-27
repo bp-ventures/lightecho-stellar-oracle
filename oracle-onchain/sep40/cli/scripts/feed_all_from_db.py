@@ -1,10 +1,11 @@
 #!/usr/bin/env -S poetry run python
 import sqlite3
 import importlib.util
+import traceback
+from datetime import datetime
 import sys
 import subprocess
 import math
-import multiprocessing
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -54,6 +55,22 @@ def adjust_timestamp(external_timestamp, resolution):
     adjusted_timestamp = math.ceil(external_timestamp / resolution) * resolution
     return adjusted_timestamp
 
+def add_price_to_blockchain(price: dict):
+    if price['sell_asset'] == "XLM":
+        contract_id = CONTRACT_ID_XLM
+    elif price['sell_asset'] == 'USD':
+        contract_id = CONTRACT_ID_USD
+    else:
+        raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
+    cmd = f"--oracle-contract-id {contract_id} oracle add_price 1 other {price['buy_asset']} {price['price']}"
+    print(datetime.now().isoformat())
+    print(f"cli.py {cmd}")
+    try:
+        output = run_cli(cmd)
+        print(output)
+    except Exception as e:
+        traceback.print_exc()
+
 
 def read_prices_from_db():
     query = """
@@ -86,16 +103,7 @@ def read_prices_from_db():
                 result_dict['adjusted_timestamp'] = adjust_timestamp(timestamp_as_unix, RESOLUTION)
                 prices.append(result_dict)
         for price in prices:
-            if price['sell_asset'] == "XLM":
-                contract_id = CONTRACT_ID_XLM
-            elif price['sell_asset'] == 'USD':
-                contract_id = CONTRACT_ID_USD
-            else:
-                raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
-            output = run_cli(
-                    f"--oracle-contract-id {contract_id} oracle add_price 1 other {price['buy_asset']} {price['price']}"
-            )
-            print(output)
+            add_price_to_blockchain(price)
 
 if __name__ == "__main__":
     read_prices_from_db()
