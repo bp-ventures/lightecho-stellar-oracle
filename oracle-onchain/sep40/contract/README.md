@@ -2,6 +2,16 @@
 
 For more information see docs at https://github.com/bp-ventures/lightecho-stellar-oracle
 
+**TESTNET** Official Contracts:
+- Base `XLM`:
+  ```
+  CDYHDC7OPAWPQ46TGT5PU77C2NWFGERD6IQRKVNBL34HCXHARWO24XWM
+  ```
+- Base `USD`:
+  ```
+  CAC6JWJG22ULRNGY75H2NVDIXQQP5JRJPERTZXXXONJHD2ETMGGEV7WP
+  ```
+
 # Consuming the Oracle from another Soroban contract
 
 See the [PriceUpDown contract example](../examples/price_up_down) on how to consume the Oracle from another
