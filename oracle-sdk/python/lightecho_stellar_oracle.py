@@ -1,13 +1,13 @@
 from decimal import Decimal
 import time
-from typing import Optional, Literal
+from typing import List, Literal, Optional, Tuple, TypedDict
 
 from stellar_sdk import (
     Keypair,
+    Network as StellarSdkNetwork,
     StrKey,
     TransactionBuilder,
     TransactionEnvelope,
-    Network as StellarSdkNetwork,
 )
 from stellar_sdk import scval, xdr as stellar_xdr
 from stellar_sdk.soroban_rpc import GetTransactionStatus, SendTransactionStatus
@@ -15,8 +15,23 @@ from stellar_sdk.soroban_server import SorobanServer
 from stellar_sdk.xdr.sc_val_type import SCValType
 
 
-OracleAssetType = Literal["stellar", "other"]
-OracleNetwork = Literal["futurenet", "testnet", "public"]
+AssetType = Literal["stellar", "other"]
+Network = Literal["futurenet", "testnet", "public"]
+
+TESTNET_CONTRACT_XLM = "CDYHDC7OPAWPQ46TGT5PU77C2NWFGERD6IQRKVNBL34HCXHARWO24XWM"
+TESTNET_CONTRACT_USD = "CAC6JWJG22ULRNGY75H2NVDIXQQP5JRJPERTZXXXONJHD2ETMGGEV7WP"
+
+DECIMAL_PLACES_DIVIDER = Decimal(10**18)
+
+
+class Price(TypedDict):
+    price: str
+    timestamp: int
+
+
+class Asset(TypedDict):
+    asset_type: AssetType
+    asset: str
 
 
 class OracleClient:
@@ -25,7 +40,7 @@ class OracleClient:
         *,
         contract_id: str,
         signer: Keypair,
-        network: OracleNetwork,
+        network: Network,
         wait_tx_interval: int = 3,
         tx_timeout: int = 30,
         decimal_places: int = 18,
@@ -46,7 +61,7 @@ class OracleClient:
         self.tx_timeout = tx_timeout
         self.decimal_places = decimal_places
 
-    def build_asset_enum(self, asset_type: OracleAssetType, asset: str):
+    def build_asset_enum(self, asset_type: AssetType, asset: str):
         if asset_type == "stellar":
             return scval.to_enum("Stellar", scval.to_address(asset))
         elif asset_type == "other":
@@ -193,12 +208,12 @@ class OracleClient:
     def initialize(
         self,
         admin: str,
-        base_type: OracleAssetType,
+        base_type: AssetType,
         base: str,
         decimals: int,
         resolution: int,
-    ):
-        return self.invoke_and_parse(
+    ) -> Tuple[str, None]:
+        return self.invoke_and_parse(  # type: ignore
             "initialize",
             [
                 scval.to_address(admin),
@@ -208,22 +223,22 @@ class OracleClient:
             ],
         )
 
-    def has_admin(self):
-        return self.invoke_and_parse("has_admin")
+    def has_admin(self) -> Tuple[str, bool]:
+        return self.invoke_and_parse("has_admin")  # type: ignore
 
-    def write_admin(self):
+    def write_admin(self) -> Tuple[str, None]:
         raise RuntimeError("This function is not yet available")
 
-    def read_admin(self):
-        return self.invoke_and_parse("read_admin")
+    def read_admin(self) -> Tuple[str, str]:
+        return self.invoke_and_parse("read_admin")  # type: ignore
 
-    def sources(self):
-        return self.invoke_and_parse("sources")
+    def sources(self) -> Tuple[str, List[int]]:
+        return self.invoke_and_parse("sources")  # type: ignore
 
     def prices_by_source(
-        self, source: int, asset_type: OracleAssetType, asset: str, records: int
-    ):
-        return self.invoke_and_parse(
+        self, source: int, asset_type: AssetType, asset: str, records: int
+    ) -> Tuple[str, List[Price]]:
+        tx_hash, prices = self.invoke_and_parse(
             "prices_by_source",
             [
                 scval.to_uint32(source),
@@ -231,11 +246,20 @@ class OracleClient:
                 scval.to_uint32(records),
             ],
         )
+        results = []
+        for price in prices:  # type: ignore
+            results.append(
+                {
+                    "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),
+                    "timestamp": price["timestamp"],
+                }
+            )
+        return tx_hash, results
 
     def price_by_source(
-        self, source: int, asset_type: OracleAssetType, asset: str, timestamp: int
-    ):
-        return self.invoke_and_parse(
+        self, source: int, asset_type: AssetType, asset: str, timestamp: int
+    ) -> Tuple[str, Optional[Price]]:
+        return self.invoke_and_parse(  # type: ignore
             "price_by_source",
             [
                 scval.to_uint32(source),
@@ -244,8 +268,10 @@ class OracleClient:
             ],
         )
 
-    def lastprice_by_source(self, source: int, asset_type: OracleAssetType, asset: str):
-        return self.invoke_and_parse(
+    def lastprice_by_source(
+        self, source: int, asset_type: AssetType, asset: str
+    ) -> Tuple[str, Optional[Price]]:
+        return self.invoke_and_parse(  # type: ignore
             "lastprice_by_source",
             [
                 scval.to_uint32(source),
@@ -256,11 +282,11 @@ class OracleClient:
     def add_price(
         self,
         source: int,
-        asset_type: OracleAssetType,
+        asset_type: AssetType,
         asset: str,
         price: str,
         timestamp: Optional[int] = None,
-    ):
+    ) -> Tuple[str, None]:
         price_d = Decimal(price)
         price_d_str = "{:f}".format(price_d)
         price_parts = price_d_str.split(".")
@@ -285,16 +311,33 @@ class OracleClient:
             scval.to_int128(price_as_int),
             scval.to_uint64(timestamp),
         ]
-        return self.invoke_and_parse(func_name, args)
+        return self.invoke_and_parse(func_name, args)  # type: ignore
 
-    def remove_prices(self):
+    def remove_prices(self) -> Tuple[str, None]:
         raise RuntimeError("This function is not yet available")
 
-    def base(self):
-        return self.invoke_and_parse("base")
+    def base(self) -> Tuple[str, Asset]:
+        tx_hash, result = self.invoke_and_parse("base")
+        if result[0] == "Other":  # type: ignore
+            asset = Asset({"asset_type": "other", "asset": result[1]})  # type: ignore
+        elif result[1] == "Stellar":  # type: ignore
+            asset = Asset({"asset_type": "stellar", "asset": result[1]})  # type: ignore
+        else:
+            raise ValueError(f"Unexpected asset type: {result[1]}")  # type: ignore
+        return tx_hash, asset
 
-    def assets(self):
-        return self.invoke_and_parse("assets")
+    def assets(self) -> Tuple[str, List[Asset]]:
+        tx_hash, results = self.invoke_and_parse("assets")
+        assets = []
+        for result in results: # type: ignore
+            if result[0] == "Other":  # type: ignore
+                asset = Asset({"asset_type": "other", "asset": result[1]})  # type: ignore
+            elif result[1] == "Stellar":  # type: ignore
+                asset = Asset({"asset_type": "stellar", "asset": result[1]})  # type: ignore
+            else:
+                raise ValueError(f"Unexpected asset type: {result[1]}")  # type: ignore
+            assets.append(asset)
+        return tx_hash, assets
 
     def decimals(self):
         return self.invoke_and_parse("decimals")
@@ -304,7 +347,7 @@ class OracleClient:
 
     def price(
         self,
-        asset_type: OracleAssetType,
+        asset_type: AssetType,
         asset: str,
         timestamp: int,
     ):
@@ -316,7 +359,7 @@ class OracleClient:
             ],
         )
 
-    def prices(self, asset_type: OracleAssetType, asset: str, records: int):
+    def prices(self, asset_type: AssetType, asset: str, records: int):
         return self.invoke_and_parse(
             "prices",
             [
@@ -327,7 +370,7 @@ class OracleClient:
 
     def lastprice(
         self,
-        asset_type: OracleAssetType,
+        asset_type: AssetType,
         asset: str,
     ):
         return self.invoke_and_parse(
@@ -343,7 +386,7 @@ class OracleDeployer:
         self,
         *,
         signer: Keypair,
-        network: OracleNetwork,
+        network: Network,
         wait_tx_interval: int = 3,
         tx_timeout: int = 30,
     ):

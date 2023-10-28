@@ -18,3 +18,7 @@ class OracleTests(unittest.TestCase):
     def test_base(self):
         _, base = self.client.base()
         self.assertEqual(base, ['Other', 'XLM'])
+
+    def test_prices_by_source(self):
+        _, result = self.client.prices_by_source(0, "other", "USD", 5)
+        print(result)
