@@ -1,11 +1,30 @@
+/**
+ * Lightecho Stellar Oracle SDK for the Soroban network.
+ */
 var SorobanClient = require("soroban-client");
 
 export default class OracleClient {
+  /**
+   * The contract address on the Soroban testnet for XLM (Stellar Lumens).
+   */
   static TESTNET_CONTRACT_XLM =
     "CDYHDC7OPAWPQ46TGT5PU77C2NWFGERD6IQRKVNBL34HCXHARWO24XWM";
+
+  /**
+   * The contract address on the Soroban testnet for USD (U.S. Dollars).
+   */
   static TESTNET_CONTRACT_USD =
     "CAC6JWJG22ULRNGY75H2NVDIXQQP5JRJPERTZXXXONJHD2ETMGGEV7WP";
 
+  /**
+   * Initializes a new OracleClient instance.
+   *
+   * @param {string} contractId - The contract ID.
+   * @param {string} rpcServerUrl - The RPC server URL.
+   * @param {string} networkPassphrase - The network passphrase.
+   * @param {string} sourceSecret - The source account secret.
+   * @param {object} options - Additional options (default baseFee: 50000).
+   */
   constructor(
     contractId,
     rpcServerUrl,
@@ -22,6 +41,12 @@ export default class OracleClient {
     this.options = options;
   }
 
+  /**
+   * Parses a Soroban value and returns the corresponding JavaScript value.
+   *
+   * @param {object} val - The Soroban value to be parsed.
+   * @returns {any} - The parsed JavaScript value.
+   */
   parseScMap(val) {
     const resultMap = {};
     for (let _value of val["_value"]) {
@@ -94,6 +119,13 @@ export default class OracleClient {
     }
   }
 
+  /**
+   * Submits a transaction to the blockchain oracle contract.
+   *
+   * @param {object} contractOp - The contract operation to execute.
+   * @param {string} signerSecret - The secret of the signer account (default: this.sourceSecret).
+   * @returns {any} - The result of the transaction.
+   */
   async submitTx(contractOp, signerSecret = this.sourceSecret) {
     const server = new SorobanClient.Server(this.rpcServerUrl);
     const keypair = SorobanClient.Keypair.fromSecret(signerSecret);
@@ -125,6 +157,13 @@ export default class OracleClient {
     }
   }
 
+  /**
+   * Gets the Soroban value representing an asset.
+   *
+   * @param {string} assetCode - The asset code.
+   * @param {string} assetIssuer - The asset issuer's public key.
+   * @returns {object} - The Soroban value representing the asset.
+   */
   getAssetEnum(assetCode, assetIssuer) {
     if (assetIssuer) {
       return SorobanClient.xdr.ScVal.scvVec([
@@ -140,6 +179,12 @@ export default class OracleClient {
     ]);
   }
 
+  /**
+   * Converts a JavaScript number to a Soroban U64 value.
+   *
+   * @param {number} n - The JavaScript number to convert.
+   * @returns {object} - The Soroban U64 value.
+   */
   numberToScvU64(n) {
     return SorobanClient.xdr.ScVal.scvU64(
       new SorobanClient.xdr.Uint64(BigInt.asUintN(64, BigInt(n))) // reiterpret as unsigned
@@ -159,12 +204,24 @@ export default class OracleClient {
     );
   }
 
+  /**
+   * Converts an integer to a decimal string with 18 decimal places.
+   *
+   * @param {number} integerValue - The integer value to convert.
+   * @returns {string} - The decimal string representation.
+   */
   convertIntegerToDecimalString(integerValue) {
     const decimalValue = integerValue / Math.pow(10, 18);
     const decimalString = decimalValue.toString();
     return decimalString;
   }
 
+  /**
+   * Converts a decimal number to a custom integer with 18 decimal places.
+   *
+   * @param {number} n - The decimal number to convert.
+   * @returns {BigInt} - The custom integer value.
+   */
   convertToInt18DecimalPlaces(n) {
     const integerPart = Math.floor(n);
     const decimalPart = (n - integerPart) * 1e18;
@@ -175,6 +232,16 @@ export default class OracleClient {
     return customInteger;
   }
 
+  /**
+   * Initializes the oracle contract with admin and asset information.
+   *
+   * @param {string} admin - The admin's public key.
+   * @param {string} baseAssetCode - The code of the base asset.
+   * @param {string} baseAssetIssuer - The public key of the base asset issuer.
+   * @param {number} decimals - The number of decimals for the contract.
+   * @param {number} resolution - The resolution value.
+   * @returns {any} - The result of the transaction.
+   */
   async initialize(
     admin,
     baseAssetCode,
@@ -195,17 +262,32 @@ export default class OracleClient {
     );
   }
 
+  /**
+   * Bumps the contract instance so it doesn't expire.
+   * See https://soroban.stellar.org/docs/fundamentals-and-concepts/persisting-data
+   *
+   * @returns {any} - The result of the transaction.
+   */
   async bump_instance() {
     return await this.submitTx(this.contract.call("bump_instance"));
   }
 
+  /**
+   * Checks if the contract has an admin.
+   *
+   * @returns {any} - The result of the transaction.
+   */
   async has_admin() {
-    //TODO re-test and fix
     return await this.submitTx(this.contract.call("has_admin"));
   }
 
+  /**
+   * Writes a new admin for the contract.
+   *
+   * @param {string} admin_pubkey - The public key of the new admin.
+   * @returns {any} - The result of the transaction.
+   */
   async write_admin(admin_pubkey) {
-    //TODO test
     return await this.submitTx(
       this.contract.call(
         "write_admin",
@@ -216,14 +298,33 @@ export default class OracleClient {
     );
   }
 
+  /**
+   * Reads the current admin of the contract.
+   *
+   * @returns {any} - The result of the transaction.
+   */
   async read_admin() {
     return await this.submitTx(this.contract.call("read_admin"));
   }
 
+  /**
+   * Retrieves sources associated with the contract.
+   *
+   * @returns {any} - The result of the transaction.
+   */
   async sources() {
     return await this.submitTx(this.contract.call("sources"));
   }
 
+  /**
+   * Retrieves price records for a specific source and asset.
+   *
+   * @param {number} source - The source identifier.
+   * @param {string} assetCode - The asset code.
+   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {number} records - The number of records to retrieve.
+   * @returns {Array} - An array of price records.
+   */
   async prices_by_source(source, assetCode, assetIssuer, records) {
     let prices = await this.submitTx(
       this.contract.call(
@@ -243,6 +344,15 @@ export default class OracleClient {
     return results;
   }
 
+  /**
+   * Retrieves a price record for a specific source, asset, and timestamp.
+   *
+   * @param {number} source - The source identifier.
+   * @param {string} assetCode - The asset code.
+   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {number} timestamp - The timestamp of the price record.
+   * @returns {object|null} - The price record or null if not found.
+   */
   async price_by_source(source, assetCode, assetIssuer, timestamp) {
     let price = await this.submitTx(
       this.contract.call(
@@ -261,6 +371,14 @@ export default class OracleClient {
     return price;
   }
 
+  /**
+   * Retrieves the latest price record for a specific source and asset.
+   *
+   * @param {number} source - The source identifier.
+   * @param {string} assetCode - The asset code.
+   * @param {string} assetIssuer - The asset issuer's public key.
+   * @returns {object|null} - The latest price record or null if not found.
+   */
   async lastprice_by_source(source, assetCode, assetIssuer) {
     let price = await this.submitTx(
       this.contract.call(
@@ -278,6 +396,16 @@ export default class OracleClient {
     return price;
   }
 
+  /**
+   * Adds a new price record to the contract.
+   *
+   * @param {number} source - The source identifier.
+   * @param {string} assetCode - The asset code.
+   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {number} price - The price to add.
+   * @param {number} timestamp - The timestamp of the price record.
+   * @returns {any} - The result of the transaction.
+   */
   async add_price(source, assetCode, assetIssuer, price, timestamp) {
     return await this.submitTx(
       this.contract.call(
@@ -292,26 +420,63 @@ export default class OracleClient {
     );
   }
 
+  /**
+   * Removes price records within a specific time range (Not implemented yet).
+   *
+   * @param {Array} sources - An array of source identifiers to filter by.
+   * @param {Array} assets - An array of asset codes to filter by.
+   * @param {number} start_timestamp - The start of the time range.
+   * @param {number} end_timestamp - The end of the time range.
+   * @throws {string} - A message indicating that this feature is not implemented yet.
+   */
   async remove_prices(sources, assets, start_timestamp, end_timestamp) {
     throw "Not implemented yet";
   }
 
+  /**
+   * Retrieves the base asset of the contract.
+   *
+   * @returns {any} - The result of the transaction.
+   */
   async base() {
     return await this.submitTx(this.contract.call("base"));
   }
 
+  /**
+   * Retrieves the list of supported assets by the contract.
+   *
+   * @returns {any} - The result of the transaction.
+   */
   async assets() {
     return await this.submitTx(this.contract.call("assets"));
   }
 
+  /**
+   * Retrieves the number of decimals for the contract's assets.
+   *
+   * @returns {any} - The result of the transaction.
+   */
   async decimals() {
     return await this.submitTx(this.contract.call("decimals"));
   }
 
+  /**
+   * Retrieves the resolution value of the contract.
+   *
+   * @returns {any} - The result of the transaction.
+   */
   async resolution() {
     return await this.submitTx(this.contract.call("resolution"));
   }
 
+  /**
+   * Retrieves a price record for a specific asset and timestamp.
+   *
+   * @param {string} assetCode - The asset code.
+   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {number} timestamp - The timestamp of the price record.
+   * @returns {object|null} - The price record or null if not found.
+   */
   async price(assetCode, assetIssuer, timestamp) {
     let price = await this.submitTx(
       this.contract.call(
@@ -329,6 +494,14 @@ export default class OracleClient {
     return price;
   }
 
+  /**
+   * Retrieves price records for a specific asset and number of records.
+   *
+   * @param {string} assetCode - The asset code.
+   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {number} records - The number of records to retrieve.
+   * @returns {Array} - An array of price records.
+   */
   async prices(assetCode, assetIssuer, records) {
     let prices = await this.submitTx(
       this.contract.call(
@@ -347,6 +520,13 @@ export default class OracleClient {
     return results;
   }
 
+  /**
+   * Retrieves the latest price record for a specific asset.
+   *
+   * @param {string} assetCode - The asset code.
+   * @param {string} assetIssuer - The asset issuer's public key.
+   * @returns {object|null} - The latest price record or null if not found.
+   */
   async lastprice(assetCode, assetIssuer) {
     let price = await this.submitTx(
       this.contract.call("lastprice", this.getAssetEnum(assetCode, assetIssuer))
