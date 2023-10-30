@@ -1,6 +1,11 @@
 var SorobanClient = require("soroban-client");
 
 export default class OracleClient {
+  static TESTNET_CONTRACT_XLM =
+    "CDYHDC7OPAWPQ46TGT5PU77C2NWFGERD6IQRKVNBL34HCXHARWO24XWM";
+  static TESTNET_CONTRACT_USD =
+    "CAC6JWJG22ULRNGY75H2NVDIXQQP5JRJPERTZXXXONJHD2ETMGGEV7WP";
+
   constructor(
     contractId,
     rpcServerUrl,
@@ -154,6 +159,12 @@ export default class OracleClient {
     );
   }
 
+  convertIntegerToDecimalString(integerValue) {
+    const decimalValue = integerValue / Math.pow(10, 18);
+    const decimalString = decimalValue.toString();
+    return decimalString;
+  }
+
   convertToInt18DecimalPlaces(n) {
     const integerPart = Math.floor(n);
     const decimalPart = (n - integerPart) * 1e18;
@@ -214,7 +225,7 @@ export default class OracleClient {
   }
 
   async prices_by_source(source, assetCode, assetIssuer, records) {
-    return await this.submitTx(
+    let prices = await this.submitTx(
       this.contract.call(
         "prices_by_source",
         SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
@@ -222,10 +233,18 @@ export default class OracleClient {
         SorobanClient.xdr.ScVal.scvU32(parseInt(records))
       )
     );
+    let results = [];
+    for (let price of prices) {
+      results.push({
+        price: this.convertIntegerToDecimalString(price["price"]),
+        timestamp: price["timestamp"],
+      });
+    }
+    return results;
   }
 
   async price_by_source(source, assetCode, assetIssuer, timestamp) {
-    return await this.submitTx(
+    let price = await this.submitTx(
       this.contract.call(
         "price_by_source",
         SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
@@ -233,16 +252,30 @@ export default class OracleClient {
         this.numberToScvU64(parseInt(timestamp))
       )
     );
+    if (price !== null && price !== undefined) {
+      price = {
+        price: this.convertIntegerToDecimalString(price["price"]),
+        timestamp: price["timestamp"],
+      };
+    }
+    return price;
   }
 
   async lastprice_by_source(source, assetCode, assetIssuer) {
-    return await this.submitTx(
+    let price = await this.submitTx(
       this.contract.call(
         "lastprice_by_source",
         SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
         this.getAssetEnum(assetCode, assetIssuer)
       )
     );
+    if (price !== null && price !== undefined) {
+      price = {
+        price: this.convertIntegerToDecimalString(price["price"]),
+        timestamp: price["timestamp"],
+      };
+    }
+    return price;
   }
 
   async add_price(source, assetCode, assetIssuer, price, timestamp) {
@@ -280,28 +313,50 @@ export default class OracleClient {
   }
 
   async price(assetCode, assetIssuer, timestamp) {
-    return await this.submitTx(
+    let price = await this.submitTx(
       this.contract.call(
         "prices",
         this.getAssetEnum(assetCode, assetIssuer),
         this.numberToScvU64(parseInt(timestamp))
       )
     );
+    if (price !== null && price !== undefined) {
+      price = {
+        price: this.convertIntegerToDecimalString(price["price"]),
+        timestamp: price["timestamp"],
+      };
+    }
+    return price;
   }
 
   async prices(assetCode, assetIssuer, records) {
-    await this.submitTx(
+    let prices = await this.submitTx(
       this.contract.call(
         "prices",
         this.getAssetEnum(assetCode, assetIssuer),
         SorobanClient.xdr.ScVal.scvU32(parseInt(records))
       )
     );
+    let results = [];
+    for (let price of prices) {
+      results.push({
+        price: this.convertIntegerToDecimalString(price["price"]),
+        timestamp: price["timestamp"],
+      });
+    }
+    return results;
   }
 
   async lastprice(assetCode, assetIssuer) {
-    return await this.submitTx(
+    let price = await this.submitTx(
       this.contract.call("lastprice", this.getAssetEnum(assetCode, assetIssuer))
     );
+    if (price !== null && price !== undefined) {
+      price = {
+        price: this.convertIntegerToDecimalString(price["price"]),
+        timestamp: price["timestamp"],
+      };
+    }
+    return price;
   }
 }
