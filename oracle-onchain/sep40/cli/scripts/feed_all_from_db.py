@@ -67,20 +67,20 @@ def add_price_to_blockchain(price: dict):
     print(f"cli.py {cmd}")
     try:
         output = run_cli(cmd)
-        mark_price_as_added_to_blockchain(price["id"])
+        mark_symbol_as_added_to_blockchain(price["symbol"])
         print(output)
     except Exception:
         traceback.print_exc()
 
 
-def mark_price_as_added_to_blockchain(price_id):
+def mark_symbol_as_added_to_blockchain(symbol):
     query = """
         UPDATE prices
         SET added_to_blockchain = 1
-        WHERE id = ?
+        WHERE symbol = ?
     """
     with cursor_ctx() as cursor:
-        cursor.execute(query, (price_id,))
+        cursor.execute(query, (symbol,))
 
 
 def read_prices_from_db():
