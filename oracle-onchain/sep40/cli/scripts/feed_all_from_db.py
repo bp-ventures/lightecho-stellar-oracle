@@ -63,8 +63,7 @@ def add_price_to_blockchain(price: dict):
     else:
         raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
     cmd = f"--oracle-contract-id {contract_id} oracle add_price 1 other {price['buy_asset']} {price['price']}"
-    print(datetime.now().isoformat())
-    print(f"cli.py {cmd}")
+    print(f"{datetime.now().isoformat()} cli.py {cmd}")
     try:
         output = run_cli(cmd)
         mark_symbol_as_added_to_blockchain(price["symbol"])
