@@ -88,6 +88,7 @@ def read_prices_from_db():
         SELECT
             id,
             updated_at,
+            symbol,
             price,
             sell_asset,
             buy_asset
