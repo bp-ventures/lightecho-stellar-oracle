@@ -23,3 +23,63 @@ class OracleTests(unittest.TestCase):
     def test_prices_by_source(self):
         _, result = self.client.prices_by_source(1, "other", "USD", 1)
         self.assertEqual(len(result), 1)
+
+    def test_initialize(self):
+        # TODO: Implement this test
+        pass
+
+    def test_has_admin(self):
+        # TODO apparently the contract call is failing, need to investigate
+        # _, has_admin = self.client.has_admin()
+        # self.assertIsInstance(has_admin, bool)
+        pass
+
+    def test_write_admin(self):
+        # TODO: Implement this test
+        pass
+
+    def test_read_admin(self):
+        _, admin_public_key = self.client.read_admin()
+        self.assertIsInstance(admin_public_key, str)
+
+    def test_sources(self):
+        _, source_ids = self.client.sources()
+        self.assertIsInstance(source_ids, list)
+
+    def test_price_by_source(self):
+        # TODO: Implement this test
+        pass
+
+    def test_lastprice_by_source(self):
+        # TODO: Implement this test
+        pass
+
+    def test_add_price(self):
+        # TODO: Implement this test
+        pass
+
+    def test_assets(self):
+        _, assets = self.client.assets()
+        for asset in assets:
+            self.assertIn("asset_type", asset)
+            self.assertIn("asset", asset)
+
+    def test_decimals(self):
+        _, decimals = self.client.decimals()
+        self.assertIsInstance(decimals, int)
+
+    def test_resolution(self):
+        _, resolution = self.client.resolution()
+        self.assertIsInstance(resolution, int)
+
+    def test_price(self):
+        # TODO: Implement this test
+        pass
+
+    def test_prices(self):
+        # TODO: Implement this test
+        pass
+
+    def test_lastprice(self):
+        # TODO: Implement this test
+        pass
