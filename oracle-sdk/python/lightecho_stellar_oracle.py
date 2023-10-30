@@ -259,7 +259,7 @@ class OracleClient:
     def price_by_source(
         self, source: int, asset_type: AssetType, asset: str, timestamp: int
     ) -> Tuple[str, Optional[Price]]:
-        return self.invoke_and_parse(  # type: ignore
+        tx_hash, price = self.invoke_and_parse(  # type: ignore
             "price_by_source",
             [
                 scval.to_uint32(source),
@@ -267,17 +267,29 @@ class OracleClient:
                 scval.to_uint32(timestamp),
             ],
         )
+        if price is not None:
+            price = {
+                "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),  # type: ignore
+                "timestamp": price["timestamp"],  # type: ignore
+            }
+        return tx_hash, price  # type: ignore
 
     def lastprice_by_source(
         self, source: int, asset_type: AssetType, asset: str
     ) -> Tuple[str, Optional[Price]]:
-        return self.invoke_and_parse(  # type: ignore
+        tx_hash, price = self.invoke_and_parse(  # type: ignore
             "lastprice_by_source",
             [
                 scval.to_uint32(source),
                 self.build_asset_enum(asset_type, asset),
             ],
         )
+        if price is not None:
+            price = {
+                "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),  # type: ignore
+                "timestamp": price["timestamp"],  # type: ignore
+            }
+        return tx_hash, price  # type: ignore
 
     def add_price(
         self,
@@ -329,7 +341,7 @@ class OracleClient:
     def assets(self) -> Tuple[str, List[Asset]]:
         tx_hash, results = self.invoke_and_parse("assets")
         assets = []
-        for result in results: # type: ignore
+        for result in results:  # type: ignore
             if result[0] == "Other":  # type: ignore
                 asset = Asset({"asset_type": "other", "asset": result[1]})  # type: ignore
             elif result[1] == "Stellar":  # type: ignore
@@ -350,35 +362,58 @@ class OracleClient:
         asset_type: AssetType,
         asset: str,
         timestamp: int,
-    ):
-        return self.invoke_and_parse(
+    ) -> Tuple[str, Optional[Price]]:
+        tx_hash, price = self.invoke_and_parse(
             "price",
             [
                 self.build_asset_enum(asset_type, asset),
                 scval.to_uint64(timestamp),
             ],
         )
+        if price is not None:
+            price = {
+                "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),  # type: ignore
+                "timestamp": price["timestamp"],  # type: ignore
+            }
+        return tx_hash, price  # type: ignore
 
-    def prices(self, asset_type: AssetType, asset: str, records: int):
-        return self.invoke_and_parse(
+    def prices(
+        self, asset_type: AssetType, asset: str, records: int
+    ) -> Tuple[str, List[Price]]:
+        tx_hash, prices = self.invoke_and_parse(
             "prices",
             [
                 self.build_asset_enum(asset_type, asset),
                 scval.to_uint32(records),
             ],
         )
+        results = []
+        for price in prices:  # type: ignore
+            results.append(
+                {
+                    "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),
+                    "timestamp": price["timestamp"],
+                }
+            )
+        return tx_hash, results
 
     def lastprice(
         self,
         asset_type: AssetType,
         asset: str,
-    ):
-        return self.invoke_and_parse(
+    ) -> Tuple[str, Optional[Price]]:
+        tx_hash, price = self.invoke_and_parse(
             "lastprice",
             [
                 self.build_asset_enum(asset_type, asset),
             ],
         )
+        if price is not None:
+            price = {
+                "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),  # type: ignore
+                "timestamp": price["timestamp"],  # type: ignore
+            }
+        return tx_hash, price  # type: ignore
 
 
 class OracleDeployer:

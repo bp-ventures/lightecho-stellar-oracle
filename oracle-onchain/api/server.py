@@ -66,6 +66,14 @@ def db_create_tables():
         """
         )
 
+        # migration at 2023-10-30
+        cursor.execute(
+        """
+        ALTER TABLE prices
+        ADD COLUMN added_to_blockchain BOOLEAN DEFAULT 0;
+        """
+        )
+
 
 def init_app():
     """Initialize the core application."""

@@ -67,28 +67,35 @@ def add_price_to_blockchain(price: dict):
     print(f"cli.py {cmd}")
     try:
         output = run_cli(cmd)
+        mark_price_as_added_to_blockchain(price["id"])
         print(output)
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
+
+
+def mark_price_as_added_to_blockchain(price_id):
+    query = """
+        UPDATE prices
+        SET added_to_blockchain = 1
+        WHERE id = ?
+    """
+    with cursor_ctx() as cursor:
+        cursor.execute(query, (price_id,))
 
 
 def read_prices_from_db():
     query = """
         SELECT
             id,
-            created_at,
             updated_at,
-            timeframe,
-            status,
-            source,
-            asset_type,
-            symbol,
             price,
-            bid,
-            offer,
             sell_asset,
             buy_asset
         FROM prices
+        WHERE status = 'active'
+          AND source = 999
+          AND asset_type = 'other'
+          AND added_to_blockchain = 0
         ORDER BY updated_at DESC
     """
     with cursor_ctx() as cursor:
