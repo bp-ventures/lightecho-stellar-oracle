@@ -327,7 +327,7 @@ class OracleClient:
         Args:
             source (int): The source ID.
             asset_type (AssetType): The asset type ("stellar" or "other").
-            asset (str): The asset identifier.
+            asset (str): The asset identifier. For off-chain assets, this is an empty string. For on-chain asset, this is the Soroban asset address (Token Interface).
             records (int): The number of records to retrieve.
 
         Returns:
@@ -360,7 +360,7 @@ class OracleClient:
         Args:
             source (int): The source ID.
             asset_type (AssetType): The asset type ("stellar" or "other").
-            asset (str): The asset identifier.
+            asset (str): The asset identifier. For off-chain assets, this is an empty string. For on-chain asset, this is the Soroban asset address (Token Interface).
             timestamp (int): The timestamp of the price record.
 
         Returns:
@@ -390,7 +390,7 @@ class OracleClient:
         Args:
             source (int): The source ID.
             asset_type (AssetType): The asset type ("stellar" or "other").
-            asset (str): The asset identifier.
+            asset (str): The asset identifier. For off-chain assets, this is an empty string. For on-chain asset, this is the Soroban asset address (Token Interface).
 
         Returns:
             Tuple[str, Optional[Price]]: A tuple containing the transaction hash and the latest price record (or None if not found).
@@ -423,7 +423,7 @@ class OracleClient:
         Args:
             source (int): The source ID.
             asset_type (AssetType): The asset type ("stellar" or "other").
-            asset (str): The asset identifier.
+            asset (str): The asset identifier. For off-chain assets, this is an empty string. For on-chain asset, this is the Soroban asset address (Token Interface).
             price (str): The price value.
             timestamp (int, optional): The timestamp for the price record (defaults to current time).
 
@@ -529,7 +529,7 @@ class OracleClient:
 
         Args:
             asset_type (AssetType): The asset type ("stellar" or "other").
-            asset (str): The asset identifier.
+            asset (str): The asset identifier. For off-chain assets, this is an empty string. For on-chain asset, this is the Soroban asset address (Token Interface).
             timestamp (int): The timestamp of the price record.
 
         Returns:
@@ -557,7 +557,7 @@ class OracleClient:
 
         Args:
             asset_type (AssetType): The asset type ("stellar" or "other").
-            asset (str): The asset identifier.
+            asset (str): The asset identifier. For off-chain assets, this is an empty string. For on-chain asset, this is the Soroban asset address (Token Interface).
             records (int): The number of records to retrieve.
 
         Returns:
@@ -590,7 +590,7 @@ class OracleClient:
 
         Args:
             asset_type (AssetType): The asset type ("stellar" or "other").
-            asset (str): The asset identifier.
+            asset (str): The asset identifier. For off-chain assets, this is an empty string. For on-chain asset, this is the Soroban asset address (Token Interface).
 
         Returns:
             Tuple[str, Optional[Price]]: A tuple containing the transaction hash and the latest price record (or None if not found).
