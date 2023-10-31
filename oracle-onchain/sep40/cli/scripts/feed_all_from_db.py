@@ -109,12 +109,16 @@ def read_prices_from_db():
     with cursor_ctx() as cursor:
         cursor.execute(query)
         prices = []
+        symbols = []
         for result in cursor.fetchall():
             result_dict = dict(result)
+            if result_dict["symbol"] in symbols:
+                continue
             timestamp_as_unix = int(result_dict['updated_at'].timestamp())
             result_dict['adjusted_timestamp'] = adjust_timestamp(timestamp_as_unix, RESOLUTION)
             if result_dict['adjusted_timestamp'] <= int(datetime.now().timestamp()):
                 prices.append(result_dict)
+                symbols.append(result_dict["symbol"])
         for price in prices:
             add_price_to_blockchain(price)
 
