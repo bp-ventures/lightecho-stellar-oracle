@@ -225,13 +225,6 @@ def invoke_and_output(
     print("Success!")
 
 
-def issuer_as_bytes(asset_issuer: Optional[str]):
-    if asset_issuer:
-        return scval.to_bytes(asset_issuer.encode())
-    else:
-        return None
-
-
 def build_asset_enum(asset_type: AssetType, asset: str):
     if asset_type == AssetType.stellar:
         return scval.to_enum("Stellar", scval.to_address(asset))

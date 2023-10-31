@@ -251,21 +251,6 @@ class OracleClient:
         )
         return tx_hash, self.parse_tx_data(tx_data)
 
-    def issuer_as_bytes(self, asset_issuer: Optional[str]):
-        """
-        Converts an asset issuer to bytes.
-
-        Args:
-            asset_issuer (str, optional): The asset issuer's public key.
-
-        Returns:
-            bytes or None: The asset issuer as bytes, or None if not provided.
-        """
-        if asset_issuer:
-            return scval.to_bytes(asset_issuer.encode())
-        else:
-            return None
-
     def initialize(
         self,
         admin: str,

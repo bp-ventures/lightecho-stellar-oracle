@@ -5,14 +5,12 @@ var SorobanClient = require("soroban-client");
 
 export default class OracleClient {
   /**
-   * The contract address on the Soroban testnet for XLM (Stellar Lumens).
+   * TESTNET values
    */
+  static TESTNET_RPC_URL = "https://soroban-testnet.stellar.org";
+  static TESTNET_NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
   static TESTNET_CONTRACT_XLM =
     "CDYHDC7OPAWPQ46TGT5PU77C2NWFGERD6IQRKVNBL34HCXHARWO24XWM";
-
-  /**
-   * The contract address on the Soroban testnet for USD (U.S. Dollars).
-   */
   static TESTNET_CONTRACT_USD =
     "CAC6JWJG22ULRNGY75H2NVDIXQQP5JRJPERTZXXXONJHD2ETMGGEV7WP";
 
@@ -39,6 +37,26 @@ export default class OracleClient {
     this.rpcServerUrl = rpcServerUrl;
     this.sourceSecret = sourceSecret;
     this.options = options;
+  }
+
+  /**
+   * Initializes a new OracleClient instance for TESTNET with XLM base.
+   *
+   * @param {string} sourceSecret - The source account secret to be used in transactions.
+   */
+  static newTestnetXlm(
+    sourceSecret,
+    options = {
+      baseFee: 50000,
+    }
+  ) {
+    return new OracleClient(
+      OracleClient.TESTNET_CONTRACT_XLM,
+      OracleClient.TESTNET_RPC_URL,
+      OracleClient.TESTNET_NETWORK_PASSPHRASE,
+      sourceSecret,
+      options
+    );
   }
 
   /**
@@ -161,15 +179,15 @@ export default class OracleClient {
    * Gets the Soroban value representing an asset.
    *
    * @param {string} assetCode - The asset code.
-   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {string} assetAddress - The Soroban asset address (Token Interface)
    * @returns {object} - The Soroban value representing the asset.
    */
-  getAssetEnum(assetCode, assetIssuer) {
-    if (assetIssuer) {
+  getAssetEnum(assetCode, assetAddress) {
+    if (assetAddress) {
       return SorobanClient.xdr.ScVal.scvVec([
         SorobanClient.xdr.ScVal.scvSymbol(Buffer.from("Stellar", "utf-8")),
         SorobanClient.xdr.ContractId.contractIdFromAsset(
-          new SorobanClient.StellarBase.Asset(assetCode, assetIssuer)
+          new SorobanClient.StellarBase.Asset(assetCode, assetAddress)
         ),
       ]);
     }
@@ -237,7 +255,7 @@ export default class OracleClient {
    *
    * @param {string} admin - The admin's public key.
    * @param {string} baseAssetCode - The code of the base asset.
-   * @param {string} baseAssetIssuer - The public key of the base asset issuer.
+   * @param {string} baseAssetAddress - The Soroban asset address (Token Interface)
    * @param {number} decimals - The number of decimals for the contract.
    * @param {number} resolution - The resolution value.
    * @returns {any} - The result of the transaction.
@@ -245,7 +263,7 @@ export default class OracleClient {
   async initialize(
     admin,
     baseAssetCode,
-    baseAssetIssuer,
+    baseAssetAddress,
     decimals,
     resolution
   ) {
@@ -255,7 +273,7 @@ export default class OracleClient {
         SorobanClient.xdr.ScVal.scvAddress(
           new SorobanClient.Address(admin).toScAddress()
         ),
-        this.getAssetEnum(baseAssetCode, baseAssetIssuer),
+        this.getAssetEnum(baseAssetCode, baseAssetAddress),
         SorobanClient.xdr.ScVal.scvU32(parseInt(decimals)),
         SorobanClient.xdr.ScVal.scvU32(parseInt(resolution))
       )
@@ -321,16 +339,16 @@ export default class OracleClient {
    *
    * @param {number} source - The source identifier.
    * @param {string} assetCode - The asset code.
-   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {string} assetAddress - The Soroban asset address (Token Interface)
    * @param {number} records - The number of records to retrieve.
    * @returns {Array} - An array of price records.
    */
-  async prices_by_source(source, assetCode, assetIssuer, records) {
+  async prices_by_source(source, assetCode, assetAddress, records) {
     let prices = await this.submitTx(
       this.contract.call(
         "prices_by_source",
         SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
-        this.getAssetEnum(assetCode, assetIssuer),
+        this.getAssetEnum(assetCode, assetAddress),
         SorobanClient.xdr.ScVal.scvU32(parseInt(records))
       )
     );
@@ -349,16 +367,16 @@ export default class OracleClient {
    *
    * @param {number} source - The source identifier.
    * @param {string} assetCode - The asset code.
-   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {string} assetAddress - The Soroban asset address (Token Interface)
    * @param {number} timestamp - The timestamp of the price record.
    * @returns {object|null} - The price record or null if not found.
    */
-  async price_by_source(source, assetCode, assetIssuer, timestamp) {
+  async price_by_source(source, assetCode, assetAddress, timestamp) {
     let price = await this.submitTx(
       this.contract.call(
         "price_by_source",
         SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
-        this.getAssetEnum(assetCode, assetIssuer),
+        this.getAssetEnum(assetCode, assetAddress),
         this.numberToScvU64(parseInt(timestamp))
       )
     );
@@ -376,15 +394,15 @@ export default class OracleClient {
    *
    * @param {number} source - The source identifier.
    * @param {string} assetCode - The asset code.
-   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {string} assetAddress - The Soroban asset address (Token Interface)
    * @returns {object|null} - The latest price record or null if not found.
    */
-  async lastprice_by_source(source, assetCode, assetIssuer) {
+  async lastprice_by_source(source, assetCode, assetAddress) {
     let price = await this.submitTx(
       this.contract.call(
         "lastprice_by_source",
         SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
-        this.getAssetEnum(assetCode, assetIssuer)
+        this.getAssetEnum(assetCode, assetAddress)
       )
     );
     if (price !== null && price !== undefined) {
@@ -401,17 +419,17 @@ export default class OracleClient {
    *
    * @param {number} source - The source identifier.
    * @param {string} assetCode - The asset code.
-   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {string} assetAddress - The Soroban asset address (Token Interface)
    * @param {number} price - The price to add.
    * @param {number} timestamp - The timestamp of the price record.
    * @returns {any} - The result of the transaction.
    */
-  async add_price(source, assetCode, assetIssuer, price, timestamp) {
+  async add_price(source, assetCode, assetAddress, price, timestamp) {
     return await this.submitTx(
       this.contract.call(
         "add_price",
         SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
-        this.getAssetEnum(assetCode, assetIssuer),
+        this.getAssetEnum(assetCode, assetAddress),
         this.numberToScvI128(
           this.convertToInt18DecimalPlaces(parseFloat(price))
         ),
@@ -473,15 +491,15 @@ export default class OracleClient {
    * Retrieves a price record for a specific asset and timestamp.
    *
    * @param {string} assetCode - The asset code.
-   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {string} assetAddress - The Soroban asset address (Token Interface)
    * @param {number} timestamp - The timestamp of the price record.
    * @returns {object|null} - The price record or null if not found.
    */
-  async price(assetCode, assetIssuer, timestamp) {
+  async price(assetCode, assetAddress, timestamp) {
     let price = await this.submitTx(
       this.contract.call(
         "prices",
-        this.getAssetEnum(assetCode, assetIssuer),
+        this.getAssetEnum(assetCode, assetAddress),
         this.numberToScvU64(parseInt(timestamp))
       )
     );
@@ -498,15 +516,15 @@ export default class OracleClient {
    * Retrieves price records for a specific asset and number of records.
    *
    * @param {string} assetCode - The asset code.
-   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {string} assetAddress - The Soroban asset address (Token Interface)
    * @param {number} records - The number of records to retrieve.
    * @returns {Array} - An array of price records.
    */
-  async prices(assetCode, assetIssuer, records) {
+  async prices(assetCode, assetAddress, records) {
     let prices = await this.submitTx(
       this.contract.call(
         "prices",
-        this.getAssetEnum(assetCode, assetIssuer),
+        this.getAssetEnum(assetCode, assetAddress),
         SorobanClient.xdr.ScVal.scvU32(parseInt(records))
       )
     );
@@ -524,12 +542,15 @@ export default class OracleClient {
    * Retrieves the latest price record for a specific asset.
    *
    * @param {string} assetCode - The asset code.
-   * @param {string} assetIssuer - The asset issuer's public key.
+   * @param {string} assetAddress - The Soroban asset address (Token Interface)
    * @returns {object|null} - The latest price record or null if not found.
    */
-  async lastprice(assetCode, assetIssuer) {
+  async lastprice(assetCode, assetAddress) {
     let price = await this.submitTx(
-      this.contract.call("lastprice", this.getAssetEnum(assetCode, assetIssuer))
+      this.contract.call(
+        "lastprice",
+        this.getAssetEnum(assetCode, assetAddress)
+      )
     );
     if (price !== null && price !== undefined) {
       price = {
