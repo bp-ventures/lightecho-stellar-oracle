@@ -71,7 +71,7 @@ def add_price_to_blockchain(price: dict):
     else:
         raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
     cmd = f"--oracle-contract-id {contract_id} oracle add_price 1 other {price['buy_asset']} {price['price']}"
-    logger.info(f"{datetime.now().isoformat()} cli.py {cmd}")
+    logger.info(f"cli.py {cmd}")
     try:
         output = run_cli(cmd)
         mark_symbol_as_added_to_blockchain(price["symbol"])
@@ -119,8 +119,11 @@ def read_prices_from_db():
             if result_dict['adjusted_timestamp'] <= int(datetime.now().timestamp()):
                 prices.append(result_dict)
                 symbols.append(result_dict["symbol"])
-        for price in prices:
-            add_price_to_blockchain(price)
+        if len(prices) == 0:
+            logger.info("no new prices to feed into the blockchain contract")
+        else:
+            for price in prices:
+                add_price_to_blockchain(price)
 
 if __name__ == "__main__":
     read_prices_from_db()
