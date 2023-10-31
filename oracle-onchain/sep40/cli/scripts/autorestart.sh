@@ -13,8 +13,9 @@ echo "Starting $MYNAME. Press Ctrl+C or use 'kill' to exit."
 
 while true; do
     "$@"
-    random_seconds=$((RANDOM % 30 + 1))
+    #sleep_for=$((RANDOM % 30 + 1))
+    sleep_for=30
     date
-    echo "$MYNAME has exited, restarting it after $random_seconds seconds"
-    sleep $random_seconds || break
+    echo "$MYNAME has exited, restarting it after $sleep_for seconds"
+    sleep $sleep_for || break
 done
