@@ -1,5 +1,6 @@
 #!/usr/bin/env -S poetry run python
 import sqlite3
+import logging
 import importlib.util
 import traceback
 from datetime import datetime
@@ -26,6 +27,13 @@ db_path = getattr(local_settings, "API_DB_PATH", None)
 if db_path is None:
     db_path = Path(__file__).parent.parent.parent.parent.resolve() / "api" / "db.sqlite3"
 cli_dir = Path(__file__).parent.parent.resolve()
+
+logging.basicConfig(
+    filename=Path(__file__).resolve().parent / "feed_all_from_db.log",
+    level=logging.INFO,
+    format='[%(asctime)s %(filename)s:%(lineno)d %(levelname)s] %(message)s'
+)
+logger = logging.getLogger('feed_all_from_db.py')
 
 
 def run_cli(cmd: str):
@@ -63,11 +71,11 @@ def add_price_to_blockchain(price: dict):
     else:
         raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
     cmd = f"--oracle-contract-id {contract_id} oracle add_price 1 other {price['buy_asset']} {price['price']}"
-    print(f"{datetime.now().isoformat()} cli.py {cmd}")
+    logger.info(f"{datetime.now().isoformat()} cli.py {cmd}")
     try:
         output = run_cli(cmd)
         mark_symbol_as_added_to_blockchain(price["symbol"])
-        print(output)
+        logger.info(output)
     except Exception:
         traceback.print_exc()
 
