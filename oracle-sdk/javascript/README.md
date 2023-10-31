@@ -5,7 +5,8 @@ Example usage in Browser:
 ```
 <script src="https://unpkg.com/lightecho_stellar_oracle@latest/dist/lightecho_stellar_oracle.min.js"></script>
 <script>
-    const client = OracleClient.newTestnetXlm(
+    const client = OracleClient.newInstance(
+      "testnet",
       "SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH",
       {
         baseFee: 50000,
