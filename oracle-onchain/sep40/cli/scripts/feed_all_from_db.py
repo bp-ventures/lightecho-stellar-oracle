@@ -70,7 +70,7 @@ def add_price_to_blockchain(price: dict):
         contract_id = CONTRACT_ID_USD
     else:
         raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
-    cmd = f"--oracle-contract-id {contract_id} oracle add_price 1 other {price['buy_asset']} {price['price']}"
+    cmd = f"--oracle-contract-id {contract_id} oracle add_price 0 other {price['buy_asset']} {price['price']}"
     logger.info(f"cli.py {cmd}")
     try:
         output = run_cli(cmd)
