@@ -37,6 +37,7 @@ export default class OracleClient {
     this.rpcServerUrl = rpcServerUrl;
     this.sourceSecret = sourceSecret;
     this.options = options;
+    this.contractId = contractId;
   }
 
   /**
