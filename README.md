@@ -46,10 +46,15 @@ This repository contains:
 The price feed is a script that puts the prices into the blockchain contract.
 
 ```
+sudo apt install systemd-container
+sudo machinectl shell myusername@
 mkdir -p ~/.config/systemd/user/
 cp init/systemd/feed_all_from_db.* ~/.config/systemd/user/
 systemctl --user enable feed_all_from_db.timer
 systemctl --user start feed_all_from_db.timer
+
+# to see logs
+journalctl --user -u feed_all_from_db
 ```
 
 #### Featured projects
