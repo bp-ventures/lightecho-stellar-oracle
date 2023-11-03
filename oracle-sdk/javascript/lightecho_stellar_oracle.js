@@ -3,7 +3,7 @@
  */
 var SorobanClient = require("soroban-client");
 
-export default class OracleClient {
+class OracleClient {
   /**
    * TESTNET values
    */
@@ -573,3 +573,4 @@ export default class OracleClient {
     return price;
   }
 }
+module.exports = OracleClient;
