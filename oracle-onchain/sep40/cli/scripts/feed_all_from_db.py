@@ -29,7 +29,6 @@ if db_path is None:
 cli_dir = Path(__file__).parent.parent.resolve()
 
 logging.basicConfig(
-    filename=Path(__file__).resolve().parent / "feed_all_from_db.log",
     level=logging.INFO,
     format='[%(asctime)s %(filename)s:%(lineno)d %(levelname)s] %(message)s'
 )
