@@ -1,6 +1,9 @@
-const webpack = require('webpack');
+import { createRequire } from "node:module";
+import webpack from "webpack";
 
-module.exports = {
+const require = createRequire(import.meta.url);
+const pathName = require.resolve("buffer");
+const configs = {
   mode: "none",
   entry: {
     lightecho_stellar_oracle: [`./lightecho_stellar_oracle.js`],
@@ -25,7 +28,8 @@ module.exports = {
   resolve: {
     extensions: [".ts", ".js"],
     fallback: {
-      buffer: require.resolve("buffer"),
+      buffer: pathName,
     },
   },
 };
+export default configs;

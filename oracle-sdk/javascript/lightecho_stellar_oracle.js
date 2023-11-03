@@ -1,7 +1,7 @@
 /**
  * Lightecho Stellar Oracle SDK for the Soroban network.
  */
-var SorobanClient = require("soroban-client");
+import SorobanClient from "soroban-client";
 
 class OracleClient {
   /**
@@ -573,4 +573,8 @@ class OracleClient {
     return price;
   }
 }
+<<<<<<< Updated upstream
 module.exports = OracleClient;
+=======
+export default OracleClient;
+>>>>>>> Stashed changes
