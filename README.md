@@ -41,6 +41,17 @@ This repository contains:
 - Soroban go live (pilot mode)
 - Soroban Production```
 
+#### Install the price feed script
+
+The price feed is a script that puts the prices into the blockchain contract.
+
+```
+mkdir -p ~/.config/systemd/user/
+cp init/systemd/feed_all_from_db.* ~/.config/systemd/user/
+systemctl --user enable feed_all_from_db.timer
+systemctl --user start feed_all_from_db.timer
+```
+
 #### Featured projects
 
 Have a project that uses our Oracle? Feel free to share with us and we'll be happy to list it here!

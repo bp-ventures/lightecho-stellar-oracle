@@ -1,0 +1,10 @@
+[Unit]
+Description=Feed all database prices into the Oracle blockchain contract
+
+[Service]
+ExecStart=/home/lightecho-stellar-oracle/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/feed_all_from_db.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
