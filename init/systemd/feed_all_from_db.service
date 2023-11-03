@@ -2,8 +2,6 @@
 Description=Feed all database prices into the Oracle blockchain contract
 
 [Service]
-Environment="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus"
-Environment="XDG_RUNTIME_DIR=/run/user/$(id -u)"
 ExecStart=/home/lightecho-stellar-oracle/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/feed_all_from_db.sh
 StandardOutput=journal
 StandardError=journal
