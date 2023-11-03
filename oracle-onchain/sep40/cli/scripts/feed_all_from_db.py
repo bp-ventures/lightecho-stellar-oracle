@@ -1,4 +1,3 @@
-#!/usr/bin/env -S poetry run python
 import sqlite3
 import logging
 import importlib.util
