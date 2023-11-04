@@ -3,6 +3,7 @@ Description=feed_all_from_db
 
 [Service]
 ExecStart=/home/lightecho-stellar-oracle/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/feed_all_from_db.sh
+ExecStartPost=echo "Failed to feed prices into Oracle. Use these commands to see the logs:\nsudo machinectl shell lightecho-stellar-oracle@\njournalctl --user -u feed_all_from_db\n" | mutt  -s "Oracle feed failed" -- support@bpventures.us
 StandardOutput=journal
 StandardError=journal
 

@@ -3,6 +3,7 @@ Description=bump_instance
 
 [Service]
 ExecStart=/home/lightecho-stellar-oracle/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/bump_instance.sh
+ExecStartPost=echo "Failed to bump Oracle instance. Use these commands to see the logs:\nsudo machinectl shell lightecho-stellar-oracle@\njournalctl --user -u bump_instance\n" | mutt  -s "Oracle bump failed" -- support@bpventures.us
 StandardOutput=journal
 StandardError=journal
 
