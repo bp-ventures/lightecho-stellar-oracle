@@ -19,5 +19,11 @@ def run_cli(cmd: str):
     )
 
 if __name__ == "__main__":
-    run_cli(f"--oracle-contract-id {TESTNET_CONTRACT_XLM} oracle bump_instance")
-    run_cli(f"--oracle-contract-id {TESTNET_CONTRACT_USD} oracle bump_instance")
+    cmd = f"--oracle-contract-id {TESTNET_CONTRACT_XLM} oracle bump_instance"
+    logger.info(f"cli.py {cmd}")
+    output = run_cli(cmd)
+    logger.info(output)
+    cmd = f"--oracle-contract-id {TESTNET_CONTRACT_USD} oracle bump_instance"
+    logger.info(f"cli.py {cmd}")
+    output = run_cli(cmd)
+    logger.info(output)
