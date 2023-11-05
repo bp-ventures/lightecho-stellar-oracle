@@ -3,7 +3,6 @@ Description=feed_all_from_db
 
 [Service]
 ExecStart=/home/lightecho-stellar-oracle/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/feed_all_from_db.sh
-ExecStopPost=/home/lightecho-stellar-oracle/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/send_email_failed_feed_prices.sh
 StandardOutput=journal
 StandardError=journal
 
