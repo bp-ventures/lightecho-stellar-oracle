@@ -230,7 +230,7 @@ files = [
 
 [[package]]
 name = "lightecho-stellar-oracle"
-version = "0.8.0"
+version = "0.9.0"
 description = "Python SDK for the Lightecho Stellar Oracle"
 category = "main"
 optional = false
@@ -245,7 +245,7 @@ stellar-sdk = "9.0.0b0"
 type = "git"
 url = "https://github.com/bp-ventures/lightecho-stellar-oracle.git"
 reference = "HEAD"
-resolved_reference = "0e2dd24a4442a46f702d9af8974aa0ab493d7157"
+resolved_reference = "ec2206ca51cc6f76adc6e1d2bfe7221985d3d5a7"
 subdirectory = "oracle-sdk/python"
 [[package]]
 name = "mnemonic"
