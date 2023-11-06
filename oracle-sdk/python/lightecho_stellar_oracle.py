@@ -29,6 +29,14 @@ class Price(TypedDict):
     timestamp: int
 
 
+class AssetPrice(TypedDict):
+    source: int
+    asset_type: AssetType
+    asset: str
+    price: str
+    timestamp: Optional[int]
+
+
 class Asset(TypedDict):
     asset_type: AssetType
     asset: str
@@ -251,6 +259,38 @@ class OracleClient:
         )
         return tx_hash, self.parse_tx_data(tx_data)
 
+    def build_add_price_args(
+        self,
+        source: int,
+        asset_type: AssetType,
+        asset: str,
+        price: str,
+        timestamp: Optional[int] = None,
+    ):
+        price_d = Decimal(price)
+        price_d_str = "{:f}".format(price_d)
+        price_parts = price_d_str.split(".")
+        price_as_int = int(price_d_str.replace(".", ""))
+        if len(price_parts) == 2:
+            decimal_places = len(price_parts[1])
+        else:
+            decimal_places = 0
+        zeroes_to_add = self.decimal_places - decimal_places
+        if zeroes_to_add >= 0:
+            price_as_int = price_as_int * (10**zeroes_to_add)
+        else:
+            raise ValueError(
+                f"Invalid price: no more than {self.decimal_places} decimal places are allowed"
+            )
+        if timestamp is None:
+            timestamp = int(time.time())
+        return [
+            scval.to_uint32(source),
+            self.build_asset_enum(asset_type, asset),
+            scval.to_int128(price_as_int),
+            scval.to_uint64(timestamp),
+        ]
+
     def initialize(
         self,
         admin: str,
@@ -430,30 +470,37 @@ class OracleClient:
         Returns:
             Tuple[str, None]: A tuple containing the transaction hash and None.
         """
-        price_d = Decimal(price)
-        price_d_str = "{:f}".format(price_d)
-        price_parts = price_d_str.split(".")
-        price_as_int = int(price_d_str.replace(".", ""))
-        if len(price_parts) == 2:
-            decimal_places = len(price_parts[1])
-        else:
-            decimal_places = 0
-        zeroes_to_add = self.decimal_places - decimal_places
-        if zeroes_to_add >= 0:
-            price_as_int = price_as_int * (10**zeroes_to_add)
-        else:
-            raise ValueError(
-                f"Invalid price: no more than {self.decimal_places} decimal places are allowed"
+        args = self.build_add_price_args(
+            source,
+            asset_type,
+            asset,
+            price,
+            timestamp,
+        )
+        return self.invoke_and_parse(func_name, args)  # type: ignore
+
+    def add_prices(self, prices: List[AssetPrice]) -> Tuple[str, None]:
+        """
+        Add prices to the contract.
+
+        Args:
+            prices (List[AssetPrice]): List of prices
+
+        Returns:
+            Tuple[str, None]: A tuple containing the transaction hash and None.
+        """
+        args = []
+        for price in prices:
+            args.append(
+                self.build_add_price_args(
+                    price["source"],
+                    price["asset_type"],
+                    price["asset"],
+                    price["price"],
+                    price["timestamp"],
+                )
             )
-        if timestamp is None:
-            timestamp = int(time.time())
-        func_name = "add_price"
-        args = [
-            scval.to_uint32(source),
-            self.build_asset_enum(asset_type, asset),
-            scval.to_int128(price_as_int),
-            scval.to_uint64(timestamp),
-        ]
+        args = [args]
         return self.invoke_and_parse(func_name, args)  # type: ignore
 
     def remove_prices(self) -> Tuple[str, None]:

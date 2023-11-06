@@ -1,7 +1,7 @@
 use soroban_sdk::{contract, contractimpl, Address, Env, Map, Vec};
 
 use crate::metadata;
-use crate::storage_types::{bump_instance, Asset, DataKey, PriceData};
+use crate::storage_types::{bump_instance, Asset, DataKey, PriceData, Price};
 
 pub trait OracleTrait {
     fn initialize(env: Env, admin: Address, base: Asset, decimals: u32, resolution: u32);
@@ -19,6 +19,7 @@ pub trait OracleTrait {
     fn price_by_source(env: Env, source: u32, asset: Asset, timestamp: u64) -> Option<PriceData>;
     fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData>;
     fn add_price(env: Env, source: u32, asset: Asset, price: i128, timestamp: u64);
+    fn add_prices(env: Env, prices: Vec<Price>);
     //TODO add bulk prices
 
     /// Remove prices matching the given conditions.
@@ -201,6 +202,38 @@ impl OracleTrait for Oracle {
         asset_map.set(asset.clone(), price_data_vec);
         prices.set(source, asset_map);
         write_prices(&env, &prices);
+    }
+
+    fn add_prices(env: Env, prices: Vec<Price>) {
+        metadata::read_admin(&env).require_auth();
+        let mut new_prices = read_prices(&env);
+        for price in prices.iter() {
+            let asset_map_option = new_prices.get(price.source);
+            let mut asset_map;
+            match asset_map_option {
+                Some(asset_map_result) => asset_map = asset_map_result,
+                None => {
+                    asset_map = Map::<Asset, Vec<PriceData>>::new(&env);
+                }
+            }
+            let price_data_vec_option = asset_map.get(price.asset.clone());
+            let mut price_data_vec;
+            match price_data_vec_option {
+                Some(price_data_vec_result) => {
+                    price_data_vec = price_data_vec_result;
+                }
+                None => {
+                    price_data_vec = Vec::<PriceData>::new(&env);
+                }
+            }
+            if price_data_vec.len() >= 10 {
+                price_data_vec.pop_front();
+            }
+            price_data_vec.push_back(PriceData::new(price.price, price.timestamp));
+            asset_map.set(price.asset.clone(), price_data_vec);
+            new_prices.set(price.source, asset_map);
+        }
+        write_prices(&env, &new_prices);
     }
 
     fn remove_prices(

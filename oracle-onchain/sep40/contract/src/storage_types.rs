@@ -35,6 +35,15 @@ pub enum Asset {
     Other(Symbol),
 }
 
+#[derive(Clone, Debug)]
+#[contracttype]
+pub struct Price {
+    pub source: u32,
+    pub asset: Asset,
+    pub price: i128,
+    pub timestamp: u64,
+}
+
 pub fn bump_instance(env: &Env) {
     env.storage()
         .instance()

@@ -1,8 +1,8 @@
 #![cfg(test)]
 
 use crate::contract::{Oracle, OracleClient};
-use crate::storage_types::Asset;
-use soroban_sdk::{testutils::Address as _, Address, Env, Vec};
+use crate::storage_types::{Asset, Price};
+use soroban_sdk::{testutils::Address as _, Address, Env, Vec, BytesN};
 extern crate std;
 
 fn is_asset_in_vec(asset: Asset, vec: &Vec<Asset>) -> bool {
@@ -522,4 +522,50 @@ fn test_prices_limit() {
     assert!(!prices.is_none());
     let prices = prices.unwrap();
     assert_eq!(prices.len(), 10);
+}
+
+#[test]
+fn test_add_prices() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, Oracle);
+    let client = OracleClient::new(&env, &contract_id);
+    let admin = Address::random(&env);
+    let base = Asset::Stellar(Address::random(&env));
+    let decimals = 18;
+    let resolution = 1;
+    client.initialize(&admin, &base, &decimals, &resolution);
+
+    let mut prices = Vec::<Price>::new(&env);
+    let source0 = 0;
+    let asset0_bytes = BytesN::from_array(&env, &[8; 32]);
+    let asset0_address = Address::from_contract_id(&asset0_bytes);
+    let asset0 = Asset::Stellar(asset0_address);
+    let price0: i128 = 918729481812938171823918237122;
+    let timestamp0 = env.ledger().timestamp();
+    prices.push_back(Price{
+        source: source0,
+        asset: asset0,
+        price: price0,
+        timestamp: timestamp0,
+    });
+    let source1 = 0;
+    let asset1_bytes = BytesN::from_array(&env, &[8; 32]);
+    let asset1_address = Address::from_contract_id(&asset1_bytes);
+    let asset1 = Asset::Stellar(asset1_address);
+    let price1: i128 = 918729481812938171823918237123;
+    let timestamp1 = timestamp0 + 1;
+    prices.push_back(Price{
+        source: source1,
+        asset: asset1,
+        price: price1,
+        timestamp: timestamp1,
+    });
+    client.add_prices(&prices);
+    let asset3_bytes = BytesN::from_array(&env, &[8; 32]);
+    let asset3_address = Address::from_contract_id(&asset3_bytes);
+    let asset3 = Asset::Stellar(asset3_address);
+    let prices = client.prices_by_source(&0, &asset3, &5);
+    let prices = prices.unwrap();
+    assert_eq!(prices.len(), 2);
 }
