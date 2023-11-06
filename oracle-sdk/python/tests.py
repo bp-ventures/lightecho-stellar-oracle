@@ -58,6 +58,10 @@ class OracleTests(unittest.TestCase):
         # TODO: Implement this test
         pass
 
+    def test_add_prices(self):
+        # TODO: Implement this test
+        pass
+
     def test_assets(self):
         _, assets = self.client.assets()
         for asset in assets:
