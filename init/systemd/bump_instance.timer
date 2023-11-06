@@ -1,0 +1,8 @@
+[Unit]
+Description=Run bump_instance every minute
+
+[Timer]
+OnCalendar=*-*-* 0,3,6,9,12,15,18,21:00:00
+
+[Install]
+WantedBy=timers.target

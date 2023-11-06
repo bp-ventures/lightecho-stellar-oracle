@@ -1,0 +1,10 @@
+[Unit]
+Description=bump_instance
+
+[Service]
+ExecStart=/home/lightecho-stellar-oracle/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/bump_instance.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

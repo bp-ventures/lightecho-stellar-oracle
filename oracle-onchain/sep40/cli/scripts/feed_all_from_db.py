@@ -1,16 +1,14 @@
 import sqlite3
 import logging
 import importlib.util
-import traceback
 from datetime import datetime
 import sys
 import subprocess
 import math
 from contextlib import contextmanager
 from pathlib import Path
+from lightecho_stellar_oracle import TESTNET_CONTRACT_XLM, TESTNET_CONTRACT_USD
 
-CONTRACT_ID_XLM = "CDYHDC7OPAWPQ46TGT5PU77C2NWFGERD6IQRKVNBL34HCXHARWO24XWM"
-CONTRACT_ID_USD = "CAC6JWJG22ULRNGY75H2NVDIXQQP5JRJPERTZXXXONJHD2ETMGGEV7WP"
 RESOLUTION = 10800
 
 mod_spec = importlib.util.spec_from_file_location(
@@ -63,9 +61,9 @@ def adjust_timestamp(external_timestamp, resolution):
 
 def add_price_to_blockchain(price: dict):
     if price['sell_asset'] == "XLM":
-        contract_id = CONTRACT_ID_XLM
+        contract_id = TESTNET_CONTRACT_XLM
     elif price['sell_asset'] == 'USD':
-        contract_id = CONTRACT_ID_USD
+        contract_id = TESTNET_CONTRACT_USD
     else:
         raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
     cmd = f"--oracle-contract-id {contract_id} oracle add_price 0 other {price['buy_asset']} {price['price']}"

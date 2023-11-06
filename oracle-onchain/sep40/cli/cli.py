@@ -89,7 +89,7 @@ def print_error(msg: str):
 
 def abort(msg: str):
     print_error(msg)
-    raise typer.Exit()
+    raise typer.Exit(1)
 
 
 def vprint(msg: str):
