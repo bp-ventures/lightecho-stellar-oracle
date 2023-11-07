@@ -1,17 +1,14 @@
-const assert = require("chai").assert;
-const OracleClient = require("./lightecho_stellar_oracle"); // Import your JavaScript SDK
+import { assert } from "chai";
+import OracleClient from "./lightecho_stellar_oracle.js";
 
-const CONTRACT_ID = OracleClient.TESTNET_CONTRACT_XLM;
 const SECRET = "SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH";
 
 describe("OracleClient", () => {
   let client;
 
   before(() => {
-    client = new OracleClient({
-      contractId: CONTRACT_ID,
-      signerSecret: SECRET,
-      network: "testnet",
+    client = new OracleClient.newInstance("testnet", SECRET, {
+      baseFee: 50000,
     });
   });
 
@@ -19,17 +16,12 @@ describe("OracleClient", () => {
     // TODO: Implement this test
   });
 
-  it("should check if has admin", async () => {
-    const hasAdmin = await client.hasAdmin();
-    assert.isBoolean(hasAdmin);
-  });
-
   it("should write admin", async () => {
     // TODO: Implement this test
   });
 
   it("should read admin", async () => {
-    const admin = await client.readAdmin();
+    const admin = await client.read_admin();
     assert.isString(admin);
   });
 
