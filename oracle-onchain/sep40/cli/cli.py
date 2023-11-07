@@ -207,16 +207,7 @@ def output_tx_data(tx_data):
         abort(f"Error: {tx_data}")
 
 
-def invoke_and_output(
-    function_name, parameters=[], source_acc=None, signer=None, contract_id=None
-):
-    tx_hash, tx_data = invoke_contract_function(
-        function_name,
-        parameters,
-        source_acc=source_acc,
-        signer=signer,
-        contract_id=contract_id,
-    )
+def print_contract_output(tx_hash, tx_data):
     print("Output:")
     output_tx_data(tx_data)
     print("Horizon tx:")
@@ -332,19 +323,20 @@ def oracle_deploy():
 
 @oracle_app.command("initialize", help="oracle: invoke initialize()")
 def oracle_initialize(admin: str, base: str, decimals: int, resolution: int):
-    func_name = "initialize"
-    args = [
-        scval.to_address(admin),
-        build_asset_enum(AssetType.other, base),
-        scval.to_uint32(decimals),
-        scval.to_uint32(resolution),
-    ]
-    invoke_and_output(func_name, args)
+    tx_hash, tx_data = oracle_client.initialize(
+        admin,
+        "other",
+        base,
+        decimals,
+        resolution,
+    )
+    print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("bump_instance", help="oracle: invoke bump_instance()")
 def oracle_bump_instance():
-    invoke_and_output("bump_instance")
+    tx_hash, tx_data = oracle_client.bump_instance()
+    print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("has_admin", help="oracle: invoke has_admin()")
