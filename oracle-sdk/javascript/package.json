@@ -1,6 +1,7 @@
 {
   "name": "lightecho_stellar_oracle",
   "version": "0.13.0",
+  "type": "module",
   "description": "Lightecho Stellar Oracle Client",
   "main": "lightecho_stellar_oracle.js",
   "author": "bpventures.us",
