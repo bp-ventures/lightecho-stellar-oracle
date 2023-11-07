@@ -655,6 +655,15 @@ class OracleClient:
             }
         return tx_hash, price  # type: ignore
 
+    def bump_instance(self):
+        """
+        Bumps the contract instance.
+
+        Returns:
+            Tuple[str, None]: A tuple containing the transaction hash and None.
+        """
+        return self.invoke_and_parse("bump_instance")  # type: ignore
+
 
 class OracleDeployer:
     def __init__(

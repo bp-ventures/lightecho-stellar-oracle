@@ -1,13 +1,14 @@
 {
   "name": "lightecho_stellar_oracle",
   "version": "0.13.0",
+  "type": "module",
   "description": "Lightecho Stellar Oracle Client",
   "main": "lightecho_stellar_oracle.js",
   "author": "bpventures.us",
   "git repository": "https://github.com/bp-ventures/lightecho-stellar-oracle/tree/trunk/oracle-sdk/javascript",
   "license": "https://github.com/bp-ventures/lightecho-stellar-oracle/blob/trunk/LICENSE.md",
   "scripts": {
-    "test": "mocha tests.js",
+    "test": "mocha --require @babel/register --timeout 10000",
     "build": "webpack && cp ./dist/lightecho_stellar_oracle.min.js example/"
   },
   "dependencies": {
@@ -16,6 +17,10 @@
     "webpack-cli": "^5.1.4"
   },
   "devDependencies": {
+    "@babel/cli": "^7.23.0",
+    "@babel/core": "^7.23.2",
+    "@babel/preset-env": "^7.23.2",
+    "@babel/register": "^7.22.15",
     "chai": "^4.3.10",
     "mocha": "^10.2.0"
   }

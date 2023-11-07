@@ -3,17 +3,21 @@
   <body>
     <script src="./lightecho_stellar_oracle.min.js"></script>
     <script>
-      const client = OracleClient.newInstance(
-        "testnet",
-        "SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH",
-        {
-          baseFee: 50000,
-        }
-      );
-      client
-        .lastprice("USD", "")
-        .then((result) => console.log(result))
-        .catch((err) => console.error(err));
+      try {
+        const client = OracleClient.newInstance(
+          "testnet",
+          "SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH",
+          {
+            baseFee: 50000,
+          }
+        );
+        client
+          .prices_by_source(0, "USD", "", 2)
+          .then((result) => console.log(result))
+          .catch((err) => console.error(err));
+      } catch (error) {
+        console.log(error);
+      }
     </script>
   </body>
 </html>
