@@ -15,4 +15,3 @@ if ! [ command -v $POETRY &>/dev/null ]; then
         exit 1
     fi
 fi
-$POETRY run python cli.py "$@"
