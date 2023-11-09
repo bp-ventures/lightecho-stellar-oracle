@@ -43,12 +43,6 @@ oracle_app = typer.Typer()
 app = typer.Typer()
 app.add_typer(oracle_app, name="oracle")
 
-oracle_client = OracleClient(
-    contract_id=local_settings.ORACLE_CONTRACT_ID,
-    signer=Keypair.from_secret(local_settings.SOURCE_SECRET),
-    network=local_settings.STELLAR_NETWORK,
-)
-
 state = {
     "verbose": False,
     "source_secret": local_settings.SOURCE_SECRET,
@@ -105,7 +99,7 @@ def build_asset_enum(asset_type: AssetType, asset: str):
 
 @oracle_app.command("initialize", help="oracle: invoke initialize()")
 def oracle_initialize(admin: str, base: str, decimals: int, resolution: int):
-    tx_hash, tx_data = oracle_client.initialize(
+    tx_hash, tx_data = state["oracle_client"].initialize(
         admin,
         "other",
         base,
@@ -117,13 +111,13 @@ def oracle_initialize(admin: str, base: str, decimals: int, resolution: int):
 
 @oracle_app.command("bump_instance", help="oracle: invoke bump_instance()")
 def oracle_bump_instance():
-    tx_hash, tx_data = oracle_client.bump_instance()
+    tx_hash, tx_data = state["oracle_client"].bump_instance()
     print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("has_admin", help="oracle: invoke has_admin()")
 def oracle_has_admin():
-    tx_hash, tx_data = oracle_client.has_admin()
+    tx_hash, tx_data = state["oracle_client"].has_admin()
     print_contract_output(tx_hash, tx_data)
 
 
@@ -134,13 +128,13 @@ def oracle_write_admin():
 
 @oracle_app.command("read_admin", help="oracle: invoke read_admin()")
 def oracle_read_admin():
-    tx_hash, tx_data = oracle_client.read_admin()
+    tx_hash, tx_data = state["oracle_client"].read_admin()
     print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("sources", help="oracle: invoke sources()")
 def oracle_sources():
-    tx_hash, tx_data = oracle_client.sources()
+    tx_hash, tx_data = state["oracle_client"].sources()
     print_contract_output(tx_hash, tx_data)
 
 
@@ -151,7 +145,7 @@ def oracle_prices_by_source(
     asset: str,
     records: int,
 ):
-    tx_hash, tx_data = oracle_client.prices_by_source(
+    tx_hash, tx_data = state["oracle_client"].prices_by_source(
         source,
         asset_type.name,
         asset,
@@ -167,7 +161,7 @@ def oracle_price_by_source(
     asset: str,
     timestamp: int,
 ):
-    tx_hash, tx_data = oracle_client.price_by_source(
+    tx_hash, tx_data = state["oracle_client"].price_by_source(
         source,
         asset_type.name,
         asset,
@@ -182,7 +176,7 @@ def oracle_lastprice_by_source(
     asset_type: AssetType,
     asset: str,
 ):
-    tx_hash, tx_data = oracle_client.lastprice_by_source(
+    tx_hash, tx_data = state["oracle_client"].lastprice_by_source(
         source,
         asset_type.name,
         asset,
@@ -198,7 +192,7 @@ def oracle_add_price(
     price: str,
     timestamp: Optional[int] = None,
 ):
-    tx_hash, tx_data = oracle_client.add_price(
+    tx_hash, tx_data = state["oracle_client"].add_price(
         source,
         asset_type.name,
         asset,
@@ -214,7 +208,7 @@ def oracle_add_prices(
 ):
     decoded_bytes = base64.b64decode(prices_base64)
     decoded_list = json.loads(decoded_bytes)
-    tx_hash, tx_data = oracle_client.add_prices(decoded_list)
+    tx_hash, tx_data = state["oracle_client"].add_prices(decoded_list)
     print_contract_output(tx_hash, tx_data)
 
 @oracle_app.command("remove_prices", help="oracle: invoke remove_prices()")
@@ -225,25 +219,25 @@ def oracle_remove_prices():
 
 @oracle_app.command("base", help="oracle: invoke base()")
 def oracle_base():
-    tx_hash, tx_data = oracle_client.base()
+    tx_hash, tx_data = state["oracle_client"].base()
     print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("assets", help="oracle: invoke assets()")
 def oracle_assets():
-    tx_hash, tx_data = oracle_client.assets()
+    tx_hash, tx_data = state["oracle_client"].assets()
     print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("decimals", help="oracle: invoke decimals()")
 def oracle_decimals():
-    tx_hash, tx_data = oracle_client.decimals()
+    tx_hash, tx_data = state["oracle_client"].decimals()
     print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("resolution", help="oracle: invoke resolution()")
 def oracle_resolution():
-    tx_hash, tx_data = oracle_client.resolution()
+    tx_hash, tx_data = state["oracle_client"].resolution()
     print_contract_output(tx_hash, tx_data)
 
 
@@ -253,7 +247,7 @@ def oracle_price(
     asset: str,
     timestamp: int,
 ):
-    tx_hash, tx_data = oracle_client.price(
+    tx_hash, tx_data = state["oracle_client"].price(
         asset_type.name,
         asset,
         timestamp,
@@ -263,7 +257,7 @@ def oracle_price(
 
 @oracle_app.command("prices", help="oracle: invoke prices()")
 def oracle_prices(asset_type: AssetType, asset: str, records: int):
-    tx_hash, tx_data = oracle_client.prices(
+    tx_hash, tx_data = state["oracle_client"].prices(
         asset_type.name,
         asset,
         records,
@@ -276,7 +270,7 @@ def oracle_lastprice(
     asset_type: AssetType,
     asset: str,
 ):
-    tx_hash, tx_data = oracle_client.lastprice(
+    tx_hash, tx_data = state["oracle_client"].lastprice(
         asset_type.name,
         asset,
     )
@@ -292,6 +286,11 @@ def main(
         state["verbose"] = True
     if oracle_contract_id:
         state["oracle_contract_id"] = oracle_contract_id
+    state["oracle_client"] = OracleClient(
+        contract_id=state["oracle_contract_id"],
+        signer=Keypair.from_secret(state["source_secret"]),
+        network=local_settings.STELLAR_NETWORK,
+    )
 
 
 if __name__ == "__main__":
