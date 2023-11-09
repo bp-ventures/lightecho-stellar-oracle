@@ -477,7 +477,7 @@ class OracleClient:
             price,
             timestamp,
         )
-        return self.invoke_and_parse(func_name, args)  # type: ignore
+        return self.invoke_and_parse("add_price", args)  # type: ignore
 
     def add_prices(self, prices: List[AssetPrice]) -> Tuple[str, None]:
         """
@@ -501,7 +501,7 @@ class OracleClient:
                 )
             )
         args = [args]
-        return self.invoke_and_parse(func_name, args)  # type: ignore
+        return self.invoke_and_parse("add_prices", args)  # type: ignore
 
     def remove_prices(self) -> Tuple[str, None]:
         """
