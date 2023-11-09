@@ -491,15 +491,22 @@ class OracleClient:
         """
         price_args = []
         for price in prices:
-            price_args.append(
-                self.build_add_price_args(
-                    price["source"],
-                    price["asset_type"],
-                    price["asset"],
-                    price["price"],
-                    price["timestamp"],
-                )
+            add_price_args = self.build_add_price_args(
+                price["source"],
+                price["asset_type"],
+                price["asset"],
+                price["price"],
+                price["timestamp"],
             )
+            add_price_struct = scval.to_struct(
+                {
+                    "source": add_price_args[0],
+                    "asset": add_price_args[1],
+                    "price": add_price_args[2],
+                    "timestamp": add_price_args[3],
+                }
+            )
+            price_args.append(add_price_struct)
         price_args = scval.to_vec(price_args)
         args = [price_args]
         return self.invoke_and_parse("add_prices", args)  # type: ignore
