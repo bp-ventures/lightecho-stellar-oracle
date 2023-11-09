@@ -69,6 +69,20 @@ fn test_admin() {
 }
 
 #[test]
+fn test_has_admin() {
+    let env = Env::default();
+    let contract_id = env.register_contract(None, Oracle);
+    let client = OracleClient::new(&env, &contract_id);
+    let admin = Address::random(&env);
+    let base = Asset::Stellar(Address::random(&env));
+    let decimals = 18;
+    let resolution = 1;
+    assert_eq!(client.has_admin(), false);
+    client.initialize(&admin, &base, &decimals, &resolution);
+    assert_eq!(client.has_admin(), true);
+}
+
+#[test]
 fn test_sources() {
     let env = Env::default();
     let contract_id = env.register_contract(None, Oracle);

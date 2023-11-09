@@ -21,7 +21,7 @@ class OracleTests(unittest.TestCase):
         self.assertEqual(base, {"asset_type": "other", "asset": "XLM"})
 
     def test_prices_by_source(self):
-        _, result = self.client.prices_by_source(1, "other", "USD", 1)
+        _, result = self.client.prices_by_source(0, "other", "USD", 1)
         self.assertEqual(len(result), 1)
 
     def test_initialize(self):
@@ -29,10 +29,8 @@ class OracleTests(unittest.TestCase):
         pass
 
     def test_has_admin(self):
-        # TODO apparently the contract call is failing, need to investigate
-        # _, has_admin = self.client.has_admin()
-        # self.assertIsInstance(has_admin, bool)
-        pass
+        _, result = self.client.has_admin()
+        self.assertEqual(result, True)
 
     def test_write_admin(self):
         # TODO: Implement this test

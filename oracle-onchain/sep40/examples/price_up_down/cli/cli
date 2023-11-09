@@ -2,7 +2,6 @@
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR" || exit
-
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
@@ -16,4 +15,4 @@ if [ $? -ne 0 ]; then
         exit 1
     fi
 fi
-$POETRY install
+$POETRY run python cli.py "$@"
