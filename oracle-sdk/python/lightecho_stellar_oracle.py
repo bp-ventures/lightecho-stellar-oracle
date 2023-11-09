@@ -500,7 +500,7 @@ class OracleClient:
                     price["timestamp"],
                 )
             )
-        args = [args]
+        args = scval.to_vec(args)
         return self.invoke_and_parse("add_prices", args)  # type: ignore
 
     def remove_prices(self) -> Tuple[str, None]:
