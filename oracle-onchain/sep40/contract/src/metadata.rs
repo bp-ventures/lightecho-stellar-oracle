@@ -3,10 +3,10 @@ use soroban_sdk::{Address, Env};
 
 pub fn has_admin(env: &Env) -> bool {
     let key = DataKey::Admin;
-    if let Some(_) = env.storage().instance().get::<DataKey, i128>(&key) {
-        return true;
-    } else {
-        return false;
+    let admin_option: Option<Address> = env.storage().instance().get(&key);
+    match admin_option {
+        Some(_) => { return true }
+        None => { return false }
     }
 }
 

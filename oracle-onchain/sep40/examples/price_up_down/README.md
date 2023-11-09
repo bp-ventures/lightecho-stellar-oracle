@@ -48,8 +48,6 @@ export REPO_DIR=$(pwd)
 ### Deploy the contract
 
 ```
-cd $REPO_DIR/oracle-onchain/sep40/examples/price_up_down
-
 # build and run tests to make sure your toolchain is properly setup
 make test
 

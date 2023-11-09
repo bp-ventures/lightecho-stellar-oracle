@@ -131,7 +131,7 @@ def invoke_contract_function(
     function_name, parameters=[], source_acc=None, signer=None, contract_id=None
 ):
     if contract_id is None:
-        contract_id = state["oracle_contract_id"]
+        contract_id = state["priceupdown_contract_id"]
     if source_acc is None:
         source_acc = state["source_acc"]
 
@@ -328,11 +328,11 @@ def priceupdown_deploy():
 
 
 @priceupdown_app.command("initialize", help="priceupdown: invoke initialize()")
-def priceupdown_initialize(oracle_contract_id: str):
+def priceupdown_initialize():
     invoke_and_output(
         "initialize",
         [
-            scval.to_address(oracle_contract_id),
+            scval.to_address(state["oracle_contract_id"]),
         ],
         contract_id=state["priceupdown_contract_id"],
     )
@@ -380,14 +380,9 @@ def priceupdown_get_price_up_down(
 @app.callback()
 def main(
     verbose: bool = typer.Option(False, "-v", "--verbose"),
-    priceupdown_contract_id: Optional[str] = typer.Option(
-        None, "--priceupdown-contract-id"
-    ),
 ):
     if verbose:
         state["verbose"] = True
-    if priceupdown_contract_id:
-        state["priceupdown_contract_id"] = priceupdown_contract_id
 
 
 if __name__ == "__main__":

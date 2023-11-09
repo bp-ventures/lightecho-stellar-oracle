@@ -22,6 +22,7 @@ Create `local_settings.py`:
 ```
 SOURCE_SECRET = "SBKEDTLZ6DACGUDTBL7O2LPTEW46KGVZUEXSQGEXCBE5KFKZGDCD4YWW"
 ADMIN_SECRET = "SDFWYGBNP5TW4MS7RY5D4FILT65R2IEPWGL34NY2TLSU4DC4BJNXUAMU"
+ORACLE_CONTRACT_ID = ""  # contract id of the deployed Oracle contract
 PRICEUPDOWN_CONTRACT_ID = ""  # contract id of the deployed PriceUpDown contract
 STELLAR_NETWORK="testnet"  # testnet, futurenet or public
 ```
@@ -29,7 +30,7 @@ STELLAR_NETWORK="testnet"  # testnet, futurenet or public
 ### Initialize the contract
 
 ```
-./cli priceupdown initialize CDUXPLBTLQALOKX2IEEGINX5RGBNI7326R7DH24BB6BDGFCXLMYYDR6P
+./cli priceupdown initialize
 ```
 
 ### Get price up/down value
@@ -38,3 +39,8 @@ STELLAR_NETWORK="testnet"  # testnet, futurenet or public
 ./cli priceupdown get_price_up_down other USD
 ```
 
+### Other commands
+
+```
+./cli priceupdown --help
+```

@@ -7,7 +7,8 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 POETRY=poetry
-if ! [ command -v $POETRY &>/dev/null ]; then
+command $POETRY &>/dev/null
+if [ $? -ne 0 ]; then
     if [ -f ~/.local/bin/poetry ]; then
         POETRY=~/.local/bin/poetry
     else
@@ -15,4 +16,4 @@ if ! [ command -v $POETRY &>/dev/null ]; then
         exit 1
     fi
 fi
-$POETRY run python cli.py "$@"
+$POETRY install
