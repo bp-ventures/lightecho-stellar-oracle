@@ -489,9 +489,9 @@ class OracleClient:
         Returns:
             Tuple[str, None]: A tuple containing the transaction hash and None.
         """
-        args = []
+        price_args = []
         for price in prices:
-            args.append(
+            price_args.append(
                 self.build_add_price_args(
                     price["source"],
                     price["asset_type"],
@@ -500,7 +500,8 @@ class OracleClient:
                     price["timestamp"],
                 )
             )
-        args = scval.to_vec(args)
+        price_args = scval.to_vec(price_args)
+        args = [price_args]
         return self.invoke_and_parse("add_prices", args)  # type: ignore
 
     def remove_prices(self) -> Tuple[str, None]:
