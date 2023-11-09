@@ -1,11 +1,14 @@
 import sqlite3
 import logging
 import importlib.util
+import base64
+import json
 from datetime import datetime
 import sys
 import subprocess
 import math
 from contextlib import contextmanager
+from typing import List, Dict
 from pathlib import Path
 from lightecho_stellar_oracle import TESTNET_CONTRACT_XLM, TESTNET_CONTRACT_USD
 
@@ -59,28 +62,47 @@ def adjust_timestamp(external_timestamp, resolution):
     adjusted_timestamp = math.ceil(external_timestamp / resolution) * resolution
     return adjusted_timestamp
 
-def add_price_to_blockchain(price: dict):
-    if price['sell_asset'] == "XLM":
-        contract_id = TESTNET_CONTRACT_XLM
-    elif price['sell_asset'] == 'USD':
-        contract_id = TESTNET_CONTRACT_USD
-    else:
-        raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
-    cmd = f"--oracle-contract-id {contract_id} oracle add_price 0 other {price['buy_asset']} {price['price']}"
-    logger.info(f"cli.py {cmd}")
-    output = run_cli(cmd)
-    mark_symbol_as_added_to_blockchain(price["symbol"])
-    logger.info(output)
+def list_to_base64(data_list):
+    json_str = json.dumps(data_list)
+    json_bytes = json_str.encode('utf-8')
+    return base64.b64encode(json_bytes).decode('utf-8')
+
+def add_prices_to_blockchain(prices: List[Dict]):
+    xlm_based_prices = []
+    usd_based_prices = []
+    for price in prices:
+        parsed_price = {
+            "source": 0,
+            "asset_type": "other",
+            "asset": price["buy_asset"],
+            "price": price['price'],
+            "timestamp": price['adjusted_timestamp'],
+        }
+        if price["sell_asset"] == "XLM":
+            xlm_based_prices.append(parsed_price)
+        elif price["sell_asset"] == "USD":
+            usd_based_prices.append(parsed_price)
+        else:
+            raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
+    if xlm_based_prices:
+        cmd = f"--oracle-contract-id {TESTNET_CONTRACT_XLM} oracle add_prices {list_to_base64(xlm_based_prices)}"
+        logger.info(f"cli.py {cmd}")
+        output = run_cli(cmd)
+        logger.info(output)
+    if usd_based_prices:
+        cmd = f"--oracle-contract-id {TESTNET_CONTRACT_USD} oracle add_prices {list_to_base64(usd_based_prices)}"
+        logger.info(f"cli.py {cmd}")
+        output = run_cli(cmd)
+        logger.info(output)
+    symbols = [price["symbol"] for price in prices]
+    mark_symbols_as_added_to_blockchain(symbols)
 
 
-def mark_symbol_as_added_to_blockchain(symbol):
-    query = """
-        UPDATE prices
-        SET added_to_blockchain = 1
-        WHERE symbol = ?
-    """
+def mark_symbols_as_added_to_blockchain(symbols):
+    placeholders = ', '.join(['?'] * len(symbols))
+    query = f"UPDATE prices SET added_to_blockchain = 1 WHERE symbol IN ({placeholders})"
     with cursor_ctx() as cursor:
-        cursor.execute(query, (symbol,))
+        cursor.execute(query, symbols)
 
 
 def read_prices_from_db():
@@ -115,8 +137,7 @@ def read_prices_from_db():
         if len(prices) == 0:
             logger.info("no new prices to feed into the blockchain contract")
         else:
-            for price in prices:
-                add_price_to_blockchain(price)
+            add_prices_to_blockchain(prices)
 
 if __name__ == "__main__":
     read_prices_from_db()
