@@ -192,7 +192,7 @@ def oracle_add_price(
     price: str,
     timestamp: Optional[int] = None,
 ):
-    tx_hash, tx_data = state["oracle_client"].add_price(
+    tx_hash, tx_data = state["admin_oracle_client"].add_price(
         source,
         asset_type.name,
         asset,
@@ -208,7 +208,7 @@ def oracle_add_prices(
 ):
     decoded_bytes = base64.b64decode(prices_base64)
     decoded_list = json.loads(decoded_bytes)
-    tx_hash, tx_data = state["oracle_client"].add_prices(decoded_list)
+    tx_hash, tx_data = state["admin_oracle_client"].add_prices(decoded_list)
     print_contract_output(tx_hash, tx_data)
 
 @oracle_app.command("remove_prices", help="oracle: invoke remove_prices()")
@@ -289,6 +289,11 @@ def main(
     state["oracle_client"] = OracleClient(
         contract_id=state["oracle_contract_id"],
         signer=Keypair.from_secret(state["source_secret"]),
+        network=local_settings.STELLAR_NETWORK,
+    )
+    state["admin_oracle_client"] = OracleClient(
+        contract_id=state["oracle_contract_id"],
+        signer=Keypair.from_secret(state["admin_secret"]),
         network=local_settings.STELLAR_NETWORK,
     )
 
