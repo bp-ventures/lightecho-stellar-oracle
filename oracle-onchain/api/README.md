@@ -1,3 +1,11 @@
+Create `.env`:
+
+```
+GUNICORN_BIND=localhost:8000
+GUNICORN_WORKERS=1
+GUNICORN_TIMEOUT=30
+```
+
 Create `local_settings.py`:
 
 ```
