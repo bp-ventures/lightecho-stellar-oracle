@@ -53,6 +53,9 @@ cp init/systemd/* ~/.config/systemd/user/
 systemctl --user enable feed_bulk_from_db.timer bump_instance.timer
 systemctl --user start feed_bulk_from_db.timer bump_instance.timer
 
+# to check status
+./systemd-status.sh
+
 # to see logs
 journalctl --user -u feed_bulk_from_db
 journalctl --user -u bump_instance
