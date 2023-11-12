@@ -141,8 +141,16 @@ def read_prices_from_db():
     query = """
         SELECT
             id,
-            updated_at,
+            timeframe,
+            status,
+            source,
+            asset_type,
             symbol,
+            price,
+            bid,
+            offer,
+            sell_asset,
+            buy_asset,
             added_to_blockchain
         FROM prices
         WHERE added_to_blockchain = 1
