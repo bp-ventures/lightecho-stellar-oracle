@@ -498,6 +498,7 @@ class OracleClient:
                 price["price"],
                 price["timestamp"],
             )
+            # see https://github.com/StellarCN/py-stellar-base/issues/815
             add_price_struct = scval.to_struct(
                 {
                     "asset": add_price_args[1],
