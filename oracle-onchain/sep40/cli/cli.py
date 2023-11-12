@@ -208,7 +208,11 @@ def oracle_add_prices(
 ):
     decoded_bytes = base64.b64decode(prices_base64)
     decoded_list = json.loads(decoded_bytes)
-    tx_hash, tx_data = state["admin_oracle_client"].add_prices(decoded_list)
+    import pdb; pdb.set_trace()
+    try:
+        tx_hash, tx_data = state["admin_oracle_client"].add_prices(decoded_list)
+    except Exception as e:
+        exc = e
     print_contract_output(tx_hash, tx_data)
 
 @oracle_app.command("remove_prices", help="oracle: invoke remove_prices()")
