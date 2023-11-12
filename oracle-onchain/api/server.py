@@ -160,6 +160,7 @@ def read_prices_from_db():
             symbols.append(result_dict["symbol"])
         return prices
 
+
 @app.route("/soroban/add-price/", methods=["POST", "OPTIONS"])
 @auth.login_required
 def add_price():
@@ -207,6 +208,7 @@ def api_db_add_prices():
         return {
             "error": "The payload must be a list, each item of the list being a price entry object"
         }, 400
+    previous_prices = read_prices_from_db()
     with cursor_ctx() as cursor:
         for item in data:
             cursor.execute(
@@ -248,7 +250,7 @@ def api_db_add_prices():
                     item["buy_asset"],
                 ),
             )
-    return {"data": read_prices_from_db()}
+    return {"data": previous_prices}
 
 
 def get_enum_variable_name(enum_class, value):
