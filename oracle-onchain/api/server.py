@@ -32,6 +32,7 @@ if db_path is None:
 @contextmanager
 def cursor_ctx():
     conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     try:
         yield cursor
