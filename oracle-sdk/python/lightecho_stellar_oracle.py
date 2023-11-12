@@ -500,9 +500,9 @@ class OracleClient:
             )
             add_price_struct = scval.to_struct(
                 {
-                    "source": add_price_args[0],
                     "asset": add_price_args[1],
                     "price": add_price_args[2],
+                    "source": add_price_args[0],
                     "timestamp": add_price_args[3],
                 }
             )
