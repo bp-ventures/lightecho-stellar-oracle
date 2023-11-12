@@ -1,5 +1,6 @@
 [Unit]
 Description=oracle_api
+After=default.target
 
 [Service]
 ExecStart=/home/lightecho-stellar-oracle/lightecho-stellar-oracle/oracle-onchain/api/server.sh
@@ -7,4 +8,4 @@ StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
