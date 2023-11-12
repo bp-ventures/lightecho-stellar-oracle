@@ -61,16 +61,9 @@ def db_create_tables():
                 bid         TEXT NOT NULL,
                 offer       TEXT NOT NULL,
                 sell_asset  TEXT NOT NULL,
-                buy_asset   TEXT NOT NULL
+                buy_asset   TEXT NOT NULL,
+                added_to_blockchain BOOLEAN DEFAULT 0
             )
-            """
-        )
-
-        # migration at 2023-10-30
-        cursor.execute(
-            """
-            ALTER TABLE prices
-            ADD COLUMN added_to_blockchain BOOLEAN DEFAULT 0;
             """
         )
 
