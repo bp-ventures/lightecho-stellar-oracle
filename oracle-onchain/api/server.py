@@ -63,15 +63,15 @@ def db_create_tables():
                 sell_asset  TEXT NOT NULL,
                 buy_asset   TEXT NOT NULL
             )
-        """
+            """
         )
 
         # migration at 2023-10-30
         cursor.execute(
-        """
-        ALTER TABLE prices
-        ADD COLUMN added_to_blockchain BOOLEAN DEFAULT 0;
-        """
+            """
+            ALTER TABLE prices
+            ADD COLUMN added_to_blockchain BOOLEAN DEFAULT 0;
+            """
         )
 
 
@@ -142,6 +142,29 @@ def parse_asset_type(asset_type: Optional[str] = None):
         )
     return asset_type, None
 
+
+def read_prices_from_db():
+    query = """
+        SELECT
+            id,
+            updated_at,
+            symbol,
+            added_to_blockchain
+        FROM prices
+        WHERE added_to_blockchain = 1
+        ORDER BY updated_at DESC
+    """
+    with cursor_ctx() as cursor:
+        cursor.execute(query)
+        prices = []
+        symbols = []
+        for result in cursor.fetchall():
+            result_dict = dict(result)
+            if result_dict["symbol"] in symbols:
+                continue
+            prices.append(result_dict)
+            symbols.append(result_dict["symbol"])
+        return prices
 
 @app.route("/soroban/add-price/", methods=["POST", "OPTIONS"])
 @auth.login_required
@@ -231,7 +254,7 @@ def api_db_add_prices():
                     item["buy_asset"],
                 ),
             )
-    return {"success": True}
+    return {"data": read_prices_from_db()}
 
 
 def get_enum_variable_name(enum_class, value):
