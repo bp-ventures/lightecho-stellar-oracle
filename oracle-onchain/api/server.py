@@ -233,30 +233,19 @@ def api_db_add_prices():
                 sell_asset,
                 buy_asset
             ) VALUES (
-                ?,
-                ?,
-                ?,
-                ?,
-                ?,
-                ?,
-                ?,
-                ?,
-                ?,
-                ?
+                :timeframe,
+                :status,
+                :source,
+                :asset_type,
+                :symbol,
+                :price,
+                :bid,
+                :offer,
+                :sell_asset,
+                :buy_asset
             )
             """,
-                (
-                    item["timeframe"],
-                    item["status"],
-                    item["source"],
-                    item["asset_type"],
-                    item["symbol"],
-                    item["price"],
-                    item["bid"],
-                    item["offer"],
-                    item["sell_asset"],
-                    item["buy_asset"],
-                ),
+            item
             )
     return {"data": previous_prices}
 
