@@ -116,7 +116,7 @@ def read_prices_from_db():
             buy_asset
         FROM prices
         WHERE status = 'active'
-          AND source = 999
+          AND source = 0
           AND asset_type = 'other'
           AND added_to_blockchain = 0
         ORDER BY updated_at DESC
