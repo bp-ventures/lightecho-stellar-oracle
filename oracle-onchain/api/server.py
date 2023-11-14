@@ -1,3 +1,4 @@
+import base64
 from decimal import Decimal
 import importlib.util
 from pathlib import Path
@@ -50,21 +51,44 @@ def db_create_tables():
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS prices (
-                id          INTEGER PRIMARY KEY,
-                created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                updated_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                timeframe   TEXT,
-                status      TEXT,
-                source      INTEGER NOT NULL,
-                asset_type  TEXT NOT NULL,
-                symbol      TEXT NOT NULL,
-                price       TEXT NOT NULL,
-                bid         TEXT NOT NULL,
-                offer       TEXT NOT NULL,
-                sell_asset  TEXT NOT NULL,
-                buy_asset   TEXT NOT NULL,
-                added_to_blockchain BOOLEAN DEFAULT 0
+                id                  INTEGER PRIMARY KEY,
+                created_at          TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                updated_at          TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                timeframe           TEXT,
+                status              TEXT,
+                source              INTEGER NOT NULL,
+                asset_type          TEXT NOT NULL,
+                symbol              TEXT NOT NULL,
+                price               TEXT NOT NULL,
+                bid                 TEXT NOT NULL,
+                offer               TEXT NOT NULL,
+                sell_asset          TEXT NOT NULL,
+                buy_asset           TEXT NOT NULL,
+                added_to_blockchain BOOLEAN DEFAULT 0,
+                api_username        TEXT NULL
             )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS feed_bulk_from_db_logs (
+                id                  INTEGER PRIMARY KEY,
+                created_at          TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                command             TEXT NOT NULL,
+                output              TEXT NOT NULL,
+                success             BOOLEAN NOT NULL
+            );
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS feed_all_from_db_logs (
+                id                  INTEGER PRIMARY KEY,
+                created_at          TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                command             TEXT NOT NULL,
+                output              TEXT NOT NULL,
+                success             BOOLEAN NOT NULL
+            );
             """
         )
 
@@ -206,6 +230,14 @@ def add_price():
     return {"success": True, "output": output}
 
 
+def get_auth_basic_username(request):
+    return (
+        base64.b64decode(request.headers["Authorization"].split(" ")[1])
+        .decode()
+        .split(":")[0]
+    )
+
+
 @app.route("/db/add-prices/", methods=["POST", "OPTIONS"])
 @auth.login_required
 def api_db_add_prices():
@@ -217,8 +249,11 @@ def api_db_add_prices():
             "error": "The payload must be a list, each item of the list being a price entry object"
         }, 400
     previous_prices = read_prices_from_db()
+    api_username = get_auth_basic_username(request)
     with cursor_ctx() as cursor:
         for item in data:
+            item_values = dict(item)
+            item_values["api_username"] = api_username
             cursor.execute(
                 """
             INSERT INTO prices (
@@ -231,7 +266,8 @@ def api_db_add_prices():
                 bid,
                 offer,
                 sell_asset,
-                buy_asset
+                buy_asset,
+                api_username
             ) VALUES (
                 :timeframe,
                 :status,
@@ -242,10 +278,11 @@ def api_db_add_prices():
                 :bid,
                 :offer,
                 :sell_asset,
-                :buy_asset
+                :buy_asset,
+                :api_username
             )
             """,
-            item
+                item_values,
             )
     return {"data": previous_prices}
 

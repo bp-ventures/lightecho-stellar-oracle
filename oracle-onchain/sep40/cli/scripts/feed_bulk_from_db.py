@@ -8,7 +8,7 @@ import sys
 import subprocess
 import math
 from contextlib import contextmanager
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from pathlib import Path
 from lightecho_stellar_oracle import TESTNET_CONTRACT_XLM, TESTNET_CONTRACT_USD
 
@@ -25,20 +25,25 @@ mod_spec.loader.exec_module(local_settings)
 
 db_path = getattr(local_settings, "API_DB_PATH", None)
 if db_path is None:
-    db_path = Path(__file__).parent.parent.parent.parent.resolve() / "api" / "db.sqlite3"
+    db_path = (
+        Path(__file__).parent.parent.parent.parent.resolve() / "api" / "db.sqlite3"
+    )
 cli_dir = Path(__file__).parent.parent.resolve()
 
 logging.basicConfig(
     level=logging.INFO,
-    format='[%(asctime)s %(filename)s:%(lineno)d %(levelname)s] %(message)s'
+    format="[%(asctime)s %(filename)s:%(lineno)d %(levelname)s] %(message)s",
 )
-logger = logging.getLogger('feed_all_from_db.py')
+logger = logging.getLogger("feed_all_from_db.py")
 
 
-def run_cli(cmd: str):
-    return subprocess.check_output(
-        f"./cli {cmd}", shell=True, text=True, cwd=cli_dir
-    )
+def run_cli(cmd: str) -> Tuple[bool, str]:
+    try:
+        return True, subprocess.check_output(
+            f"./cli {cmd}", shell=True, text=True, cwd=cli_dir, stderr=subprocess.STDOUT
+        )
+    except subprocess.CalledProcessError as e:
+        return False, e.output
 
 
 @contextmanager
@@ -62,10 +67,38 @@ def adjust_timestamp(external_timestamp, resolution):
     adjusted_timestamp = math.ceil(external_timestamp / resolution) * resolution
     return adjusted_timestamp
 
+
 def list_to_base64(data_list):
     json_str = json.dumps(data_list)
-    json_bytes = json_str.encode('utf-8')
-    return base64.b64encode(json_bytes).decode('utf-8')
+    json_bytes = json_str.encode("utf-8")
+    return base64.b64encode(json_bytes).decode("utf-8")
+
+
+def log_result_to_db(cmd, success, output):
+    query = """
+        INSERT INTO feed_bulk_from_db_logs
+        (
+            command,
+            output,
+            success
+        )
+        VALUES
+        (
+            :command,
+            :output,
+            :success,
+        )
+    """
+    with cursor_ctx() as cursor:
+        cursor.execute(
+            query,
+            {
+                "command": cmd,
+                "output": output,
+                "success": success,
+            },
+        )
+
 
 def add_prices_to_blockchain(prices: List[Dict]):
     xlm_based_prices = []
@@ -75,8 +108,8 @@ def add_prices_to_blockchain(prices: List[Dict]):
             "source": 0,
             "asset_type": "other",
             "asset": price["buy_asset"],
-            "price": price['price'],
-            "timestamp": price['adjusted_timestamp'],
+            "price": price["price"],
+            "timestamp": price["adjusted_timestamp"],
         }
         if price["sell_asset"] == "XLM":
             xlm_based_prices.append(parsed_price)
@@ -87,20 +120,24 @@ def add_prices_to_blockchain(prices: List[Dict]):
     if xlm_based_prices:
         cmd = f"--oracle-contract-id {TESTNET_CONTRACT_XLM} oracle add_prices {list_to_base64(xlm_based_prices)}"
         logger.info(f"cli.py {cmd}")
-        output = run_cli(cmd)
+        success, output = run_cli(cmd)
         logger.info(output)
+        log_result_to_db(cmd, success, output)
     if usd_based_prices:
         cmd = f"--oracle-contract-id {TESTNET_CONTRACT_USD} oracle add_prices {list_to_base64(usd_based_prices)}"
         logger.info(f"cli.py {cmd}")
-        output = run_cli(cmd)
+        success, output = run_cli(cmd)
         logger.info(output)
+        log_result_to_db(cmd, success, output)
     symbols = [price["symbol"] for price in prices]
     mark_symbols_as_added_to_blockchain(symbols)
 
 
 def mark_symbols_as_added_to_blockchain(symbols):
-    placeholders = ', '.join(['?'] * len(symbols))
-    query = f"UPDATE prices SET added_to_blockchain = 1 WHERE symbol IN ({placeholders})"
+    placeholders = ", ".join(["?"] * len(symbols))
+    query = (
+        f"UPDATE prices SET added_to_blockchain = 1 WHERE symbol IN ({placeholders})"
+    )
     with cursor_ctx() as cursor:
         cursor.execute(query, symbols)
 
@@ -129,9 +166,11 @@ def read_prices_from_db():
             result_dict = dict(result)
             if result_dict["symbol"] in symbols:
                 continue
-            timestamp_as_unix = int(result_dict['updated_at'].timestamp())
-            result_dict['adjusted_timestamp'] = adjust_timestamp(timestamp_as_unix, RESOLUTION)
-            if result_dict['adjusted_timestamp'] <= int(datetime.now().timestamp()):
+            timestamp_as_unix = int(result_dict["updated_at"].timestamp())
+            result_dict["adjusted_timestamp"] = adjust_timestamp(
+                timestamp_as_unix, RESOLUTION
+            )
+            if result_dict["adjusted_timestamp"] <= int(datetime.now().timestamp()):
                 prices.append(result_dict)
                 symbols.append(result_dict["symbol"])
         if len(prices) == 0:
@@ -139,6 +178,6 @@ def read_prices_from_db():
         else:
             add_prices_to_blockchain(prices)
 
+
 if __name__ == "__main__":
     read_prices_from_db()
-

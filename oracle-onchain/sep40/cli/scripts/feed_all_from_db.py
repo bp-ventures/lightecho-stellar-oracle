@@ -22,20 +22,25 @@ mod_spec.loader.exec_module(local_settings)
 
 db_path = getattr(local_settings, "API_DB_PATH", None)
 if db_path is None:
-    db_path = Path(__file__).parent.parent.parent.parent.resolve() / "api" / "db.sqlite3"
+    db_path = (
+        Path(__file__).parent.parent.parent.parent.resolve() / "api" / "db.sqlite3"
+    )
 cli_dir = Path(__file__).parent.parent.resolve()
 
 logging.basicConfig(
     level=logging.INFO,
-    format='[%(asctime)s %(filename)s:%(lineno)d %(levelname)s] %(message)s'
+    format="[%(asctime)s %(filename)s:%(lineno)d %(levelname)s] %(message)s",
 )
-logger = logging.getLogger('feed_all_from_db.py')
+logger = logging.getLogger("feed_all_from_db.py")
 
 
 def run_cli(cmd: str):
-    return subprocess.check_output(
-        f"./cli {cmd}", shell=True, text=True, cwd=cli_dir
-    )
+    try:
+        return True, subprocess.check_output(
+            f"./cli {cmd}", shell=True, text=True, cwd=cli_dir, stderr=subprocess.STDOUT
+        )
+    except subprocess.CalledProcessError as e:
+        return False, e.output
 
 
 @contextmanager
@@ -59,18 +64,47 @@ def adjust_timestamp(external_timestamp, resolution):
     adjusted_timestamp = math.ceil(external_timestamp / resolution) * resolution
     return adjusted_timestamp
 
+
+def log_result_to_db(cmd, success, output):
+    query = """
+        INSERT INTO feed_bulk_from_db_logs
+        (
+            command,
+            output,
+            success
+        )
+        VALUES
+        (
+            :command,
+            :output,
+            :success,
+        )
+    """
+    with cursor_ctx() as cursor:
+        cursor.execute(
+            query,
+            {
+                "command": cmd,
+                "output": output,
+                "success": success,
+            },
+        )
+
+
 def add_price_to_blockchain(price: dict):
-    if price['sell_asset'] == "XLM":
+    if price["sell_asset"] == "XLM":
         contract_id = TESTNET_CONTRACT_XLM
-    elif price['sell_asset'] == 'USD':
+    elif price["sell_asset"] == "USD":
         contract_id = TESTNET_CONTRACT_USD
     else:
         raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
     cmd = f"--oracle-contract-id {contract_id} oracle add_price 0 other {price['buy_asset']} {price['price']}"
     logger.info(f"cli.py {cmd}")
-    output = run_cli(cmd)
-    mark_symbol_as_added_to_blockchain(price["symbol"])
+    success, output = run_cli(cmd)
     logger.info(output)
+    log_result_to_db(cmd, success, output)
+    if success:
+        mark_symbol_as_added_to_blockchain(price["symbol"])
 
 
 def mark_symbol_as_added_to_blockchain(symbol):
@@ -107,9 +141,11 @@ def read_prices_from_db():
             result_dict = dict(result)
             if result_dict["symbol"] in symbols:
                 continue
-            timestamp_as_unix = int(result_dict['updated_at'].timestamp())
-            result_dict['adjusted_timestamp'] = adjust_timestamp(timestamp_as_unix, RESOLUTION)
-            if result_dict['adjusted_timestamp'] <= int(datetime.now().timestamp()):
+            timestamp_as_unix = int(result_dict["updated_at"].timestamp())
+            result_dict["adjusted_timestamp"] = adjust_timestamp(
+                timestamp_as_unix, RESOLUTION
+            )
+            if result_dict["adjusted_timestamp"] <= int(datetime.now().timestamp()):
                 prices.append(result_dict)
                 symbols.append(result_dict["symbol"])
         if len(prices) == 0:
@@ -118,6 +154,6 @@ def read_prices_from_db():
             for price in prices:
                 add_price_to_blockchain(price)
 
+
 if __name__ == "__main__":
     read_prices_from_db()
-
