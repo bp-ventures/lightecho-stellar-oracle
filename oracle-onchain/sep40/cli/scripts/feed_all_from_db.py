@@ -77,7 +77,7 @@ def log_result_to_db(cmd, success, output):
         (
             :command,
             :output,
-            :success,
+            :success
         )
     """
     with cursor_ctx() as cursor:
