@@ -161,36 +161,42 @@ def parse_asset_type(asset_type: Optional[str] = None):
     return asset_type, None
 
 
-def read_prices_from_db():
+def get_feed_all_from_db_logs():
     query = """
         SELECT
             id,
-            timeframe,
-            status,
-            source,
-            asset_type,
-            symbol,
-            price,
-            bid,
-            offer,
-            sell_asset,
-            buy_asset,
-            added_to_blockchain
-        FROM prices
-        WHERE added_to_blockchain = 1
-        ORDER BY updated_at DESC
+            created_at,
+            command,
+            output,
+            success
+        FROM feed_all_from_db_logs
+        ORDER BY created_at DESC LIMIT 1
     """
     with cursor_ctx() as cursor:
         cursor.execute(query)
-        prices = []
-        symbols = []
+        entries = []
         for result in cursor.fetchall():
-            result_dict = dict(result)
-            if result_dict["symbol"] in symbols:
-                continue
-            prices.append(result_dict)
-            symbols.append(result_dict["symbol"])
-        return prices
+            entries.append(dict(result))
+        return entries
+
+
+def get_feed_bulk_from_db_logs():
+    query = """
+        SELECT
+            id,
+            created_at,
+            command,
+            output,
+            success
+        FROM feed_bulk_from_db_logs
+        ORDER BY created_at DESC LIMIT 1
+    """
+    with cursor_ctx() as cursor:
+        cursor.execute(query)
+        entries = []
+        for result in cursor.fetchall():
+            entries.append(dict(result))
+        return entries
 
 
 @app.route("/soroban/add-price/", methods=["POST", "OPTIONS"])
@@ -248,7 +254,6 @@ def api_db_add_prices():
         return {
             "error": "The payload must be a list, each item of the list being a price entry object"
         }, 400
-    previous_prices = read_prices_from_db()
     api_username = get_auth_basic_username(request)
     with cursor_ctx() as cursor:
         for item in data:
@@ -284,7 +289,11 @@ def api_db_add_prices():
             """,
                 item_values,
             )
-    return {"data": previous_prices}
+    return {
+        "success": True,
+        "feed_all_from_db_logs": get_feed_all_from_db_logs(),
+        "feed_bulk_from_db_logs": get_feed_bulk_from_db_logs(),
+    }
 
 
 def get_enum_variable_name(enum_class, value):
