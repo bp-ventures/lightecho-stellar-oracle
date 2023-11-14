@@ -161,7 +161,7 @@ def parse_asset_type(asset_type: Optional[str] = None):
     return asset_type, None
 
 
-def get_feed_all_from_db_logs():
+def get_feed_all_from_db_latest_log():
     query = """
         SELECT
             id,
@@ -180,7 +180,7 @@ def get_feed_all_from_db_logs():
         return entries
 
 
-def get_feed_bulk_from_db_logs():
+def get_feed_bulk_from_db_latest_log():
     query = """
         SELECT
             id,
@@ -291,8 +291,8 @@ def api_db_add_prices():
             )
     return {
         "success": True,
-        "feed_all_from_db_logs": get_feed_all_from_db_logs(),
-        "feed_bulk_from_db_logs": get_feed_bulk_from_db_logs(),
+        "feed_all_from_db_latest_log": get_feed_all_from_db_latest_log(),
+        "feed_bulk_from_db_latest_log": get_feed_bulk_from_db_latest_log(),
     }
 
 
