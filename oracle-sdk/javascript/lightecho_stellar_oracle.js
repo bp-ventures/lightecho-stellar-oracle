@@ -2,6 +2,7 @@
  * Lightecho Stellar Oracle SDK for the Soroban network.
  */
 import SorobanClient from "soroban-client";
+import StellarSdk from "stellar-sdk";
 
 class OracleClient {
   /**
@@ -107,9 +108,7 @@ class OracleClient {
   }
 
   parseScAddressTypeAccount(val) {
-    return SorobanClient.StellarBase.Address.account(
-      val["_value"]["_value"]
-    ).toString();
+    return StellarSdk.Address.account(val["_value"]["_value"]).toString();
   }
 
   parseScVec(val) {
@@ -198,9 +197,7 @@ class OracleClient {
     if (assetAddress) {
       return SorobanClient.xdr.ScVal.scvVec([
         SorobanClient.xdr.ScVal.scvSymbol(Buffer.from("Stellar", "utf-8")),
-        SorobanClient.xdr.ContractId.contractIdFromAsset(
-          new SorobanClient.StellarBase.Asset(assetCode, assetAddress)
-        ),
+        (new StellarSdk.Asset(assetCode, assetAddress)).contractId(this.networkPassphrase)
       ]);
     }
     return SorobanClient.xdr.ScVal.scvVec([
@@ -510,7 +507,7 @@ class OracleClient {
   async price(assetCode, assetAddress, timestamp) {
     let price = await this.submitTx(
       this.contract.call(
-        "prices",
+        "price",
         this.getAssetEnum(assetCode, assetAddress),
         this.numberToScvU64(parseInt(timestamp))
       )

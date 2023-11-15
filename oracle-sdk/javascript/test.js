@@ -7,17 +7,9 @@ describe("OracleClient", () => {
   let client;
 
   before(() => {
-    client = new OracleClient.newInstance("testnet", SECRET, {
+    client = OracleClient.newInstance("testnet", SECRET, {
       baseFee: 50000,
     });
-  });
-
-  it("should initialize", async () => {
-    // TODO: Implement this test
-  });
-
-  it("should write admin", async () => {
-    // TODO: Implement this test
   });
 
   it("should read admin", async () => {
@@ -31,15 +23,13 @@ describe("OracleClient", () => {
   });
 
   it("should get price by source", async () => {
-    // TODO: Implement this test
+    const price = await client.price_by_source(0, "USD", "", 1);
+    assert.isNull(price);
   });
 
   it("should get last price by source", async () => {
-    // TODO: Implement this test
-  });
-
-  it("should add price", async () => {
-    // TODO: Implement this test
+    const price = await client.lastprice_by_source(0, "USD", "");
+    assert.isNotNull(price);
   });
 
   it("should get assets", async () => {
@@ -58,17 +48,17 @@ describe("OracleClient", () => {
   });
 
   it("should get price", async () => {
-    // TODO: Implement this test
+    const price = await client.price("USD", "", 1);
+    assert.isNull(price);
   });
 
   it("should get prices", async () => {
-    // TODO: Implement this test
+    const prices = await client.prices("USD", "", 1);
+    assert.isNotEmpty(prices);
   });
 
   it("should get last price", async () => {
-    // TODO: Implement this test
+    const price = await client.lastprice("USD", "");
+    assert.isNotNull(price);
   });
 });
-
-// Run the tests
-//mocha.run();
