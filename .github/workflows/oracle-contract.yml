@@ -13,8 +13,16 @@ jobs:
         run: python3 -m pip install poetry
       - name: Install Poetry dependencies
         run: cd oracle-sdk/python && python3 -m poetry install
-      - name: Oracle Python SDK Tests
+      - name: Python SDK Tests
         run: oracle-sdk/python/run_tests.sh
+      - name: Download Node.js
+        run: cd ~ && wget https://nodejs.org/dist/v18.18.0/node-v18.18.0-linux-x64.tar.gz
+      - name: Unzip Node.js
+        run: cd ~ && tar -xzf node-v18.18.0-linux-x64.tar.gz
+      - name: JavaScript SDK dependencies
+        run: cd oracle-sdk/javascript && ~/node-v18.18.0-linux-x64/bin/npm install
+      - name: JavaScript SDK tests
+        run: cd oracle-sdk/javascript && ~/node-v18.18.0-linux-x64/bin/npm test
       - name: Install Rust
         run: rustup update stable
       - name: Add target wasm32
