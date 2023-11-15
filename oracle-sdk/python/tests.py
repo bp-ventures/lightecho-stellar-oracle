@@ -24,17 +24,9 @@ class OracleTests(unittest.TestCase):
         _, result = self.client.prices_by_source(0, "other", "USD", 1)
         self.assertEqual(len(result), 1)
 
-    def test_initialize(self):
-        # TODO: Implement this test
-        pass
-
     def test_has_admin(self):
         _, result = self.client.has_admin()
         self.assertEqual(result, True)
-
-    def test_write_admin(self):
-        # TODO: Implement this test
-        pass
 
     def test_read_admin(self):
         _, admin_public_key = self.client.read_admin()
@@ -45,20 +37,13 @@ class OracleTests(unittest.TestCase):
         self.assertIsInstance(source_ids, list)
 
     def test_price_by_source(self):
-        # TODO: Implement this test
-        pass
+        _, price = self.client.price_by_source(0, "other", "USD", 0)
+        self.assertEqual(price, None)
 
     def test_lastprice_by_source(self):
-        # TODO: Implement this test
-        pass
-
-    def test_add_price(self):
-        # TODO: Implement this test
-        pass
-
-    def test_add_prices(self):
-        # TODO: Implement this test
-        pass
+        _, price = self.client.lastprice_by_source(0, "other", "USD")
+        self.assertIsInstance(price["price"], str)  # type: ignore
+        self.assertIsInstance(price["timestamp"], int)  # type: ignore
 
     def test_assets(self):
         _, assets = self.client.assets()
@@ -75,13 +60,13 @@ class OracleTests(unittest.TestCase):
         self.assertIsInstance(resolution, int)
 
     def test_price(self):
-        # TODO: Implement this test
-        pass
+        _, price = self.client.price("other", "USD", 0)
+        self.assertEqual(price, None)
 
     def test_prices(self):
-        # TODO: Implement this test
-        pass
+        _, prices = self.client.prices("other", "USD", 5)
+        self.assertGreater(len(prices), 0)
 
     def test_lastprice(self):
-        # TODO: Implement this test
-        pass
+        _, price = self.client.lastprice("other", "USD")
+        self.assertNotEqual(price, None)

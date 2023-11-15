@@ -411,7 +411,7 @@ class OracleClient:
             [
                 scval.to_uint32(source),
                 self.build_asset_enum(asset_type, asset),
-                scval.to_uint32(timestamp),
+                scval.to_uint64(timestamp),
             ],
         )
         if price is not None:
