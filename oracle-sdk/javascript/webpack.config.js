@@ -2,7 +2,6 @@ import { createRequire } from "node:module";
 import webpack from "webpack";
 
 const require = createRequire(import.meta.url);
-const pathName = require.resolve("buffer");
 const configs = {
   mode: "none",
   entry: {
@@ -28,7 +27,8 @@ const configs = {
   resolve: {
     extensions: [".ts", ".js"],
     fallback: {
-      buffer: pathName,
+      buffer: require.resolve("buffer"),
+      "process/browser": require.resolve("process/browser"),
     },
   },
 };

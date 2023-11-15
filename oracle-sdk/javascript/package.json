@@ -12,6 +12,7 @@
     "build": "webpack && cp ./dist/lightecho_stellar_oracle.min.js example/"
   },
   "dependencies": {
+    "process": "^0.11.10",
     "soroban-client": "^1.0.0-beta.3",
     "stellar-sdk": "github:stellar/js-stellar-sdk#v11.0.0-beta.6",
     "webpack": "^5.89.0",
