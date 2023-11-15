@@ -166,7 +166,6 @@ def get_feed_all_from_db_latest_log():
         SELECT
             id,
             created_at,
-            command,
             output,
             success
         FROM feed_all_from_db_logs
@@ -185,7 +184,6 @@ def get_feed_bulk_from_db_latest_log():
         SELECT
             id,
             created_at,
-            command,
             output,
             success
         FROM feed_bulk_from_db_logs
