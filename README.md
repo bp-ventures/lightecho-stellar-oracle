@@ -27,6 +27,7 @@ This repository contains:
   - Oracle contract implementation for the Soroban Smart Contracts platform
     - [Contract source code](./oracle-onchain/sep40/contract)
     - [SEP-40 specification](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0040.md)
+  - [Infrastructure Diagram](./INFRASTRUCTURE.md)
 
 ### Roadmap
 
