@@ -12,7 +12,7 @@ from typing import List, Dict, Tuple
 from pathlib import Path
 from lightecho_stellar_oracle import TESTNET_CONTRACT_XLM, TESTNET_CONTRACT_USD
 
-RESOLUTION = 10800
+RESOLUTION = 600
 
 mod_spec = importlib.util.spec_from_file_location(
     "local_settings", Path(__file__).resolve().parent.parent / "local_settings.py"
