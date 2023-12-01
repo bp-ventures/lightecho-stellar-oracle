@@ -70,3 +70,9 @@ class OracleTests(unittest.TestCase):
     def test_lastprice(self):
         _, price = self.client.lastprice("other", "USD")
         self.assertNotEqual(price, None)
+
+    def test_get_all_prices(self):
+        _, prices = self.client.get_all_prices()
+        print(prices)
+        self.assertGreater(len(prices.keys()), 0)
+        self.assertGreater(len(prices.get(0).keys()), 0) # type: ignore

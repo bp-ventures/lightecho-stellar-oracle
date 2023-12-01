@@ -216,6 +216,11 @@ def oracle_remove_prices():
     # TODO
     pass
 
+@oracle_app.command("get_all_prices", help="oracle: invoke get_all_prices()")
+def oracle_get_all_prices():
+    tx_hash, tx_data = state["oracle_client"].get_all_prices()
+    print_contract_output(tx_hash, tx_data)
+
 
 @oracle_app.command("base", help="oracle: invoke base()")
 def oracle_base():

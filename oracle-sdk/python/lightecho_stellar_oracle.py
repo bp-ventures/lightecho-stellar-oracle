@@ -18,8 +18,8 @@ from stellar_sdk.xdr.sc_val_type import SCValType
 AssetType = Literal["stellar", "other"]
 Network = Literal["futurenet", "testnet", "public"]
 
-TESTNET_CONTRACT_XLM = "CBZDJPHNPWNNVOPNAFKLDGM3BRMTH5UROJLXXR3RPZXC4VPOK76DTA4Q"
-TESTNET_CONTRACT_USD = "CDGPRLHWCTP4YTNH24BGYZEMT745AD5TX2MOWXFLBPE6WL7FLEWLCZYA"
+TESTNET_CONTRACT_XLM = "CC43CSJHJAELVI4A27KR4AGZQLIE7GM24DEWKL3SGAN22XXA5MWY7C7W"
+TESTNET_CONTRACT_USD = "CBJV6TXZVFGG6DTPKNMUBHVZGQS5G7ZBBBBEGH4QGG6L3VBEN7H57JJE"
 
 DECIMAL_PLACES_DIVIDER = Decimal(10**18)
 
@@ -520,6 +520,15 @@ class OracleClient:
             RuntimeError: Indicates that this feature is not implemented yet.
         """
         raise RuntimeError("This function is not yet available")
+
+    def get_all_prices(self) -> Tuple[str, dict]:
+        """
+        Retrieves all price records (as a map) from the contract.
+
+        Returns:
+            Tuple[str, Any]: A tuple containing the transaction hash and the price records as a map.
+        """
+        return self.invoke_and_parse("get_all_prices") # type: ignore
 
     def base(self) -> Tuple[str, Asset]:
         """
