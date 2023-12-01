@@ -521,14 +521,19 @@ class OracleClient:
         """
         raise RuntimeError("This function is not yet available")
 
-    def get_all_lastprices(self) -> Tuple[str, dict]:
+    def get_all_lastprices(self, source: int) -> Tuple[str, dict]:
         """
         Retrieves all last price records (as a map) from the contract.
 
         Returns:
             Tuple[str, Any]: A tuple containing the transaction hash and the last price records as a map.
         """
-        return self.invoke_and_parse("get_all_lastprices") # type: ignore
+        return self.invoke_and_parse(
+            "get_all_lastprices",
+            [
+                scval.to_uint32(source),
+            ]
+        ) # type: ignore
 
     def base(self) -> Tuple[str, Asset]:
         """
