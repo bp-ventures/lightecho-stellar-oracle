@@ -223,7 +223,7 @@ files = [
 
 [[package]]
 name = "lightecho-stellar-oracle"
-version = "0.20.0"
+version = "0.22.0"
 description = "Python SDK for the Lightecho Stellar Oracle"
 optional = false
 python-versions = "^3.10"
@@ -237,7 +237,7 @@ stellar-sdk = "9.0.0b0"
 type = "git"
 url = "https://github.com/bp-ventures/lightecho-stellar-oracle.git"
 reference = "HEAD"
-resolved_reference = "1e77d1993698d26a114a02dbf6e9d5480047ed20"
+resolved_reference = "4082ac3dfd3f8de9fa4c6460b2e807174e703b66"
 subdirectory = "oracle-sdk/python"
 
 [[package]]
