@@ -1,7 +1,7 @@
 use soroban_sdk::{contract, contractimpl, Address, Env, Map, Vec};
 
 use crate::metadata;
-use crate::storage_types::{bump_instance, Asset, DataKey, PriceData, Price};
+use crate::storage_types::{bump_instance, Asset, DataKey, Price, PriceData};
 
 pub trait OracleTrait {
     fn initialize(env: Env, admin: Address, base: Asset, decimals: u32, resolution: u32);
@@ -20,7 +20,7 @@ pub trait OracleTrait {
     fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData>;
     fn add_price(env: Env, source: u32, asset: Asset, price: i128, timestamp: u64);
     fn add_prices(env: Env, prices: Vec<Price>);
-    fn get_all_prices(env: Env) -> Map<u32, Map<Asset, Vec<PriceData>>>;
+    fn get_all_lastprices(env: Env, source: u32) -> Map<Asset, Vec<PriceData>>;
 
     /// Remove prices matching the given conditions.
     /// Parameters:
@@ -236,8 +236,28 @@ impl OracleTrait for Oracle {
         write_prices(&env, &new_prices);
     }
 
-    fn get_all_prices(env: Env) -> Map<u32, Map<Asset, Vec<PriceData>>> {
-        return read_prices(&env);
+    fn get_all_lastprices(env: Env, source: u32) -> Map<Asset, Vec<PriceData>> {
+        let prices = read_prices(&env);
+        let asset_map_option = prices.get(source);
+        match asset_map_option {
+            Some(asset_map) => {
+                let mut new_asset_map = Map::<Asset, Vec<PriceData>>::new(&env);
+                for (asset, price_data_vec) in asset_map.iter() {
+                    let end_index = price_data_vec.len() - 1;
+                    for (index_usize, price_data) in price_data_vec.iter().enumerate() {
+                        let index: u32 = index_usize.try_into().unwrap();
+                        if index == end_index {
+                            new_asset_map.set(
+                                asset.clone(),
+                                Vec::<PriceData>::from_array(&env, [price_data.clone()]),
+                            );
+                        }
+                    }
+                }
+                return new_asset_map;
+            }
+            None => return Map::<Asset, Vec<PriceData>>::new(&env),
+        }
     }
 
     fn remove_prices(

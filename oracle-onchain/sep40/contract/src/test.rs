@@ -2,7 +2,7 @@
 
 use crate::contract::{Oracle, OracleClient};
 use crate::storage_types::{Asset, Price};
-use soroban_sdk::{testutils::Address as _, Address, Env, Vec, BytesN};
+use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, Vec};
 extern crate std;
 
 fn is_asset_in_vec(asset: Asset, vec: &Vec<Asset>) -> bool {
@@ -557,7 +557,7 @@ fn test_add_prices() {
     let asset0 = Asset::Stellar(asset0_address);
     let price0: i128 = 918729481812938171823918237122;
     let timestamp0 = env.ledger().timestamp();
-    prices.push_back(Price{
+    prices.push_back(Price {
         source: source0,
         asset: asset0,
         price: price0,
@@ -569,7 +569,7 @@ fn test_add_prices() {
     let asset1 = Asset::Stellar(asset1_address);
     let price1: i128 = 918729481812938171823918237123;
     let timestamp1 = timestamp0 + 1;
-    prices.push_back(Price{
+    prices.push_back(Price {
         source: source1,
         asset: asset1,
         price: price1,
@@ -585,7 +585,7 @@ fn test_add_prices() {
 }
 
 #[test]
-fn test_get_all_prices() {
+fn test_get_all_lastprices() {
     let env = Env::default();
     env.mock_all_auths();
     let contract_id = env.register_contract(None, Oracle);
@@ -603,7 +603,7 @@ fn test_get_all_prices() {
     let asset0 = Asset::Stellar(asset0_address);
     let price0: i128 = 918729481812938171823918237122;
     let timestamp0 = env.ledger().timestamp();
-    prices.push_back(Price{
+    prices.push_back(Price {
         source: source0,
         asset: asset0,
         price: price0,
@@ -615,7 +615,7 @@ fn test_get_all_prices() {
     let asset1 = Asset::Stellar(asset1_address);
     let price1: i128 = 918729481812938171823918237123;
     let timestamp1 = timestamp0 + 1;
-    prices.push_back(Price{
+    prices.push_back(Price {
         source: source1,
         asset: asset1,
         price: price1,
@@ -633,8 +633,7 @@ fn test_get_all_prices() {
     let asset4_address = Address::from_contract_id(&asset4_bytes);
     let asset4 = Asset::Stellar(asset4_address);
 
-    let all_prices = client.get_all_prices();
-    assert_eq!(all_prices.keys().len(), 1);
-    assert_eq!(all_prices.get(source0).unwrap().keys().len(), 1);
-    assert_eq!(all_prices.get(source0).unwrap().get(asset4).unwrap().len(), 2);
+    let all_lastprices = client.get_all_lastprices(&source0);
+    assert_eq!(all_lastprices.keys().len(), 1);
+    assert_eq!(all_lastprices.get(asset4).unwrap().len(), 1);
 }
