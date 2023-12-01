@@ -20,7 +20,7 @@ pub trait OracleTrait {
     fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData>;
     fn add_price(env: Env, source: u32, asset: Asset, price: i128, timestamp: u64);
     fn add_prices(env: Env, prices: Vec<Price>);
-    //TODO add bulk prices
+    fn get_all_prices(env: Env) -> Map<u32, Map<Asset, Vec<PriceData>>>;
 
     /// Remove prices matching the given conditions.
     /// Parameters:
@@ -234,6 +234,10 @@ impl OracleTrait for Oracle {
             new_prices.set(price.source, asset_map);
         }
         write_prices(&env, &new_prices);
+    }
+
+    fn get_all_prices(env: Env) -> Map<u32, Map<Asset, Vec<PriceData>>> {
+        return read_prices(&env);
     }
 
     fn remove_prices(

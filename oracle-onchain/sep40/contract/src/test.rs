@@ -583,3 +583,58 @@ fn test_add_prices() {
     let prices = prices.unwrap();
     assert_eq!(prices.len(), 2);
 }
+
+#[test]
+fn test_get_all_prices() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, Oracle);
+    let client = OracleClient::new(&env, &contract_id);
+    let admin = Address::random(&env);
+    let base = Asset::Stellar(Address::random(&env));
+    let decimals = 18;
+    let resolution = 1;
+    client.initialize(&admin, &base, &decimals, &resolution);
+
+    let mut prices = Vec::<Price>::new(&env);
+    let source0 = 0;
+    let asset0_bytes = BytesN::from_array(&env, &[8; 32]);
+    let asset0_address = Address::from_contract_id(&asset0_bytes);
+    let asset0 = Asset::Stellar(asset0_address);
+    let price0: i128 = 918729481812938171823918237122;
+    let timestamp0 = env.ledger().timestamp();
+    prices.push_back(Price{
+        source: source0,
+        asset: asset0,
+        price: price0,
+        timestamp: timestamp0,
+    });
+    let source1 = 0;
+    let asset1_bytes = BytesN::from_array(&env, &[8; 32]);
+    let asset1_address = Address::from_contract_id(&asset1_bytes);
+    let asset1 = Asset::Stellar(asset1_address);
+    let price1: i128 = 918729481812938171823918237123;
+    let timestamp1 = timestamp0 + 1;
+    prices.push_back(Price{
+        source: source1,
+        asset: asset1,
+        price: price1,
+        timestamp: timestamp1,
+    });
+    client.add_prices(&prices);
+    let asset3_bytes = BytesN::from_array(&env, &[8; 32]);
+    let asset3_address = Address::from_contract_id(&asset3_bytes);
+    let asset3 = Asset::Stellar(asset3_address);
+    let prices = client.prices_by_source(&0, &asset3, &5);
+    let prices = prices.unwrap();
+    assert_eq!(prices.len(), 2);
+
+    let asset4_bytes = BytesN::from_array(&env, &[8; 32]);
+    let asset4_address = Address::from_contract_id(&asset4_bytes);
+    let asset4 = Asset::Stellar(asset4_address);
+
+    let all_prices = client.get_all_prices();
+    assert_eq!(all_prices.keys().len(), 1);
+    assert_eq!(all_prices.get(source0).unwrap().keys().len(), 1);
+    assert_eq!(all_prices.get(source0).unwrap().get(asset4).unwrap().len(), 2);
+}
