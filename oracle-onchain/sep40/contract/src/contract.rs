@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractimpl, Address, Env, Map, Vec};
+use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Map, Vec};
 
 use crate::metadata;
 use crate::storage_types::{bump_instance, Asset, DataKey, Price, PriceData};
@@ -21,6 +21,7 @@ pub trait OracleTrait {
     fn add_price(env: Env, source: u32, asset: Asset, price: i128, timestamp: u64);
     fn add_prices(env: Env, prices: Vec<Price>);
     fn get_all_lastprices(env: Env, source: u32) -> Map<Asset, Vec<PriceData>>;
+    fn update_contract(env: Env, wasm_hash: BytesN<32>);
 
     /// Remove prices matching the given conditions.
     /// Parameters:
@@ -85,6 +86,7 @@ impl OracleTrait for Oracle {
     }
 
     fn write_admin(env: Env, id: Address) {
+        metadata::read_admin(&env).require_auth();
         metadata::write_admin(&env, &id);
     }
 
@@ -258,6 +260,11 @@ impl OracleTrait for Oracle {
             }
             None => return Map::<Asset, Vec<PriceData>>::new(&env),
         }
+    }
+
+    fn update_contract(env: Env, wasm_hash: BytesN<32>) {
+        metadata::read_admin(&env).require_auth();
+        env.deployer().update_current_contract_wasm(wasm_hash)
     }
 
     fn remove_prices(
