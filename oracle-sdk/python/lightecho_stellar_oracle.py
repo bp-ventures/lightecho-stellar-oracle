@@ -1,6 +1,6 @@
 from decimal import Decimal
 import time
-from typing import List, Literal, Optional, Tuple, TypedDict
+from typing import List, Literal, Optional, Tuple, TypedDict, Union
 
 from stellar_sdk import (
     Keypair,
@@ -68,6 +68,7 @@ class OracleClient:
         Returns:
             None
         """
+        self.network = network
         if network == "standalone":
             self.network_passphrase = StellarSdkNetwork.STANDALONE_NETWORK_PASSPHRASE
             self.rpc_server_url = "http://localhost:8000/soroban/rpc"
@@ -519,17 +520,24 @@ class OracleClient:
         args = [price_args]
         return self.invoke_and_parse("add_prices", args)  # type: ignore
 
-    def update_contract(self, wasm_file_bytes: bytes) -> Tuple[str, None]:
+    def update_contract(self, contract_wasm: Union[str,bytes]) -> Tuple[str, None]:
         """
-        Updates the contract with a new WebAssembly (Wasm) file.
+        Updates the contract.
 
         Args:
-            wasm_file_bytes (bytes): The new Wasm file.
+            contract_wasm (Union[str, bytes]): The path to the contract, or binary data.
 
         Returns:
             Tuple[str, None]: A tuple containing the transaction hash and None.
         """
-        return self.invoke_and_parse("update_contract", [scval.to_bytes(wasm_file_bytes)])  # type: ignore
+        deployer = OracleDeployer(
+            signer=self.signer,
+            network= self.network,  # type: ignore
+            wait_tx_interval = self.wait_tx_interval,
+            tx_timeout = self.tx_timeout,
+        )
+        wasm_id = deployer.upload_contract_wasm(contract_wasm)
+        return self.invoke_and_parse("update_contract", [scval.to_bytes(bytes.fromhex(wasm_id))])  # type: ignore
 
     def remove_prices(self) -> Tuple[str, None]:
         """
@@ -742,22 +750,22 @@ class OracleDeployer:
         self.wait_tx_interval = wait_tx_interval
         self.tx_timeout = tx_timeout
 
-    def deploy(self, contract_wasm_path: str):
+    def upload_contract_wasm(self, contract_wasm: Union[str, bytes]):
         """
-        Deploys a contract.
+        Uploads a contract to the network.
 
         Args:
-            contract_wasm_path (str): The path to the contract's WebAssembly (Wasm) file.
+            contract_wasm (Union[str, bytes]): The path to the contract, or binary data.
 
         Returns:
-            str: The contract ID.
+            str: WASM id.
         """
         source_account = self.server.load_account(self.signer.public_key)
         tx = (
             TransactionBuilder(source_account, self.network_passphrase)
             .set_timeout(self.tx_timeout)
             .append_upload_contract_wasm_op(
-                contract=contract_wasm_path,  # the path to the contract, or binary data
+                contract=contract_wasm,  # the path to the contract, or binary data
             )
             .build()
         )
@@ -784,7 +792,19 @@ class OracleDeployer:
 
         if wasm_id is None:
             raise ValueError("wasm_id should not be empty")
+        return wasm_id
 
+    def deploy(self, contract_wasm: Union[str, bytes]):
+        """
+        Deploys a contract.
+
+        Args:
+            contract_wasm (Union[str, bytes]): The path to the contract, or binary data.
+
+        Returns:
+            str: The contract ID.
+        """
+        wasm_id = self.upload_contract_wasm(contract_wasm)
         source_account = self.server.load_account(self.signer.public_key)
 
         tx = (
