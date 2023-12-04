@@ -10,6 +10,7 @@ from stellar_sdk import (
     TransactionEnvelope,
 )
 from stellar_sdk import scval, xdr as stellar_xdr
+from stellar_sdk.exceptions import PrepareTransactionException
 from stellar_sdk.soroban_rpc import GetTransactionStatus, SendTransactionStatus
 from stellar_sdk.soroban_server import SorobanServer
 from stellar_sdk.xdr.sc_val_type import SCValType
@@ -153,7 +154,10 @@ class OracleClient:
             .build()
         )
 
-        tx_hash, tx_data = self.send_tx(tx)
+        try:
+            tx_hash, tx_data = self.send_tx(tx)
+        except PrepareTransactionException as e:
+            raise RuntimeError(f"Failed to prepare transaction: {e.simulate_transaction_response}")
         if tx_data.status != GetTransactionStatus.SUCCESS:
             raise RuntimeError(f"Failed to send transaction: {tx_data}")
 

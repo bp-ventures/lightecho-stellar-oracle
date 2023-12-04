@@ -47,9 +47,13 @@ state = {
     "verbose": False,
     "source_secret": local_settings.SOURCE_SECRET,
     "admin_secret": local_settings.ADMIN_SECRET,
-    "rpc_server_url": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK]["rpc_server_url"],
+    "rpc_server_url": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK][
+        "rpc_server_url"
+    ],
     "oracle_contract_id": local_settings.ORACLE_CONTRACT_ID,
-    "network_passphrase": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK]["network_passphrase"],
+    "network_passphrase": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK][
+        "network_passphrase"
+    ],
     "horizon_url": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK]["horizon_url"],
 }
 state["kp"] = Keypair.from_secret(state["source_secret"])
@@ -78,6 +82,7 @@ def abort(msg: str):
 def vprint(msg: str):
     if state["verbose"]:
         print(msg)
+
 
 def print_contract_output(tx_hash, tx_data):
     print("Output:")
@@ -204,17 +209,21 @@ def oracle_add_price(
 
 @oracle_app.command("add_prices", help="oracle: invoke add_prices()")
 def oracle_add_prices(
-    prices_base64: str = typer.Argument(..., help="A base64-encoded JSON list of prices."),
+    prices_base64: str = typer.Argument(
+        ..., help="A base64-encoded JSON list of prices."
+    ),
 ):
     decoded_bytes = base64.b64decode(prices_base64)
     decoded_list = json.loads(decoded_bytes)
     tx_hash, tx_data = state["admin_oracle_client"].add_prices(decoded_list)
     print_contract_output(tx_hash, tx_data)
 
+
 @oracle_app.command("remove_prices", help="oracle: invoke remove_prices()")
 def oracle_remove_prices():
     # TODO
     pass
+
 
 @oracle_app.command("get_all_lastprices", help="oracle: invoke get_all_lastprices()")
 def oracle_get_all_lastprices():
@@ -279,6 +288,17 @@ def oracle_lastprice(
         asset_type.name,
         asset,
     )
+    print_contract_output(tx_hash, tx_data)
+
+
+@oracle_app.command("update_contract", help="oracle: invoke update_contract()")
+def oracle_update_contract(
+    wasm_file: str = typer.Argument(..., help="Path to WASM file")
+):
+    with open(wasm_file, "rb") as f:
+        wasm_bytes = f.read()
+    sc_bytes = scval.to_bytes(wasm_bytes)
+    tx_hash, tx_data = state["oracle_client"].update_contract(sc_bytes)
     print_contract_output(tx_hash, tx_data)
 
 
