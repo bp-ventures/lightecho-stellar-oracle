@@ -216,7 +216,7 @@ class OracleClient:
     def parse_sc_map(self, sc_map):
         data = {}
         for entry in sc_map:
-            key = entry.key.sym.sc_symbol.decode()
+            key = self.parse_sc_val(entry.key)
             value = self.parse_sc_val(entry.val)
             data[key] = value
         return data
