@@ -215,6 +215,7 @@ class OracleClient:
 
     def parse_sc_map(self, sc_map):
         data = {}
+        import pdb; pdb.set_trace()
         for entry in sc_map:
             key = self.parse_sc_val(entry.key)
             value = self.parse_sc_val(entry.val)
