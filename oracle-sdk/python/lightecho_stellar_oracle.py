@@ -736,7 +736,11 @@ class OracleDeployer:
         Returns:
             None
         """
-        if network == "futurenet":
+        self.network = network
+        if network == "standalone":
+            self.network_passphrase = StellarSdkNetwork.STANDALONE_NETWORK_PASSPHRASE
+            self.rpc_server_url = "http://localhost:8000/soroban/rpc"
+        elif network == "futurenet":
             self.network_passphrase = StellarSdkNetwork.FUTURENET_NETWORK_PASSPHRASE
             self.rpc_server_url = "https://rpc-futurenet.stellar.org:443/"
         elif network == "testnet":
