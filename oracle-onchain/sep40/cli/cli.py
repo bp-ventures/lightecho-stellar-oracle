@@ -231,8 +231,8 @@ def oracle_remove_prices():
 
 
 @oracle_app.command("get_all_lastprices", help="oracle: invoke get_all_lastprices()")
-def oracle_get_all_lastprices():
-    tx_hash, tx_data = state["oracle_client"].get_all_lastprices()
+def oracle_get_all_lastprices(source: int):
+    tx_hash, tx_data = state["oracle_client"].get_all_lastprices(source)
     print_contract_output(tx_hash, tx_data)
 
 
