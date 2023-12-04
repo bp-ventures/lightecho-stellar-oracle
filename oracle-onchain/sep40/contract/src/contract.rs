@@ -239,6 +239,8 @@ impl OracleTrait for Oracle {
     }
 
     fn get_all_lastprices(env: Env, source: u32) -> Map<Asset, Vec<PriceData>> {
+        // As of 2023-12-04, this function is not working, it's returning an error from Soroban.
+        // The error appears to be related to the size of the returned data. Needs to be investigated.
         let prices = read_prices(&env);
         let asset_map_option = prices.get(source);
         match asset_map_option {
