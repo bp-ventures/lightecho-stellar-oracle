@@ -36,6 +36,11 @@ STELLAR_NETWORKS = {
         "network_passphrase": "Test SDF Network ; September 2015",
         "horizon_url": "https://horizon-testnet.stellar.org",
     },
+    "standalone": {
+        "rpc_server_url": "http://localhost:8000/soroban/rpc",
+        "network_passphrase": "Standalone Network ; February 2017",
+        "horizon_url": "http://localhost:8000",
+    },
 }
 
 colorama_init()
@@ -297,8 +302,7 @@ def oracle_update_contract(
 ):
     with open(wasm_file, "rb") as f:
         wasm_bytes = f.read()
-    sc_bytes = scval.to_bytes(wasm_bytes)
-    tx_hash, tx_data = state["oracle_client"].update_contract(sc_bytes)
+    tx_hash, tx_data = state["admin_oracle_client"].update_contract(wasm_bytes)
     print_contract_output(tx_hash, tx_data)
 
 

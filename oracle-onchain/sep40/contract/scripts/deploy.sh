@@ -12,14 +12,17 @@ if [ $# -ne 1 ]; then
   exit 1
 fi
 NETWORK="$1"
-if [ "$NETWORK" == "testnet" ]; then
+if [ "$NETWORK" == "standalone" ]; then
+  RPC_URL=http://localhost:8000/soroban/rpc
+  NETWORK_PASSPHRASE='Standalone Network ; February 2017'
+elif [ "$NETWORK" == "testnet" ]; then
   RPC_URL=https://soroban-testnet.stellar.org
   NETWORK_PASSPHRASE='Test SDF Network ; September 2015'
 elif [ "$NETWORK" == "futurenet" ]; then
   RPC_URL=https://rpc-futurenet.stellar.org:443
   NETWORK_PASSPHRASE='Test SDF Future Network ; October 2022'
 else
-  echo "Invalid network. Please provide either 'testnet' or 'futurenet'."
+  echo "Invalid network. Please provide either 'standalone', 'testnet' or 'futurenet'."
   exit 1
 fi
 

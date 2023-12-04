@@ -264,7 +264,7 @@ impl OracleTrait for Oracle {
 
     fn update_contract(env: Env, wasm_hash: BytesN<32>) {
         metadata::read_admin(&env).require_auth();
-        env.deployer().update_current_contract_wasm(wasm_hash)
+        env.deployer().update_current_contract_wasm(wasm_hash);
     }
 
     fn remove_prices(

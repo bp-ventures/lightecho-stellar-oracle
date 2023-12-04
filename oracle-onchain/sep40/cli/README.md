@@ -9,7 +9,7 @@ ADMIN_SECRET = "SDFWYGBNP5TW4MS7RY5D4FILT65R2IEPWGL34NY2TLSU4DC4BJNXUAMU"
 
 ORACLE_CONTRACT_ID = "" # empty by default, but you must put the oracle contract id here later
 
-STELLAR_NETWORK="testnet"  # testnet, futurenet or public
+STELLAR_NETWORK="testnet"  # standalone, testnet, futurenet or public
 ```
 
 ```
