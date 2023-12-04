@@ -17,7 +17,7 @@ from stellar_sdk.xdr.sc_val_type import SCValType
 
 
 AssetType = Literal["stellar", "other"]
-Network = Literal["futurenet", "testnet", "public"]
+Network = Literal["standalone","futurenet", "testnet", "public"]
 
 TESTNET_CONTRACT_XLM = "CD476VBGDZR7O6N4VJHEOMEX4LVJ5JWSIS6LJ7H7MWXZLXVL56OYGXDJ"
 TESTNET_CONTRACT_USD = "CDOQMF5756EC7NVMU7I3XIHLI3RESSLCB2KCNVXQ3KEZDP7O25ZS2XSQ"
@@ -60,7 +60,7 @@ class OracleClient:
         Args:
             contract_id (str): The contract ID.
             signer (Keypair): The keypair used to sign transactions.
-            network (Network): The Stellar network to connect to (e.g., "futurenet", "testnet", "public").
+            network (Network): The Stellar network to connect to (e.g., "standalone", "futurenet", "testnet", "public").
             wait_tx_interval (int, optional): The interval to wait for a transaction (in seconds). Default is 3 seconds.
             tx_timeout (int, optional): The transaction timeout (in seconds). Default is 30 seconds.
             decimal_places (int, optional): The number of decimal places for prices. Default is 18.
@@ -68,7 +68,10 @@ class OracleClient:
         Returns:
             None
         """
-        if network == "futurenet":
+        if network == "standalone":
+            self.network_passphrase = StellarSdkNetwork.STANDALONE_NETWORK_PASSPHRASE
+            self.rpc_server_url = "http://localhost:8000/soroban/rpc"
+        elif network == "futurenet":
             self.network_passphrase = StellarSdkNetwork.FUTURENET_NETWORK_PASSPHRASE
             self.rpc_server_url = "https://rpc-futurenet.stellar.org:443/"
         elif network == "testnet":
