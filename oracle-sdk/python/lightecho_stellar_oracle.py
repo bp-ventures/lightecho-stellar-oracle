@@ -512,6 +512,18 @@ class OracleClient:
         args = [price_args]
         return self.invoke_and_parse("add_prices", args)  # type: ignore
 
+    def update_contract(self, wasm_file_bytes: bytes) -> Tuple[str, None]:
+        """
+        Updates the contract with a new WebAssembly (Wasm) file.
+
+        Args:
+            wasm_file_bytes (bytes): The new Wasm file.
+
+        Returns:
+            Tuple[str, None]: A tuple containing the transaction hash and None.
+        """
+        return self.invoke_and_parse("update_contract", [scval.to_bytes(wasm_file_bytes)])  # type: ignore
+
     def remove_prices(self) -> Tuple[str, None]:
         """
         Removes price records within a specific time range. (Not implemented yet)
@@ -532,8 +544,8 @@ class OracleClient:
             "get_all_lastprices",
             [
                 scval.to_uint32(source),
-            ]
-        ) # type: ignore
+            ],
+        )  # type: ignore
 
     def base(self) -> Tuple[str, Asset]:
         """
