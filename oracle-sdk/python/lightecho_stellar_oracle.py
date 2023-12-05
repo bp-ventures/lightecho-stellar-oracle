@@ -217,7 +217,7 @@ class OracleClient:
         return vec
 
     def parse_asset_enum(self, sc_val):
-        rust_asset_type = str(sc_val.vec.sc_vec[0].sym.sc_symbol)
+        rust_asset_type = sc_val.vec.sc_vec[0].sym.sc_symbol.decode()
         if rust_asset_type == "Other":
             asset = str(sc_val.vec.sc_vec[1].sym.sc_symbol)
             asset_type = "other"
