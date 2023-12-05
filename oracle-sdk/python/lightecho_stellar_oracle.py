@@ -244,7 +244,7 @@ class OracleClient:
             data[key] = value
         return data
 
-    def parse_tx_data(self, tx_data):
+    def parse_tx_data(self, tx_data, expect_asset_map=False):
         if self.is_tx_success(tx_data):
             result = self.parse_tx_result(tx_data)
             if result.type == SCValType.SCV_BOOL:
@@ -253,6 +253,8 @@ class OracleClient:
                 return
             elif result.type == SCValType.SCV_MAP:
                 assert result.map is not None
+                if expect_asset_map:
+                    return self.parse_sc_asset_map(result.map.sc_map)
                 return self.parse_sc_map(result.map.sc_map)
             elif result.type in [
                 SCValType.SCV_U32,
@@ -273,7 +275,7 @@ class OracleClient:
         else:
             raise RuntimeError(f"Cannot parse unsuccessful transaction data: {tx_data}")
 
-    def invoke_and_parse(self, function_name, parameters=[]):
+    def invoke_and_parse(self, function_name, parameters=[], expect_asset_map=False):
         """
         Invokes a contract function and parses the result.
 
@@ -288,7 +290,7 @@ class OracleClient:
             function_name,
             parameters,
         )
-        return tx_hash, self.parse_tx_data(tx_data)
+        return tx_hash, self.parse_tx_data(tx_data, expect_asset_map=expect_asset_map)
 
     def build_add_price_args(
         self,
@@ -583,6 +585,7 @@ class OracleClient:
             [
                 scval.to_uint32(source),
             ],
+            expect_asset_map=True,
         )  # type: ignore
 
     def base(self) -> Tuple[str, Asset]:
