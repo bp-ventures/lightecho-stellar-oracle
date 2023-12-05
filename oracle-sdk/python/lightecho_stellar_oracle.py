@@ -8,6 +8,7 @@ from stellar_sdk import (
     StrKey,
     TransactionBuilder,
     TransactionEnvelope,
+    Address,
 )
 from stellar_sdk import scval, xdr as stellar_xdr
 from stellar_sdk.exceptions import PrepareTransactionException
@@ -17,7 +18,7 @@ from stellar_sdk.xdr.sc_val_type import SCValType
 
 
 AssetType = Literal["stellar", "other"]
-Network = Literal["standalone","futurenet", "testnet", "public"]
+Network = Literal["standalone", "futurenet", "testnet", "public"]
 
 TESTNET_CONTRACT_XLM = "CDRKPQZGDW7F3BGQNXXQIIMTGLIKRD3RGN46HZBGBAX46TR6B4YEZQQU"
 TESTNET_CONTRACT_USD = "CD25CPJMPZIJ44JM3TCUW43M5OGMLTHKVLIVRCOS55C6LBYFL5Y2GGRU"
@@ -161,7 +162,9 @@ class OracleClient:
         try:
             tx_hash, tx_data = self.send_tx(tx)
         except PrepareTransactionException as e:
-            raise RuntimeError(f"Failed to prepare transaction: {e.simulate_transaction_response}")
+            raise RuntimeError(
+                f"Failed to prepare transaction: {e.simulate_transaction_response}"
+            )
         if tx_data.status != GetTransactionStatus.SUCCESS:
             raise RuntimeError(f"Failed to send transaction: {tx_data}")
 
@@ -212,6 +215,26 @@ class OracleClient:
         for val in sc_vec.sc_vec:
             vec.append(self.parse_sc_val(val))
         return vec
+
+    def parse_asset_enum(self, sc_val):
+        rust_asset_type = str(sc_val.vec.sc_vec[0].sym.sc_symbol)
+        if rust_asset_type == "Other":
+            asset = str(sc_val.vec.sc_vec[1].sym.sc_symbol)
+            asset_type = "other"
+        elif rust_asset_type == "Stellar":
+            asset = Address.from_xdr_sc_address(sc_val.vec.sc_vec[1].address).address
+            asset_type = "stellar"
+        else:
+            raise ValueError(f"Unexpected asset enum type: {rust_asset_type}")
+        return Asset({"asset_type": asset_type, "asset": asset})
+
+    def parse_sc_asset_map(self, sc_asset_map):
+        data = {}
+        for entry in sc_asset_map:
+            key = self.parse_asset_enum(entry.key)
+            value = self.parse_sc_val(entry.val)
+            data[key] = value
+        return data
 
     def parse_sc_map(self, sc_map):
         data = {}
@@ -520,7 +543,7 @@ class OracleClient:
         args = [price_args]
         return self.invoke_and_parse("add_prices", args)  # type: ignore
 
-    def update_contract(self, contract_wasm: Union[str,bytes]) -> Tuple[str, None]:
+    def update_contract(self, contract_wasm: Union[str, bytes]) -> Tuple[str, None]:
         """
         Updates the contract.
 
@@ -532,9 +555,9 @@ class OracleClient:
         """
         deployer = OracleDeployer(
             signer=self.signer,
-            network= self.network,  # type: ignore
-            wait_tx_interval = self.wait_tx_interval,
-            tx_timeout = self.tx_timeout,
+            network=self.network,  # type: ignore
+            wait_tx_interval=self.wait_tx_interval,
+            tx_timeout=self.tx_timeout,
         )
         wasm_id = deployer.upload_contract_wasm(contract_wasm)
         return self.invoke_and_parse("update_contract", [scval.to_bytes(bytes.fromhex(wasm_id))])  # type: ignore
