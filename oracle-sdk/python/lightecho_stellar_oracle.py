@@ -1,6 +1,6 @@
 from decimal import Decimal
 import time
-from typing import List, Literal, Optional, Tuple, TypedDict, Union
+from typing import List, Literal, Optional, Tuple, TypedDict, Union, Dict
 
 from stellar_sdk import (
     Keypair,
@@ -226,9 +226,9 @@ class OracleClient:
             asset_type = "stellar"
         else:
             raise ValueError(f"Unexpected asset enum type: {rust_asset_type}")
-        return Asset({"asset_type": asset_type, "asset": asset})
+        return (asset_type, asset)
 
-    def parse_sc_asset_map(self, sc_asset_map):
+    def parse_sc_asset_map(self, sc_asset_map) -> Dict[Tuple[AssetType, str], List[Price]]:
         data = {}
         for entry in sc_asset_map:
             key = self.parse_asset_enum(entry.key)
