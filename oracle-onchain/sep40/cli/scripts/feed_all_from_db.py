@@ -98,7 +98,7 @@ def add_price_to_blockchain(price: dict):
         contract_id = TESTNET_CONTRACT_USD
     else:
         raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
-    cmd = f"--oracle-contract-id {contract_id} oracle add_price 0 other {price['buy_asset']} {price['price']}"
+    cmd = f"--oracle-contract-id {contract_id} oracle add_price {price['source']} other {price['buy_asset']} {price['price']}"
     logger.info(f"cli.py {cmd}")
     success, output = run_cli(cmd)
     logger.info(output)
@@ -122,13 +122,13 @@ def read_prices_from_db():
         SELECT
             id,
             updated_at,
+            source,
             symbol,
             price,
             sell_asset,
             buy_asset
         FROM prices
         WHERE status = 'active'
-          AND source = 0
           AND asset_type = 'other'
           AND added_to_blockchain = 0
         ORDER BY updated_at DESC

@@ -105,7 +105,7 @@ def add_prices_to_blockchain(prices: List[Dict]):
     usd_based_prices = []
     for price in prices:
         parsed_price = {
-            "source": 0,
+            "source": price["source"],
             "asset_type": "other",
             "asset": price["buy_asset"],
             "price": price["price"],
@@ -147,13 +147,13 @@ def read_prices_from_db():
         SELECT
             id,
             updated_at,
+            source,
             symbol,
             price,
             sell_asset,
             buy_asset
         FROM prices
         WHERE status = 'active'
-          AND source = 0
           AND asset_type = 'other'
           AND added_to_blockchain = 0
         ORDER BY updated_at DESC
