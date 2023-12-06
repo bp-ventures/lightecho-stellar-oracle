@@ -1,6 +1,7 @@
 from decimal import Decimal
 import time
 from typing import List, Literal, Optional, Tuple, TypedDict, Union, Dict
+import sys
 
 from stellar_sdk import (
     Keypair,
@@ -576,11 +577,15 @@ class OracleClient:
     def lastprices_by_source_and_assets(self, source: int, assets: List[Asset]) -> Tuple[str, dict]:
         """
         Retrieves the latest price records for a specific source and list of assets.
+        Note: fetching too many assets might result in errors from Soroban due to return size limits.
+        We recommend requesting no more than 15 assets at a time.
 
         Returns:
             Tuple[str, dict]: A tuple containing the transaction hash and a dict of latest price records.
         """
         asset_enums = []
+        if len(assets) > 15:
+            print("Warning: fetching too many assets might result in errors from Soroban due to return size limits. We recommend requesting no more than 15 assets at a time.", file=sys.stderr)
         for asset in assets:
             asset_enums.append(self.build_asset_enum(asset["asset_type"], asset["asset"]))
         return self.invoke_and_parse(
