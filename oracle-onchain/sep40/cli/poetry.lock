@@ -237,7 +237,7 @@ stellar-sdk = "9.0.0b0"
 type = "git"
 url = "https://github.com/bp-ventures/lightecho-stellar-oracle.git"
 reference = "HEAD"
-resolved_reference = "78a5f1623a0af9a34c5945f9d1e4627b758ba04b"
+resolved_reference = "75b621976251a9a2d348421dc7683f89158d2327"
 subdirectory = "oracle-sdk/python"
 
 [[package]]

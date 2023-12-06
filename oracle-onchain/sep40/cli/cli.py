@@ -230,9 +230,21 @@ def oracle_remove_prices():
     pass
 
 
-@oracle_app.command("get_all_lastprices", help="oracle: invoke get_all_lastprices()")
-def oracle_get_all_lastprices(source: int):
-    tx_hash, tx_data = state["oracle_client"].get_all_lastprices(source)
+@oracle_app.command(
+    "lastprices_by_source_and_assets",
+    help="oracle: invoke lastprices_by_source_and_assets()",
+)
+def oracle_lastprices_by_source_and_assets(
+    source: int,
+    assets_base64: str = typer.Argument(
+        ...,
+        help="A base64-encoded JSON list. E.g. [{'asset_type': 'other', 'asset': 'BTC'}]",
+    ),
+):
+    assets = json.loads(base64.b64decode(assets_base64))
+    tx_hash, tx_data = state["oracle_client"].lastprices_by_source_and_assets(
+        source, assets
+    )
     print_contract_output(tx_hash, tx_data)
 
 
