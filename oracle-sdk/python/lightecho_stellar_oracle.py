@@ -573,17 +573,21 @@ class OracleClient:
         """
         raise RuntimeError("This function is not yet available")
 
-    def get_all_lastprices(self, source: int) -> Tuple[str, dict]:
+    def lastprices_by_source_and_assets(self, source: int, assets: List[Asset]) -> Tuple[str, dict]:
         """
-        Retrieves all last price records (as a map) from the contract.
+        Retrieves the latest price records for a specific source and list of assets.
 
         Returns:
-            Tuple[str, Any]: A tuple containing the transaction hash and the last price records as a map.
+            Tuple[str, dict]: A tuple containing the transaction hash and a dict of latest price records.
         """
+        asset_enums = []
+        for asset in assets:
+            asset_enums.append(self.build_asset_enum(asset["asset_type"], asset["asset"]))
         return self.invoke_and_parse(
-            "get_all_lastprices",
+            "lastprices_by_source_and_assets",
             [
                 scval.to_uint32(source),
+                scval.to_vec(asset_enums),
             ],
             expect_asset_map=True,
         )  # type: ignore

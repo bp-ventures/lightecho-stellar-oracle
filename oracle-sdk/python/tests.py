@@ -71,8 +71,7 @@ class OracleTests(unittest.TestCase):
         _, price = self.client.lastprice("other", "USD")
         self.assertNotEqual(price, None)
 
-    def test_get_all_prices(self):
-        _, prices = self.client.get_all_prices()
-        print(prices)
+    def test_lastprices_by_source_and_assets(self):
+        _, prices = self.client.lastprices_by_source_and_assets(0, [{"asset_type": "other", "asset": "USD"}])
         self.assertGreater(len(prices.keys()), 0)
-        self.assertGreater(len(prices.get(0).keys()), 0) # type: ignore
+        self.assertGreater(prices.get(('other', 'USD'))['price'], 0) # type: ignore
