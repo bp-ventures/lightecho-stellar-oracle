@@ -768,10 +768,10 @@ class OracleDeployer:
             self.rpc_server_url = "http://localhost:8000/soroban/rpc"
         elif network == "futurenet":
             self.network_passphrase = StellarSdkNetwork.FUTURENET_NETWORK_PASSPHRASE
-            self.rpc_server_url = "https://rpc-futurenet.stellar.org:443/"
+            self.rpc_server_url = "https://rpc-futurenet.stellar.org"
         elif network == "testnet":
             self.network_passphrase = StellarSdkNetwork.TESTNET_NETWORK_PASSPHRASE
-            self.rpc_server_url = "https://rpc-testnet.stellar.org:443/"
+            self.rpc_server_url = "https://soroban-testnet.stellar.org"
         elif network == "public":
             self.network_passphrase = StellarSdkNetwork.PUBLIC_NETWORK_PASSPHRASE
             self.rpc_server_url = "https://rpc.stellar.org:443/"
