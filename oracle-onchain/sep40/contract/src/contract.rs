@@ -20,7 +20,11 @@ pub trait OracleTrait {
     fn lastprice_by_source(env: Env, source: u32, asset: Asset) -> Option<PriceData>;
     fn add_price(env: Env, source: u32, asset: Asset, price: i128, timestamp: u64);
     fn add_prices(env: Env, prices: Vec<Price>);
-    fn get_all_lastprices(env: Env, source: u32) -> Map<Asset, Vec<PriceData>>;
+    fn lastprices_by_source_and_assets(
+        env: Env,
+        source: u32,
+        assets: Vec<Asset>,
+    ) -> Map<Asset, PriceData>;
     fn update_contract(env: Env, wasm_hash: BytesN<32>);
 
     /// Remove prices matching the given conditions.
@@ -238,29 +242,36 @@ impl OracleTrait for Oracle {
         write_prices(&env, &new_prices);
     }
 
-    fn get_all_lastprices(env: Env, source: u32) -> Map<Asset, Vec<PriceData>> {
-        // As of 2023-12-04, this function is not working, it's returning an error from Soroban.
-        // The error appears to be related to the size of the returned data. Needs to be investigated.
+    fn lastprices_by_source_and_assets(
+        env: Env,
+        source: u32,
+        assets: Vec<Asset>,
+    ) -> Map<Asset, PriceData> {
         let prices = read_prices(&env);
         let asset_map_option = prices.get(source);
         match asset_map_option {
-            Some(asset_map) => {
-                let mut new_asset_map = Map::<Asset, Vec<PriceData>>::new(&env);
-                for (asset, price_data_vec) in asset_map.iter() {
-                    let end_index = price_data_vec.len() - 1;
-                    for (index_usize, price_data) in price_data_vec.iter().enumerate() {
-                        let index: u32 = index_usize.try_into().unwrap();
-                        if index == end_index {
-                            new_asset_map.set(
-                                asset.clone(),
-                                Vec::<PriceData>::from_array(&env, [price_data.clone()]),
-                            );
+            Some(asset_map_result) => {
+                let mut new_asset_map = Map::<Asset, PriceData>::new(&env);
+                for asset in assets.iter() {
+                    let price_data_vec_option = asset_map_result.get(asset.clone());
+                    match price_data_vec_option {
+                        Some(price_data_vec_result) => {
+                            let end_index = price_data_vec_result.len() - 1;
+                            for (index_usize, price_data) in
+                                price_data_vec_result.iter().enumerate()
+                            {
+                                let index: u32 = index_usize.try_into().unwrap();
+                                if index == end_index {
+                                    new_asset_map.set(asset.clone(), price_data.clone());
+                                }
+                            }
                         }
+                        None => {}
                     }
                 }
                 return new_asset_map;
             }
-            None => return Map::<Asset, Vec<PriceData>>::new(&env),
+            None => return Map::<Asset, PriceData>::new(&env),
         }
     }
 

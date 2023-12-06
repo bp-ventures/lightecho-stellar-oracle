@@ -585,7 +585,7 @@ fn test_add_prices() {
 }
 
 #[test]
-fn test_get_all_lastprices() {
+fn test_lastprices_by_source_and_assets() {
     let env = Env::default();
     env.mock_all_auths();
     let contract_id = env.register_contract(None, Oracle);
@@ -633,9 +633,12 @@ fn test_get_all_lastprices() {
     let asset4_address = Address::from_contract_id(&asset4_bytes);
     let asset4 = Asset::Stellar(asset4_address);
 
-    let all_lastprices = client.get_all_lastprices(&source0);
+    let all_lastprices = client.lastprices_by_source_and_assets(
+        &source0,
+        &Vec::<Asset>::from_array(&env, [asset4.clone()]),
+    );
     assert_eq!(all_lastprices.keys().len(), 1);
-    assert_eq!(all_lastprices.get(asset4).unwrap().len(), 1);
+    assert_eq!(all_lastprices.get(asset4).unwrap().price, price1);
 }
 
 #[test]
