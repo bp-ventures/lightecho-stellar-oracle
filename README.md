@@ -2,16 +2,6 @@
 
 Lightecho is a Stellar Oracle for emerging markets data and XLM volatility feeds.
 
-**TESTNET** Official Contracts:
-- Base `XLM`:
-  ```
-  CDRKPQZGDW7F3BGQNXXQIIMTGLIKRD3RGN46HZBGBAX46TR6B4YEZQQU
-  ```
-- Base `USD`:
-  ```
-  CD25CPJMPZIJ44JM3TCUW43M5OGMLTHKVLIVRCOS55C6LBYFL5Y2GGRU
-  ```
-
 This repository contains:
 
 - Interacting with the Contract (e.g. fetch prices, add prices)
@@ -28,6 +18,31 @@ This repository contains:
     - [Contract source code](./oracle-onchain/sep40/contract)
     - [SEP-40 specification](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0040.md)
   - [Infrastructure Diagram](./INFRASTRUCTURE.md)
+
+**TESTNET** Official Contracts:
+
+- Base `XLM`:
+  ```
+  CDRKPQZGDW7F3BGQNXXQIIMTGLIKRD3RGN46HZBGBAX46TR6B4YEZQQU
+  ```
+- Base `USD`:
+  ```
+  CD25CPJMPZIJ44JM3TCUW43M5OGMLTHKVLIVRCOS55C6LBYFL5Y2GGRU
+  ```
+
+**TESTNET** Official Sources for prices:
+
+```
+0 - BPV aggregator
+1 - Coinbase
+```
+
+Each source is represented by an integer in the blockchain contract.
+To fetch the last price of USD from Coinbase for example, you can use the CLI:
+
+```
+./cli oracle lastprice_by_source 1 other USD
+```
 
 ### Roadmap
 
