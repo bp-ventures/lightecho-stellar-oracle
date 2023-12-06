@@ -238,10 +238,15 @@ def oracle_lastprices_by_source_and_assets(
     source: int,
     assets_base64: str = typer.Argument(
         ...,
-        help="A base64-encoded JSON list. E.g. [{'asset_type': 'other', 'asset': 'BTC'}]",
+        help="A base64-encoded JSON list. E.g. [{'asset_type': 'other', 'asset': 'BTC'}]. Note: fetching too many assets might result in errors from Soroban due to return size limits. We recommend requesting no more than 15 assets at a time.",
     ),
 ):
     assets = json.loads(base64.b64decode(assets_base64))
+    if len(assets) > 15:
+        print(
+            "Warning: fetching too many assets at a time may result in errors.",
+            file=sys.stderr,
+        )
     tx_hash, tx_data = state["oracle_client"].lastprices_by_source_and_assets(
         source, assets
     )
