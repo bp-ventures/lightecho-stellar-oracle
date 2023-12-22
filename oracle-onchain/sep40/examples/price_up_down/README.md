@@ -1,3 +1,6 @@
+**It has been months since this example has been updated. It's likely that
+it's broken. We plan to fix it at some point.**
+
 # SEP-40 Consumer Contract Example
 
 This is an example implementation of a Soroban contract written in Rust that
