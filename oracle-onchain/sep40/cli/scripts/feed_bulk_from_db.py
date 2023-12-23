@@ -163,10 +163,12 @@ def read_prices_from_db():
     with cursor_ctx() as cursor:
         cursor.execute(query)
         prices = []
-        symbols = []
+        symbols = {}
         for result in cursor.fetchall():
             result_dict = dict(result)
-            if result_dict["symbol"] in symbols:
+            if result_dict["source"] not in symbols:
+                symbols[result_dict["source"]] = []
+            if result_dict["symbol"] in symbols[result_dict["source"]]:
                 continue
             timestamp_as_unix = int(result_dict["updated_at"].timestamp())
             result_dict["adjusted_timestamp"] = adjust_timestamp(
@@ -174,7 +176,7 @@ def read_prices_from_db():
             )
             if result_dict["adjusted_timestamp"] <= int(datetime.now().timestamp()):
                 prices.append(result_dict)
-                symbols.append(result_dict["symbol"])
+                symbols[result_dict["source"]].append(result_dict["symbol"])
         if len(prices) == 0:
             logger.info("no new prices to feed into the blockchain contract")
         else:
