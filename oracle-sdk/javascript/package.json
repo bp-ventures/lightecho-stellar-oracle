@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "process": "^0.11.10",
-    "soroban-client": "^1.0.0",
     "stellar-sdk": "github:stellar/js-stellar-sdk#v11.1.0",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"

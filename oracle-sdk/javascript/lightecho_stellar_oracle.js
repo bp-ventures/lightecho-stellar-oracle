@@ -1,7 +1,6 @@
 /**
  * Lightecho Stellar Oracle SDK for the Soroban network.
  */
-import SorobanClient from "soroban-client";
 import StellarSdk from "stellar-sdk";
 
 class OracleClient {
@@ -33,7 +32,7 @@ class OracleClient {
       baseFee: 50000,
     }
   ) {
-    this.contract = new SorobanClient.Contract(contractId);
+    this.contract = new StellarSdk.Contract(contractId);
     this.networkPassphrase = networkPassphrase;
     this.rpcServerUrl = rpcServerUrl;
     this.sourceSecret = sourceSecret;
@@ -156,10 +155,10 @@ class OracleClient {
    * @returns {any} - The result of the transaction.
    */
   async submitTx(contractOp, signerSecret = this.sourceSecret) {
-    const server = new SorobanClient.Server(this.rpcServerUrl);
-    const keypair = SorobanClient.Keypair.fromSecret(signerSecret);
+    const server = new StellarSdk.SorobanRpc.Server(this.rpcServerUrl);
+    const keypair = StellarSdk.Keypair.fromSecret(signerSecret);
     const account = await server.getAccount(keypair.publicKey());
-    let transaction = new SorobanClient.TransactionBuilder(account, {
+    let transaction = new StellarSdk.TransactionBuilder(account, {
       fee: this.options.baseFee,
       networkPassphrase: this.networkPassphrase,
     })
@@ -195,14 +194,14 @@ class OracleClient {
    */
   getAssetEnum(assetCode, assetAddress) {
     if (assetAddress) {
-      return SorobanClient.xdr.ScVal.scvVec([
-        SorobanClient.xdr.ScVal.scvSymbol(Buffer.from("Stellar", "utf-8")),
+      return StellarSdk.xdr.ScVal.scvVec([
+        StellarSdk.xdr.ScVal.scvSymbol(Buffer.from("Stellar", "utf-8")),
         (new StellarSdk.Asset(assetCode, assetAddress)).contractId(this.networkPassphrase)
       ]);
     }
-    return SorobanClient.xdr.ScVal.scvVec([
-      SorobanClient.xdr.ScVal.scvSymbol(Buffer.from("Other", "utf-8")),
-      SorobanClient.xdr.ScVal.scvSymbol(assetCode),
+    return StellarSdk.xdr.ScVal.scvVec([
+      StellarSdk.xdr.ScVal.scvSymbol(Buffer.from("Other", "utf-8")),
+      StellarSdk.xdr.ScVal.scvSymbol(assetCode),
     ]);
   }
 
@@ -213,8 +212,8 @@ class OracleClient {
    * @returns {object} - The Soroban U64 value.
    */
   numberToScvU64(n) {
-    return SorobanClient.xdr.ScVal.scvU64(
-      new SorobanClient.xdr.Uint64(BigInt.asUintN(64, BigInt(n))) // reiterpret as unsigned
+    return StellarSdk.xdr.ScVal.scvU64(
+      new StellarSdk.xdr.Uint64(BigInt.asUintN(64, BigInt(n))) // reiterpret as unsigned
     );
   }
 
@@ -223,10 +222,10 @@ class OracleClient {
     const hi64 = BigInt.asIntN(64, v >> 64n); // encode top 64 w/ sign bit
     const lo64 = BigInt.asUintN(64, v); // grab btm 64, encode sign
 
-    return SorobanClient.xdr.ScVal.scvI128(
-      new SorobanClient.xdr.Int128Parts({
-        hi: new SorobanClient.xdr.Int64(hi64),
-        lo: new SorobanClient.xdr.Uint64(lo64),
+    return StellarSdk.xdr.ScVal.scvI128(
+      new StellarSdk.xdr.Int128Parts({
+        hi: new StellarSdk.xdr.Int64(hi64),
+        lo: new StellarSdk.xdr.Uint64(lo64),
       })
     );
   }
@@ -279,12 +278,12 @@ class OracleClient {
     return await this.submitTx(
       this.contract.call(
         "initialize",
-        SorobanClient.xdr.ScVal.scvAddress(
-          new SorobanClient.Address(admin).toScAddress()
+        StellarSdk.xdr.ScVal.scvAddress(
+          new StellarSdk.Address(admin).toScAddress()
         ),
         this.getAssetEnum(baseAssetCode, baseAssetAddress),
-        SorobanClient.xdr.ScVal.scvU32(parseInt(decimals)),
-        SorobanClient.xdr.ScVal.scvU32(parseInt(resolution))
+        StellarSdk.xdr.ScVal.scvU32(parseInt(decimals)),
+        StellarSdk.xdr.ScVal.scvU32(parseInt(resolution))
       )
     );
   }
@@ -318,8 +317,8 @@ class OracleClient {
     return await this.submitTx(
       this.contract.call(
         "write_admin",
-        SorobanClient.xdr.ScVal.scvAddress(
-          new SorobanClient.Address(admin_pubkey).toScAddress()
+        StellarSdk.xdr.ScVal.scvAddress(
+          new StellarSdk.Address(admin_pubkey).toScAddress()
         )
       )
     );
@@ -356,9 +355,9 @@ class OracleClient {
     let prices = await this.submitTx(
       this.contract.call(
         "prices_by_source",
-        SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
+        StellarSdk.xdr.ScVal.scvU32(parseInt(source)),
         this.getAssetEnum(assetCode, assetAddress),
-        SorobanClient.xdr.ScVal.scvU32(parseInt(records))
+        StellarSdk.xdr.ScVal.scvU32(parseInt(records))
       )
     );
     let results = [];
@@ -384,7 +383,7 @@ class OracleClient {
     let price = await this.submitTx(
       this.contract.call(
         "price_by_source",
-        SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
+        StellarSdk.xdr.ScVal.scvU32(parseInt(source)),
         this.getAssetEnum(assetCode, assetAddress),
         this.numberToScvU64(parseInt(timestamp))
       )
@@ -410,7 +409,7 @@ class OracleClient {
     let price = await this.submitTx(
       this.contract.call(
         "lastprice_by_source",
-        SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
+        StellarSdk.xdr.ScVal.scvU32(parseInt(source)),
         this.getAssetEnum(assetCode, assetAddress)
       )
     );
@@ -437,7 +436,7 @@ class OracleClient {
     return await this.submitTx(
       this.contract.call(
         "add_price",
-        SorobanClient.xdr.ScVal.scvU32(parseInt(source)),
+        StellarSdk.xdr.ScVal.scvU32(parseInt(source)),
         this.getAssetEnum(assetCode, assetAddress),
         this.numberToScvI128(
           this.convertToInt18DecimalPlaces(parseFloat(price))
@@ -534,7 +533,7 @@ class OracleClient {
       this.contract.call(
         "prices",
         this.getAssetEnum(assetCode, assetAddress),
-        SorobanClient.xdr.ScVal.scvU32(parseInt(records))
+        StellarSdk.xdr.ScVal.scvU32(parseInt(records))
       )
     );
     let results = [];

@@ -1,5 +1,7 @@
 This is the JavaScript SDK for [BP Ventures Lightecho Stellar Oracle](https://github.com/bp-ventures/lightecho-stellar-oracle).
 
+This project requires Node.js `v18.19.0`
+
 Example usage in Browser:
 
 ```

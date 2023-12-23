@@ -12,7 +12,7 @@
           }
         );
         client
-          .prices_by_source(0, "USD", "", 2)
+          .lastprice_by_source(1, "USD", "")
           .then((result) => console.log(result))
           .catch((err) => console.error(err));
       } catch (error) {
