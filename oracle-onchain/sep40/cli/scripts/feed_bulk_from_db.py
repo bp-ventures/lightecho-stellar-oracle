@@ -103,6 +103,7 @@ def log_result_to_db(cmd, success, output):
 def add_prices_to_blockchain(prices: List[Dict]):
     xlm_based_prices = []
     usd_based_prices = []
+    source_symbols = {}
     for price in prices:
         parsed_price = {
             "source": price["source"],
@@ -111,6 +112,7 @@ def add_prices_to_blockchain(prices: List[Dict]):
             "price": price["price"],
             "timestamp": price["adjusted_timestamp"],
         }
+        source_symbols.setdefault(price["source"], []).append(price["symbol"])
         if price["sell_asset"] == "XLM":
             xlm_based_prices.append(parsed_price)
         elif price["sell_asset"] == "USD":
@@ -129,17 +131,17 @@ def add_prices_to_blockchain(prices: List[Dict]):
         success, output = run_cli(cmd)
         logger.info(output)
         log_result_to_db(cmd, success, output)
-    symbols = [price["symbol"] for price in prices]
-    mark_symbols_as_added_to_blockchain(symbols)
+    for source, symbols in source_symbols.items():
+        mark_symbols_as_added_to_blockchain(source, symbols)
 
 
-def mark_symbols_as_added_to_blockchain(symbols):
+def mark_symbols_as_added_to_blockchain(source, symbols):
     placeholders = ", ".join(["?"] * len(symbols))
     query = (
-        f"UPDATE prices SET added_to_blockchain = 1 WHERE symbol IN ({placeholders})"
+        f"UPDATE prices SET added_to_blockchain = 1 WHERE source = ? AND symbol IN ({placeholders})"
     )
     with cursor_ctx() as cursor:
-        cursor.execute(query, symbols)
+        cursor.execute(query, [source] + symbols)
 
 
 def read_prices_from_db():
