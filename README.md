@@ -1,5 +1,9 @@
 **Lightecho Oracle - Oracle smart contract for Soroban**
 
+**We're in the middle of a major transition in the contract structure, many
+things are not working right now. If you encounter any issues please create
+a ticket in GitHub.**
+
 TODO light version:
 - deploy to testnet
 - feed some prices
