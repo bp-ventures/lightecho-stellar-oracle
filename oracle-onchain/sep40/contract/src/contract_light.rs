@@ -106,10 +106,11 @@ impl LightOracleTrait for LightOracle {
         if timestamp == 0 {
             return None;
         }
-        let resolution: u64 = match env.storage().instance().get(&RESOLUTION) {
+        let resolution_u32: u32 = match env.storage().instance().get(&RESOLUTION) {
             Some(resolution) => resolution,
             None => panic!("RESOLUTION is not initialized"),
         };
+        let resolution_u64 = resolution_u32 as u64;
         let mut prices = Vec::new(&env);
 
         let mut records = records;
@@ -121,15 +122,18 @@ impl LightOracleTrait for LightOracle {
             let price = match price_by_source(&env, source, asset.clone(), timestamp) {
                 Some(price) => price,
                 None => {
-                    timestamp -= resolution;
+                    if timestamp < resolution_u64 {
+                        break;
+                    }
+                    timestamp -= resolution_u64;
                     continue;
                 }
             };
             prices.push_back(price);
-            if timestamp < resolution {
+            if timestamp < resolution_u64 {
                 break;
             }
-            timestamp -= resolution;
+            timestamp -= resolution_u64;
         }
 
         if prices.len() == 0 {
@@ -208,7 +212,9 @@ impl LightOracleTrait for LightOracle {
     }
 
     /// Adds prices to the contract.
-    /// Sources and assets get automatically registered in the storage.
+    /// Sources and assets get automatically registered in the storage. Which
+    /// is handy but not always necessary because once assets and sources are
+    /// registered, they don't need to be registered again.
     /// For a more lightweight version of this function, see add_prices_light.
     fn add_prices(env: Env, prices: Vec<InternalPrice>) {
         panic_if_not_admin(&env);
@@ -229,6 +235,7 @@ impl LightOracleTrait for LightOracle {
             if !storage_sources.contains(&price.source) {
                 storage_sources.push_back(price.source);
             }
+
             let key = to_price_data_key(price.source, price.asset_u32, price.timestamp);
             env.storage()
                 .temporary()

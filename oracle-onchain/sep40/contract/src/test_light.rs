@@ -84,8 +84,8 @@ fn test_sources() {
     let price1: i128 = 13579;
     let price2: i128 = 912739812;
     let mut source: u32 = 2;
-    let timestamp1 = env.ledger().timestamp();
-    let timestamp2 = env.ledger().timestamp() + 1;
+    let timestamp1 = env.ledger().timestamp() + (resolution * 100) as u64;
+    let timestamp2 = timestamp1 + resolution as u64;
     env.mock_all_auths();
     let mut prices = Vec::<InternalPrice>::new(&env);
     prices.push_back(InternalPrice {
@@ -139,7 +139,7 @@ fn test_lastprices() {
     let source = 0;
     let asset = Asset::Stellar(Address::generate(&env));
     let price: i128 = 918729481812938171823918237122;
-    let timestamp = env.ledger().timestamp();
+    let mut timestamp = env.ledger().timestamp() + (resolution * 100) as u64;
     let mut prices = Vec::<InternalPrice>::new(&env);
     prices.push_back(InternalPrice {
         source,
@@ -148,6 +148,7 @@ fn test_lastprices() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -155,6 +156,7 @@ fn test_lastprices() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -162,6 +164,7 @@ fn test_lastprices() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -195,7 +198,7 @@ fn test_lastprice() {
     let asset = Asset::Stellar(Address::generate(&env));
     let price: i128 = 12345678;
     let source: u32 = 0;
-    let timestamp = env.ledger().timestamp();
+    let timestamp = env.ledger().timestamp() + (resolution * 100) as u64;
     let mut prices = Vec::<InternalPrice>::new(&env);
     prices.push_back(InternalPrice {
         source,
@@ -224,7 +227,7 @@ fn test_lastprice_two_prices() {
     let price1: i128 = 13579;
     let price2: i128 = 2468;
     let source: u32 = 0;
-    let timestamp = env.ledger().timestamp();
+    let timestamp = env.ledger().timestamp() + (resolution * 100) as u64;
 
     let mut prices = Vec::<InternalPrice>::new(&env);
     prices.push_back(InternalPrice {
@@ -266,7 +269,7 @@ fn test_lastprice_two_assets() {
     let asset2 = Asset::Stellar(Address::generate(&env));
     let price2: i128 = 2468;
     let source: u32 = 0;
-    let timestamp = env.ledger().timestamp();
+    let timestamp = env.ledger().timestamp() + (resolution * 100) as u64;
     let mut prices = Vec::<InternalPrice>::new(&env);
     prices.push_back(InternalPrice {
         source,
@@ -314,7 +317,7 @@ fn test_lastprice_multiple_sources_assets_prices() {
     let price6: i128 = 182;
     let price7: i128 = 1;
     let price8: i128 = 907812630891721023980129383;
-    let timestamp = env.ledger().timestamp();
+    let timestamp = env.ledger().timestamp() + (resolution * 100) as u64;
 
     let mut prices = Vec::<InternalPrice>::new(&env);
     prices.push_back(InternalPrice {
@@ -390,8 +393,9 @@ fn test_lastprice_multiple_sources_assets_prices() {
         price: price8,
         timestamp,
     });
+    client.add_prices(&prices);
     lastprice = client.lastprice_by_source(&source2, &asset3);
-    assert_eq!(lastprice.unwrap().price, price6);
+    assert_eq!(lastprice.unwrap().price, price7);
     lastprice = client.lastprice_by_source(&source2, &asset4);
     assert_eq!(lastprice.unwrap().price, price8);
 }
@@ -424,7 +428,7 @@ fn test_assets() {
     let asset2 = Asset::Stellar(Address::generate(&env));
     let price1: i128 = 13579;
     let price2: i128 = 912739812;
-    let timestamp = env.ledger().timestamp();
+    let timestamp = env.ledger().timestamp() + (resolution * 100) as u64;
     let mut source: u32 = 2;
     env.mock_all_auths();
     let mut prices = Vec::<InternalPrice>::new(&env);
@@ -498,7 +502,7 @@ fn test_prices() {
     let source = 0;
     let asset = Asset::Stellar(Address::generate(&env));
     let price: i128 = 918729481812938171823918237122;
-    let timestamp = env.ledger().timestamp();
+    let timestamp = env.ledger().timestamp() + (resolution * 100) as u64;
     let mut prices = Vec::<InternalPrice>::new(&env);
     prices.push_back(InternalPrice {
         source,
@@ -546,7 +550,7 @@ fn test_prices_limit() {
     let source = 0;
     let asset = Asset::Stellar(Address::generate(&env));
     let price: i128 = 918729481812938171823918237122;
-    let timestamp = env.ledger().timestamp();
+    let mut timestamp = env.ledger().timestamp() + (resolution * 100) as u64;
     let mut prices = Vec::<InternalPrice>::new(&env);
     prices.push_back(InternalPrice {
         source,
@@ -555,6 +559,7 @@ fn test_prices_limit() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -562,6 +567,7 @@ fn test_prices_limit() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -569,6 +575,7 @@ fn test_prices_limit() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -576,6 +583,7 @@ fn test_prices_limit() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -583,6 +591,7 @@ fn test_prices_limit() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -590,6 +599,7 @@ fn test_prices_limit() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -597,6 +607,7 @@ fn test_prices_limit() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -604,6 +615,7 @@ fn test_prices_limit() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -611,6 +623,7 @@ fn test_prices_limit() {
         price,
         timestamp,
     });
+    timestamp += resolution as u64;
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
@@ -710,7 +723,7 @@ fn test_add_prices() {
     let source0 = 0;
     let asset0 = Asset::Stellar(Address::generate(&env));
     let price0: i128 = 918729481812938171823918237122;
-    let timestamp0 = env.ledger().timestamp();
+    let timestamp0 = env.ledger().timestamp() + (resolution * 100) as u64;
     prices.push_back(InternalPrice {
         source: source0,
         asset: asset0.clone(),
