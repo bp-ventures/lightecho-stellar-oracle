@@ -1,6 +1,9 @@
 #![no_std]
 
-mod contract;
-mod metadata;
-mod storage_types;
-mod test;
+//mod contract_map;
+mod constants;
+mod contract_light;
+mod types;
+mod utils;
+//mod test_map;
+mod test_light;

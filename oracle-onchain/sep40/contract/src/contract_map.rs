@@ -1,3 +1,8 @@
+/// Oracle contract implementation using Map for storage.
+/// This implementation is not recommended for production use due to Map
+/// size storage limitations, along with other limitations.
+/// Please see the `contract_light.rs` implementation for a recommended
+/// production implementation.
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Map, Vec};
 
 use crate::metadata;
