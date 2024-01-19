@@ -4,7 +4,6 @@ cd "$SCRIPT_DIR"
 cd ..
 
 RED='\033[0;31m'
-GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 if [ $# -ne 2 ]; then
@@ -42,4 +41,4 @@ if [ -z "$contract_id" ]; then
     printf "${RED}Failed to deploy contract${NC}\n"
     exit 1
 fi
-printf "${GREEN}Deployed contract ID: ${contract_id}${NC}\n"
+printf "Deployed contract ID: ${contract_id}\n"
