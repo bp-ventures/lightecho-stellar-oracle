@@ -29,7 +29,7 @@ export SOURCE_SECRET
 set -e
 
 echo "➤ Building contract"
-make
+make "${VERSION}"
 
 echo "➤ Deploying contract to $NETWORK"
 contract_id=$(soroban contract deploy \
