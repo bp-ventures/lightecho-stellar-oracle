@@ -7,12 +7,13 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-if [ $# -ne 1 ]; then
-  echo "Usage: $0 <network>"
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <version> <network>"
   exit 1
 fi
 
-NETWORK="$1"
+VERSION="$1"
+NETWORK="$2"
 
 if ! command -v poetry &> /dev/null
 then

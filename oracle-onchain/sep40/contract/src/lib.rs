@@ -1,9 +1,15 @@
 #![no_std]
 
-//mod contract_map;
 mod constants;
-mod contract_light;
 mod types;
 mod utils;
-//mod test_map;
+
+#[cfg(feature = "use_map")]
+mod contract_map;
+#[cfg(feature = "use_map")]
+mod test_map;
+
+#[cfg(feature = "use_light")]
+mod contract_light;
+#[cfg(feature = "use_light")]
 mod test_light;

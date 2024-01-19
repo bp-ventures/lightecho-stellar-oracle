@@ -7,6 +7,10 @@ publish = false
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+use_map = []
+use_light = []
+
 [dependencies]
 #soroban-sdk = "0.9.2"
 soroban-sdk = { git = "https://github.com/stellar/rs-soroban-sdk", tag = "v20.0.3" }
