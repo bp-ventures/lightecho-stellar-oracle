@@ -25,6 +25,38 @@ TESTNET_CONTRACT_XLM = "CB76Q5CX65O5M3DYJKYAG6OY6KL4E4W3OBVXPWZ2W54JIUSSNQGSWT3E
 TESTNET_CONTRACT_USD = "CBL4C45UDGD6IBTFK4I52PHAMA62PHFTFT2O7HRQMTY6L4MZPQNAUZMC"
 
 DECIMAL_PLACES_DIVIDER = Decimal(10**18)
+ASSETS_TO_ASSET_U32: Dict[Tuple, int] = {
+    ("other", "ARST"): 0,
+    ("other", "AUDD"): 1,
+    ("other", "BRL"): 2,
+    ("other", "BTC"): 3,
+    ("other", "BTCLN"): 4,
+    ("other", "CLPX"): 5,
+    ("other", "ETH"): 6,
+    ("other", "EUR"): 7,
+    ("other", "EURC"): 8,
+    ("other", "EURT"): 9,
+    ("other", "GYEN"): 10,
+    ("other", "IDRT"): 11,
+    ("other", "KES"): 12,
+    ("other", "KRW"): 13,
+    ("other", "NGNT"): 14,
+    ("other", "TRY"): 15,
+    ("other", "TRYB"): 16,
+    ("other", "TZS"): 17,
+    ("other", "UPUSDT"): 18,
+    ("other", "USD"): 19,
+    ("other", "USDC"): 20,
+    ("other", "USDT"): 21,
+    ("other", "VOL30d"): 22,
+    ("other", "XCHF"): 23,
+    ("other", "XLM"): 24,
+    ("other", "XSGD"): 25,
+    ("other", "YUSDC"): 26,
+    ("other", "ZAR"): 27,
+    ("other", "yBTC"): 28,
+    ("other", "yUSDC"): 29,
+}
 
 
 class Price(TypedDict):
@@ -229,7 +261,9 @@ class OracleClient:
             raise ValueError(f"Unexpected asset enum type: {rust_asset_type}")
         return (asset_type, asset)
 
-    def parse_sc_asset_map(self, sc_asset_map) -> Dict[Tuple[AssetType, str], List[Price]]:
+    def parse_sc_asset_map(
+        self, sc_asset_map
+    ) -> Dict[Tuple[AssetType, str], List[Price]]:
         data = {}
         for entry in sc_asset_map:
             key = self.parse_asset_enum(entry.key)
@@ -293,6 +327,15 @@ class OracleClient:
         )
         return tx_hash, self.parse_tx_data(tx_data, expect_asset_map=expect_asset_map)
 
+    def asset_to_asset_u32(self, asset_type: AssetType, asset: str) -> int:
+        asset_u32 = ASSETS_TO_ASSET_U32.get((asset_type, asset))
+        if asset_u32 is None:
+            raise ValueError(
+                f"Asset has no u32 value: {asset_type} {asset}. Make sure to "
+                "add a u32 value for this asset in ASSETS_TO_ASSET_U32."
+            )
+        return asset_u32
+
     def build_add_price_args(
         self,
         source: int,
@@ -318,9 +361,11 @@ class OracleClient:
             )
         if timestamp is None:
             timestamp = int(time.time())
+        asset_u32 = self.asset_to_asset_u32(asset_type, asset)
         return [
             scval.to_uint32(source),
             self.build_asset_enum(asset_type, asset),
+            scval.to_uint32(asset_u32),
             scval.to_int128(price_as_int),
             scval.to_uint64(timestamp),
         ]
@@ -355,15 +400,6 @@ class OracleClient:
                 scval.to_uint32(resolution),
             ],
         )
-
-    def has_admin(self) -> Tuple[str, bool]:
-        """
-        Checks if the contract has an admin.
-
-        Returns:
-            Tuple[str, bool]: A tuple containing the transaction hash and a boolean indicating the presence of an admin.
-        """
-        return self.invoke_and_parse("has_admin")  # type: ignore
 
     def write_admin(self) -> Tuple[str, None]:
         """
@@ -483,36 +519,6 @@ class OracleClient:
             }
         return tx_hash, price  # type: ignore
 
-    def add_price(
-        self,
-        source: int,
-        asset_type: AssetType,
-        asset: str,
-        price: str,
-        timestamp: Optional[int] = None,
-    ) -> Tuple[str, None]:
-        """
-        Adds a new price record to the contract.
-
-        Args:
-            source (int): The source ID.
-            asset_type (AssetType): The asset type ("stellar" or "other").
-            asset (str): The asset identifier. For off-chain assets, this is an empty string. For on-chain asset, this is the Soroban asset address (Token Interface).
-            price (str): The price value.
-            timestamp (int, optional): The timestamp for the price record (defaults to current time).
-
-        Returns:
-            Tuple[str, None]: A tuple containing the transaction hash and None.
-        """
-        args = self.build_add_price_args(
-            source,
-            asset_type,
-            asset,
-            price,
-            timestamp,
-        )
-        return self.invoke_and_parse("add_price", args)  # type: ignore
-
     def add_prices(self, prices: List[AssetPrice]) -> Tuple[str, None]:
         """
         Add prices to the contract.
@@ -536,9 +542,10 @@ class OracleClient:
             add_price_struct = scval.to_struct(
                 {
                     "asset": add_price_args[1],
-                    "price": add_price_args[2],
+                    "asset_u32": add_price_args[2],
+                    "price": add_price_args[3],
                     "source": add_price_args[0],
-                    "timestamp": add_price_args[3],
+                    "timestamp": add_price_args[4],
                 }
             )
             price_args.append(add_price_struct)
@@ -565,16 +572,9 @@ class OracleClient:
         wasm_id = deployer.upload_contract_wasm(contract_wasm)
         return self.invoke_and_parse("update_contract", [scval.to_bytes(bytes.fromhex(wasm_id))])  # type: ignore
 
-    def remove_prices(self) -> Tuple[str, None]:
-        """
-        Removes price records within a specific time range. (Not implemented yet)
-
-        Raises:
-            RuntimeError: Indicates that this feature is not implemented yet.
-        """
-        raise RuntimeError("This function is not yet available")
-
-    def lastprices_by_source_and_assets(self, source: int, assets: List[Asset]) -> Tuple[str, dict]:
+    def lastprices_by_source_and_assets(
+        self, source: int, assets: List[Asset]
+    ) -> Tuple[str, dict]:
         """
         Retrieves the latest price records for a specific source and list of assets.
         Note: fetching too many assets might result in errors from Soroban due to return size limits.
@@ -585,9 +585,14 @@ class OracleClient:
         """
         asset_enums = []
         if len(assets) > 15:
-            print("Warning: fetching too many assets might result in errors from Soroban due to return size limits. We recommend requesting no more than 15 assets at a time.", file=sys.stderr)
+            print(
+                "Warning: fetching too many assets might result in errors from Soroban due to return size limits. We recommend requesting no more than 15 assets at a time.",
+                file=sys.stderr,
+            )
         for asset in assets:
-            asset_enums.append(self.build_asset_enum(asset["asset_type"], asset["asset"]))
+            asset_enums.append(
+                self.build_asset_enum(asset["asset_type"], asset["asset"])
+            )
         return self.invoke_and_parse(
             "lastprices_by_source_and_assets",
             [

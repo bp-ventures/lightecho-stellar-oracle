@@ -3,6 +3,7 @@
 For more information see docs at https://github.com/bp-ventures/lightecho-stellar-oracle
 
 **TESTNET** Official Contracts:
+
 - Base `XLM`:
   ```
   CDYHDC7OPAWPQ46TGT5PU77C2NWFGERD6IQRKVNBL34HCXHARWO24XWM
@@ -46,7 +47,10 @@ sudo apt install build-essential
 source ./scripts/source_secret.sh
 
 # deploy the contract to the blockchain
-./scripts/deploy.sh
+# examples:
+#   ./scripts/deploy.sh light testnet  # deploy the 'light' version to Testnet
+#   ./scripts/deploy.sh map testnet # deploy the 'map' (old, deprecated) version to Testnet
+./scripts/deploy.sh light testnet
 ```
 
 ## Initialize contract via CLI

@@ -4,15 +4,15 @@ cd "$SCRIPT_DIR"
 cd ..
 
 RED='\033[0;31m'
-GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-if [ $# -ne 1 ]; then
-  echo "Usage: $0 <network>"
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <version> <network>"
   exit 1
 fi
 
-NETWORK="$1"
+VERSION="$1"
+NETWORK="$2"
 
 if ! command -v poetry &> /dev/null
 then
@@ -29,7 +29,7 @@ export SOURCE_SECRET
 set -e
 
 echo "➤ Building contract"
-make
+make "${VERSION}"
 
 echo "➤ Deploying contract to $NETWORK"
 contract_id=$(soroban contract deploy \
@@ -41,4 +41,4 @@ if [ -z "$contract_id" ]; then
     printf "${RED}Failed to deploy contract${NC}\n"
     exit 1
 fi
-printf "${GREEN}Deployed contract ID: ${contract_id}${NC}\n"
+printf "Deployed contract ID: ${contract_id}\n"

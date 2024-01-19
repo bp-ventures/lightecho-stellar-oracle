@@ -417,13 +417,13 @@ requests = ">=2.31.0,<3.0.0"
 
 [[package]]
 name = "stellar-sdk"
-version = "9.1.1"
+version = "9.2.0"
 description = "The Python Stellar SDK library provides APIs to build transactions and connect to Horizon and Soroban-RPC server."
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "stellar_sdk-9.1.1-py3-none-any.whl", hash = "sha256:08b3c6b70f895381c043148ffb5c08ce8036abcf593d279fc7a6fd111ac07b9e"},
-    {file = "stellar_sdk-9.1.1.tar.gz", hash = "sha256:fd0491162d10e72a3b7f4c7eaae61b7ff0951f32645f18984dae690a17498627"},
+    {file = "stellar_sdk-9.2.0-py3-none-any.whl", hash = "sha256:c575743b710852fbb34db527a6fa13496066128878901c13b2f045cfab97bd25"},
+    {file = "stellar_sdk-9.2.0.tar.gz", hash = "sha256:a283121ad90c284fc6c675dc73a0d266be6c2f1fe1fef58c0ddc988edca42b70"},
 ]
 
 [package.dependencies]
@@ -490,4 +490,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "034d93c62169cc9f9a79c5c5017ee57c7dd44999cf4af36bcdcd768294dd3e2c"
+content-hash = "04afb303d4637de51620d3002d901de5b7a7c5bc6722f33e1d6e4b5056e44a92"
