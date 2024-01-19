@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use crate::contract_light::{LightOracle, LightOracleClient};
-use crate::types::{Asset, InternalAsset, InternalPrice};
+use crate::types::{Asset, InternalPrice};
 use soroban_sdk::{testutils::Address as _, Address, Env, Vec};
 extern crate std;
 
@@ -87,20 +87,11 @@ fn test_sources() {
     let timestamp1 = env.ledger().timestamp();
     let timestamp2 = env.ledger().timestamp() + 1;
     env.mock_all_auths();
-    let mut assets = Vec::<InternalAsset>::new(&env);
-    assets.push_back(InternalAsset {
-        asset: asset1.clone(),
-        asset_u32: 0,
-    });
-    assets.push_back(InternalAsset {
-        asset: asset2.clone(),
-        asset_u32: 1,
-    });
-    client.add_assets(&assets);
     let mut prices = Vec::<InternalPrice>::new(&env);
     prices.push_back(InternalPrice {
         source,
         asset: asset1.clone(),
+        asset_u32: 1,
         price: price1,
         timestamp: timestamp1,
     });
@@ -115,6 +106,7 @@ fn test_sources() {
     prices.push_back(InternalPrice {
         source,
         asset: asset2.clone(),
+        asset_u32: 2,
         price: price2,
         timestamp: timestamp2,
     });
@@ -152,24 +144,28 @@ fn test_lastprices() {
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
@@ -204,6 +200,7 @@ fn test_lastprice() {
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
@@ -228,10 +225,12 @@ fn test_lastprice_two_prices() {
     let price2: i128 = 2468;
     let source: u32 = 0;
     let timestamp = env.ledger().timestamp();
+
     let mut prices = Vec::<InternalPrice>::new(&env);
     prices.push_back(InternalPrice {
         source,
         asset: asset1.clone(),
+        asset_u32: 1,
         price: price1,
         timestamp,
     });
@@ -242,6 +241,7 @@ fn test_lastprice_two_prices() {
     prices.push_back(InternalPrice {
         source,
         asset: asset1.clone(),
+        asset_u32: 1,
         price: price2,
         timestamp,
     });
@@ -271,12 +271,14 @@ fn test_lastprice_two_assets() {
     prices.push_back(InternalPrice {
         source,
         asset: asset1.clone(),
+        asset_u32: 1,
         price: price1,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset2.clone(),
+        asset_u32: 2,
         price: price2,
         timestamp,
     });
@@ -318,6 +320,7 @@ fn test_lastprice_multiple_sources_assets_prices() {
     prices.push_back(InternalPrice {
         source: source1,
         asset: asset1.clone(),
+        asset_u32: 1,
         price: price1,
         timestamp,
     });
@@ -329,12 +332,14 @@ fn test_lastprice_multiple_sources_assets_prices() {
     prices.push_back(InternalPrice {
         source: source1,
         asset: asset1.clone(),
+        asset_u32: 1,
         price: price2,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source: source1,
         asset: asset2.clone(),
+        asset_u32: 2,
         price: price3,
         timestamp,
     });
@@ -348,6 +353,7 @@ fn test_lastprice_multiple_sources_assets_prices() {
     prices.push_back(InternalPrice {
         source: source2,
         asset: asset2.clone(),
+        asset_u32: 2,
         price: price4,
         timestamp,
     });
@@ -359,24 +365,28 @@ fn test_lastprice_multiple_sources_assets_prices() {
     prices.push_back(InternalPrice {
         source: source2,
         asset: asset2.clone(),
+        asset_u32: 2,
         price: price5,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source: source2,
         asset: asset3.clone(),
+        asset_u32: 3,
         price: price6,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source: source2,
         asset: asset3.clone(),
+        asset_u32: 3,
         price: price7,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source: source2,
         asset: asset4.clone(),
+        asset_u32: 4,
         price: price8,
         timestamp,
     });
@@ -421,6 +431,7 @@ fn test_assets() {
     prices.push_back(InternalPrice {
         source,
         asset: asset1.clone(),
+        asset_u32: 1,
         price: price1,
         timestamp,
     });
@@ -435,6 +446,7 @@ fn test_assets() {
     prices.push_back(InternalPrice {
         source,
         asset: asset2.clone(),
+        asset_u32: 2,
         price: price2,
         timestamp,
     });
@@ -491,6 +503,7 @@ fn test_prices() {
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
@@ -507,6 +520,7 @@ fn test_prices() {
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
@@ -537,60 +551,70 @@ fn test_prices_limit() {
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
@@ -613,6 +637,7 @@ fn test_prices_limit() {
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
@@ -626,30 +651,35 @@ fn test_prices_limit() {
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
     prices.push_back(InternalPrice {
         source,
         asset: asset.clone(),
+        asset_u32: 0,
         price,
         timestamp,
     });
@@ -683,23 +713,22 @@ fn test_add_prices() {
     let timestamp0 = env.ledger().timestamp();
     prices.push_back(InternalPrice {
         source: source0,
-        asset: asset0,
+        asset: asset0.clone(),
+        asset_u32: 0,
         price: price0,
         timestamp: timestamp0,
     });
-    let source1 = 0;
-    let asset1 = Asset::Stellar(Address::generate(&env));
     let price1: i128 = 918729481812938171823918237123;
     let timestamp1 = timestamp0 + 1;
     prices.push_back(InternalPrice {
-        source: source1,
-        asset: asset1,
+        source: source0,
+        asset: asset0.clone(),
+        asset_u32: 0,
         price: price1,
         timestamp: timestamp1,
     });
     client.add_prices(&prices);
-    let asset3 = Asset::Stellar(Address::generate(&env));
-    let prices = client.prices_by_source(&0, &asset3, &5);
+    let prices = client.prices_by_source(&source0, &asset0, &5);
     let prices = prices.unwrap();
     assert_eq!(prices.len(), 2);
 }

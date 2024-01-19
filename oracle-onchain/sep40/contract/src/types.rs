@@ -29,6 +29,7 @@ pub enum Asset {
 pub struct InternalPrice {
     pub source: u32,
     pub asset: Asset,
+    pub asset_u32: u32,
     pub price: i128,
     pub timestamp: u64,
 }

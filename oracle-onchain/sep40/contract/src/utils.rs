@@ -18,6 +18,17 @@ pub fn get_asset_as_u32(env: &Env, asset: Asset) -> Option<u32> {
     return Some(asset_u32.unwrap());
 }
 
+pub fn set_asset_as_u32(env: &Env, asset: Asset, asset_u32: u32) {
+    match asset {
+        Asset::Stellar(address) => {
+            env.storage().instance().set(&address, &asset_u32);
+        }
+        Asset::Other(symbol) => {
+            env.storage().instance().set(&symbol, &asset_u32);
+        }
+    }
+}
+
 /// Returns a 128-bit data key from the given source, asset, and timestamp.
 /// The 128-bit data key is then used as a ledger key for storing the price
 /// in the blockchain.
