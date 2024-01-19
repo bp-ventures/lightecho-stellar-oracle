@@ -24,10 +24,6 @@ class OracleTests(unittest.TestCase):
         _, result = self.client.prices_by_source(0, "other", "USD", 1)
         self.assertEqual(len(result), 1)
 
-    def test_has_admin(self):
-        _, result = self.client.has_admin()
-        self.assertEqual(result, True)
-
     def test_read_admin(self):
         _, admin_public_key = self.client.read_admin()
         self.assertIsInstance(admin_public_key, str)

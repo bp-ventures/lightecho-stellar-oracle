@@ -1,5 +1,29 @@
 **Lightecho Oracle - Oracle smart contract for Soroban**
 
+TODO light version:
+- deploy to testnet
+- feed some prices
+- python sdk
+  - review code - OK
+  - run unit tests
+- cli
+  - test all functions
+  - test feed scripts
+- javascript sdk
+  - review code
+  - run unit tests
+- deploy official testnet XLM
+- deploy official testnet USD
+- update contract id python sdk
+- publish python sdk
+- update contract id javascript sdk
+- publish javascript sdk
+- pull in server
+- poetry install in server
+- restart systemd units
+- check website to see if prices are there
+- update README.md explaining how good the contract is right now
+
 Lightecho is a Stellar Oracle for emerging markets data and XLM volatility feeds.
 
 This repository contains:
