@@ -108,7 +108,8 @@ To fetch the last price of USD from Coinbase for example, you can use the CLI:
   dedicated ledger key in temporary storage. Each price ledger key is an integer
   of type `u128` with this structure: `[first 32 bits - source][next 32 bits - asset identifier][next 64 bits - timestamp]`.
   Using this new lightweight approach allowed us to reduce fee costs in **95%** compared
-  to the previous implementation using `Map`.
+  to the previous implementation using `Map`, and removed all the scalability
+  issues we had when using `Map`.
   More curious about the code structure? [See here](https://github.com/bp-ventures/lightecho-stellar-oracle/blob/1377a5ed8270fdd89e0b183ba0007fd6b91d36ae/oracle-onchain/sep40/contract/src/utils.rs#L35) how we generate the ledger key for a given price.
 - **January 2024:** Second official launch of the Oracle, now using the new lightweight
   structure to store the prices.
