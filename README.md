@@ -95,22 +95,22 @@ To fetch the last price of USD from Coinbase for example, you can use the CLI:
 
 ## A brief timeline of the Lightecho Oracle
 
-- April 2023: Beginning of development of the Lightecho Oracle.
-- June 2023: Beginning of development of the Oracle SDKs for Python and JavaScript.
-- July 2023: First official launch of the Oracle MVP. Internally storing all prices in a single ledger entry of type `Map`.
-- July 2023: [BPV wins Stellar Community Award for Soroban development](https://p.bpventures.us/blog/lightecho-the-first-ever-emerging-market-oracle,-earns-bpv-the-stellar-community-fund-award/).
-- November 2023: We began noticing issues related to using `Map` to store the prices in the blockchain.
+- **April 2023:** Beginning of development of the Lightecho Oracle.
+- **June 2023:** Beginning of development of the Oracle SDKs for Python and JavaScript.
+- **July 2023:** First official launch of the Oracle MVP. Internally storing all prices in a single ledger entry of type `Map`.
+- **July 2023:** [BPV wins Stellar Community Award for Soroban development](https://p.bpventures.us/blog/lightecho-the-first-ever-emerging-market-oracle,-earns-bpv-the-stellar-community-fund-award/).
+- **November 2023:** We began noticing issues related to using `Map` to store the prices in the blockchain.
   The main issue being the size limit for a single ledger entry, and the expensive
   fees consumed to add and retrieve prices from the contract.
-- December 2023: Started [discussion in Discord](https://discord.com/channels/897514728459468821/1182655940969910294) regarding fees and the use of `Map`.
-- January 2024: After many discussions, tests, and planning, we decided to rewrite
+- **December 2023:** Started [discussion in Discord](https://discord.com/channels/897514728459468821/1182655940969910294) regarding fees and the use of `Map`.
+- **January 2024:** After many discussions, tests, and planning, we decided to rewrite
   the contract using a more lightweight approach: store each price in its own
   dedicated ledger key in temporary storage. Each price ledger key is an integer
   of type `u128` with this structure: `[first 32 bits - source][next 32 bits - asset identifier][next 64 bits - timestamp]`.
   Using this new lightweight approach allowed us to reduce fee costs in **95%** compared
   to the previous implementation using `Map`.
   More curious about the code structure? [See here](https://github.com/bp-ventures/lightecho-stellar-oracle/blob/1377a5ed8270fdd89e0b183ba0007fd6b91d36ae/oracle-onchain/sep40/contract/src/utils.rs#L35) how we generate the ledger key for a given price.
-- January 2024: Second official launch of the Oracle, now using the new lightweight
+- **January 2024:** Second official launch of the Oracle, now using the new lightweight
   structure to store the prices.
 
 ## Roadmap
