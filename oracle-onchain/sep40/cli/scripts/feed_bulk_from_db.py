@@ -62,10 +62,10 @@ def cursor_ctx():
         conn.close()
 
 
-def normalize_timestamp(unnormalized_timestamp, resolution):
-    # Calculate the closest future timestamp that preserves the resolution
-    normalized_timestamp = math.ceil(unnormalized_timestamp / resolution) * resolution
-    return normalized_timestamp
+def get_closest_past_timestamp(external_timestamp, resolution):
+    # Calculate the closest past timestamp that preserves the resolution
+    adjusted_timestamp = math.floor(external_timestamp / resolution) * resolution
+    return adjusted_timestamp
 
 
 def list_to_base64(data_list):
@@ -110,7 +110,7 @@ def add_prices_to_blockchain(prices: List[Dict]):
             "asset_type": "other",
             "asset": price["buy_asset"],
             "price": price["price"],
-            "timestamp": price["normalized_timestamp"],
+            "timestamp": price["adjusted_timestamp"],
         }
         source_symbols.setdefault(price["source"], []).append(price["symbol"])
         if price["sell_asset"] == "XLM":
@@ -142,6 +142,15 @@ def mark_symbols_as_added_to_blockchain(source, symbols):
         cursor.execute(query, [source] + symbols)
 
 
+def find_highest_timestamp(prices):
+    highest_timestamp = 0
+    for price in prices:
+        updated_at_timestamp = int(price["updated_at"].timestamp())
+        if updated_at_timestamp > highest_timestamp:
+            highest_timestamp = updated_at_timestamp
+    return highest_timestamp
+
+
 def read_prices_from_db():
     query = """
         SELECT
@@ -162,23 +171,29 @@ def read_prices_from_db():
         cursor.execute(query)
         prices = []
         symbols = {}
-        current_timestamp = int(datetime.now().timestamp())
-        normalized_timestamp = normalize_timestamp(current_timestamp, RESOLUTION)
-        logger.info(f"normalized timestamp: {normalized_timestamp}, current timestamp: {current_timestamp}")
-        if normalized_timestamp > current_timestamp:
+
+        for price in cursor.fetchall():
+            prices.append(dict(price))
+
+        highest_timestamp = find_highest_timestamp(prices)
+        current_unix_time = int(datetime.now().timestamp())
+        normalized_high_timestamp = get_closest_past_timestamp(
+            highest_timestamp, RESOLUTION
+        )
+        if normalized_high_timestamp > current_unix_time:
             logger.info(
-                f"normalized timestamp is higher than current timestamp: {normalized_timestamp} > {current_timestamp}. Skipping adding prices."
+                f"highest timestamp {normalized_high_timestamp} is in the future, skipping"
             )
             return
-        for result in cursor.fetchall():
-            result_dict = dict(result)
-            if result_dict["source"] not in symbols:
-                symbols[result_dict["source"]] = []
-            if result_dict["symbol"] in symbols[result_dict["source"]]:
+
+        for price in prices:
+            if price["source"] not in symbols:
+                symbols[price["source"]] = []
+            if price["symbol"] in symbols[price["source"]]:
                 continue
-            result_dict["normalized_timestamp"] = normalized_timestamp
-            prices.append(result_dict)
-            symbols[result_dict["source"]].append(result_dict["symbol"])
+            price["adjusted_timestamp"] = normalized_high_timestamp
+            prices.append(price)
+            symbols[price["source"]].append(price["symbol"])
         if len(prices) == 0:
             logger.info("no new prices to feed into the blockchain contract")
         else:
