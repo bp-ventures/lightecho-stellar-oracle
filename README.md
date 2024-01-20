@@ -32,14 +32,8 @@ This repository contains:
 
 **TESTNET** Official Contracts:
 
-- Base `XLM`:
-  ```
-  CA2IT45Y5X4EPXMDF5W4BGXVHQ2HZCY6TTQVJYQJQ5IBD2F4Z6UPPC7P
-  ```
-- Base `USD`:
-  ```
-  <not deployed yet>
-  ```
+- Base `XLM`: [CA2IT45Y5X4EPXMDF5W4BGXVHQ2HZCY6TTQVJYQJQ5IBD2F4Z6UPPC7P](https://stellar.expert/explorer/testnet/contract/CA2IT45Y5X4EPXMDF5W4BGXVHQ2HZCY6TTQVJYQJQ5IBD2F4Z6UPPC7P)
+- Base `USD`: `not deployed yet`
 
 **TESTNET** Official Sources for prices:
 
