@@ -201,20 +201,26 @@ def read_prices_from_db():
             )
             return
 
+        batches_of_prices_to_feed = []
         prices_to_feed = []
         for price in prices_from_db:
             if len(prices_to_feed) >= 10:
-                break
+                batches_of_prices_to_feed.append(prices_to_feed)
+                prices_to_feed = []
+                continue
             if price["source"] not in symbols:
                 symbols[price["source"]] = []
             if price["symbol"] in symbols[price["source"]]:
                 continue
             prices_to_feed.append(price)
             symbols[price["source"]].append(price["symbol"])
-        if len(prices_to_feed) == 0:
+        if prices_to_feed:
+            batches_of_prices_to_feed.append(prices_to_feed)
+        if len(batches_of_prices_to_feed) == 0:
             logger.info("no new prices to feed into the blockchain contract")
         else:
-            add_prices_to_blockchain(prices_to_feed, closest_past_normalized_timestamp)
+            for batch in batches_of_prices_to_feed:
+                add_prices_to_blockchain(batch, closest_past_normalized_timestamp)
 
 
 if __name__ == "__main__":
