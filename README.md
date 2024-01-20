@@ -103,7 +103,7 @@ To fetch the last price of USD from Coinbase for example, you can use the CLI:
   The main issue being the size limit for a single ledger entry, and the expensive
   fees consumed to add and retrieve prices from the contract.
 - **December 2023:** Started [discussion in Discord](https://discord.com/channels/897514728459468821/1182655940969910294) regarding fees and the use of `Map`.
-- **January 2024:** After many discussions, tests, and planning, we decided to rewrite
+- **January 2024:** After much discussion, testing, and planning, we decided to rewrite
   the contract using a more lightweight approach: store each price in its own
   dedicated ledger key in temporary storage. Each price ledger key is an integer
   of type `u128` with this structure: `[first 32 bits - source][next 32 bits - asset identifier][next 64 bits - timestamp]`.
