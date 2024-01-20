@@ -28,7 +28,7 @@ This repository contains:
 - [FAQ](#faq)
 - [Infrastructure](#infrastructure)
 - [Price Sources](#price-sources)
-- [A brief timeline of the Lightecho Oracle](a-brief-timeline-of-the-lightecho-oracle)
+- [A brief timeline of the Lightecho Oracle](#a-brief-timeline-of-the-lightecho-oracle)
 - [Roadmap](#roadmap)
 - [Featured projects](#featured-projects)
 
