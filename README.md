@@ -34,7 +34,7 @@ This repository contains:
 
 ## FAQ
 
-- **What is the purpose of this repository?**
+- **What is this repository?**
   This repository is a monorepo that contains multiple software related to
   the Lightecho Oracle, including the Oracle source code itself.
 - **What is the Lightecho Oracle?**
