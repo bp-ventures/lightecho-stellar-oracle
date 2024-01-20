@@ -4,29 +4,7 @@
 things are not working right now. If you encounter any issues please create
 a ticket in GitHub.**
 
-TODO light version:
-- DONE deploy to testnet
-- DONE feed some prices
-- python sdk
-  - DONE review code
-  - DONE run unit tests
-- cli
-  - DONE test all functions
-  - DONE test feed scripts
-- javascript sdk
-  - DONE review code
-- DONE deploy official testnet XLM
-- DONE update contract id python sdk
-- DONE publish python sdk
-- DONE update contract id javascript sdk
-- DONE publish javascript sdk
-- DONE server stop systemd units
-- DONE pull in server
-- DONE poetry install in server
-- DONE initialize contract
-- DONE fix feed script to always feed with current normalized timestamp
-- test feed bulk
-- restart systemd units
+TODO transition:
 - check website to see if prices are there
 - diagrams
 - faq
@@ -56,11 +34,11 @@ This repository contains:
 
 - Base `XLM`:
   ```
-  CDRKPQZGDW7F3BGQNXXQIIMTGLIKRD3RGN46HZBGBAX46TR6B4YEZQQU
+  CA2IT45Y5X4EPXMDF5W4BGXVHQ2HZCY6TTQVJYQJQ5IBD2F4Z6UPPC7P
   ```
 - Base `USD`:
   ```
-  CD25CPJMPZIJ44JM3TCUW43M5OGMLTHKVLIVRCOS55C6LBYFL5Y2GGRU
+  <not deployed yet>
   ```
 
 **TESTNET** Official Sources for prices:
