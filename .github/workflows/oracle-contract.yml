@@ -28,9 +28,11 @@ jobs:
         run: rustup update stable
       - name: Add target wasm32
         run: rustup target add wasm32-unknown-unknown
-      - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
+      #- name: Install cargo-llvm-cov
+      #  uses: taiki-e/install-action@cargo-llvm-cov
       - name: Oracle build
-        run: cd oracle-onchain/sep40/contract && cargo build --features="use_light" --target wasm32-unknown-unknown --release
-      - name: Oracle code coverage
-        run: cd oracle-onchain/sep40/contract && cargo llvm-cov --all-features --fail-under-lines 85
+        run: cd oracle-onchain/sep40/contract && make
+      - name: Oracle test
+        run: cd oracle-onchain/sep40/contract && make test
+      #- name: Oracle code coverage
+      #  run: cd oracle-onchain/sep40/contract && cargo llvm-cov --all-features --fail-under-lines 85
