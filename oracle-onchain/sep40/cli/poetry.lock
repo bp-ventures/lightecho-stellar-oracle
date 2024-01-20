@@ -283,7 +283,7 @@ stellar-sdk = "9.2.0"
 type = "git"
 url = "https://github.com/bp-ventures/lightecho-stellar-oracle.git"
 reference = "HEAD"
-resolved_reference = "d076bd5f96d5880407558900e29e005648ec8fc1"
+resolved_reference = "81cfdb1197fc3447687da60bafdf82192f6b498d"
 subdirectory = "oracle-sdk/python"
 
 [[package]]
@@ -824,4 +824,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "4c9d33881e2585c5b6107c9e545d9badd9210cb6d58d380884a8ccfecf26d1c8"
+content-hash = "513682a1d0412098cb0bae32d770177a6726aac19b379e443d381d490573c19a"
