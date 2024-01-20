@@ -100,7 +100,7 @@ def log_result_to_db(cmd, success, output):
         )
 
 
-def add_prices_to_blockchain(prices: List[Dict]):
+def add_prices_to_blockchain(prices: List[Dict], timestamp: int):
     xlm_based_prices = []
     usd_based_prices = []
     source_symbols = {}
@@ -110,7 +110,7 @@ def add_prices_to_blockchain(prices: List[Dict]):
             "asset_type": "other",
             "asset": price["buy_asset"],
             "price": price["price"],
-            "timestamp": price["adjusted_timestamp"],
+            "timestamp": timestamp,
         }
         source_symbols.setdefault(price["source"], []).append(price["symbol"])
         if price["sell_asset"] == "XLM":
@@ -142,13 +142,21 @@ def mark_symbols_as_added_to_blockchain(source, symbols):
         cursor.execute(query, [source] + symbols)
 
 
-def find_highest_timestamp(prices):
-    highest_timestamp = 0
-    for price in prices:
-        updated_at_timestamp = int(price["updated_at"].timestamp())
-        if updated_at_timestamp > highest_timestamp:
-            highest_timestamp = updated_at_timestamp
-    return highest_timestamp
+def get_latest_time_prices_were_added_to_blockchain():
+    query = """
+        SELECT
+            id,
+            created_at
+        FROM feed_bulk_from_db_logs
+        WHERE success = TRUE
+        ORDER BY created_at DESC LIMIT 1
+    """
+    with cursor_ctx() as cursor:
+        cursor.execute(query)
+        row = cursor.fetchone()
+        row_dict = dict(row)
+        return row_dict["created_at"]
+
 
 
 def read_prices_from_db():
@@ -175,17 +183,9 @@ def read_prices_from_db():
         for price in cursor.fetchall():
             prices_from_db.append(dict(price))
 
-        highest_timestamp = find_highest_timestamp(prices_from_db)
-        current_unix_time = int(datetime.now().timestamp())
-        normalized_high_timestamp = get_closest_past_timestamp(
-            highest_timestamp, RESOLUTION
-        )
-        if normalized_high_timestamp > current_unix_time:
-            logger.info(
-                f"normalized highest timestamp {normalized_high_timestamp} is "
-                "in the future, skipping"
-            )
-            return
+        last_time_prices_were_added_to_blockchain = get_latest_time_prices_were_added_to_blockchain()
+        logger.info(f"last_time_prices_were_added_to_blockchain: {last_time_prices_were_added_to_blockchain}")
+        return
 
         prices_to_feed = []
         for price in prices_from_db:
@@ -195,7 +195,6 @@ def read_prices_from_db():
                 symbols[price["source"]] = []
             if price["symbol"] in symbols[price["source"]]:
                 continue
-            price["adjusted_timestamp"] = normalized_high_timestamp
             prices_to_feed.append(price)
             symbols[price["source"]].append(price["symbol"])
         if len(prices_to_feed) == 0:
