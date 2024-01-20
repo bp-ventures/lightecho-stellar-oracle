@@ -24,7 +24,8 @@ TODO light version:
 - DONE pull in server
 - DONE poetry install in server
 - DONE initialize contract
-- fix feed script to always feed with current normalized timestamp
+- DONE fix feed script to always feed with current normalized timestamp
+- test feed bulk
 - restart systemd units
 - check website to see if prices are there
 - diagrams

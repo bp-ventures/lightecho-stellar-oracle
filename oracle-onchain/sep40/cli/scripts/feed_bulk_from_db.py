@@ -162,19 +162,23 @@ def read_prices_from_db():
         cursor.execute(query)
         prices = []
         symbols = {}
+        current_timestamp = int(datetime.now().timestamp())
+        normalized_timestamp = normalize_timestamp(current_timestamp, RESOLUTION)
+        logger.info(f"normalized timestamp: {normalized_timestamp}, current timestamp: {current_timestamp}")
+        if normalized_timestamp > current_timestamp:
+            logger.info(
+                f"normalized timestamp is higher than current timestamp: {normalized_timestamp} > {current_timestamp}. Skipping adding prices."
+            )
+            return
         for result in cursor.fetchall():
             result_dict = dict(result)
             if result_dict["source"] not in symbols:
                 symbols[result_dict["source"]] = []
             if result_dict["symbol"] in symbols[result_dict["source"]]:
                 continue
-            current_timestamp = int(datetime.now().timestamp())
-            result_dict["normalized_timestamp"] = normalize_timestamp(
-                current_timestamp, RESOLUTION
-            )
-            if result_dict["normalized_timestamp"] <= current_timestamp:
-                prices.append(result_dict)
-                symbols[result_dict["source"]].append(result_dict["symbol"])
+            result_dict["normalized_timestamp"] = normalized_timestamp
+            prices.append(result_dict)
+            symbols[result_dict["source"]].append(result_dict["symbol"])
         if len(prices) == 0:
             logger.info("no new prices to feed into the blockchain contract")
         else:
