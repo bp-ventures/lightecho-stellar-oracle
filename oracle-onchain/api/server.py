@@ -80,17 +80,6 @@ def db_create_tables():
             );
             """
         )
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS feed_all_from_db_logs (
-                id                  INTEGER PRIMARY KEY,
-                created_at          TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                command             TEXT NOT NULL,
-                output              TEXT NOT NULL,
-                success             BOOLEAN NOT NULL
-            );
-            """
-        )
 
 
 def init_app():
@@ -159,24 +148,6 @@ def parse_asset_type(asset_type: Optional[str] = None):
             f"Invalid 'asset_type', must be one of: {', '.join(supported_asset_types)}",
         )
     return asset_type, None
-
-
-def get_feed_all_from_db_latest_log():
-    query = """
-        SELECT
-            id,
-            created_at,
-            output,
-            success
-        FROM feed_all_from_db_logs
-        ORDER BY created_at DESC LIMIT 1
-    """
-    with cursor_ctx() as cursor:
-        cursor.execute(query)
-        entries = []
-        for result in cursor.fetchall():
-            entries.append(dict(result))
-        return entries
 
 
 def get_feed_bulk_from_db_latest_log():
@@ -289,7 +260,6 @@ def api_db_add_prices():
             )
     return {
         "success": True,
-        "feed_all_from_db_latest_log": get_feed_all_from_db_latest_log(),
         "feed_bulk_from_db_latest_log": get_feed_bulk_from_db_latest_log(),
     }
 

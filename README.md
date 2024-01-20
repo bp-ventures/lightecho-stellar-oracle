@@ -15,14 +15,16 @@ TODO light version:
   - DONE test feed scripts
 - javascript sdk
   - DONE review code
-- deploy official testnet XLM
-- deploy official testnet USD
-- update contract id python sdk
-- publish python sdk
-- update contract id javascript sdk
-- publish javascript sdk
-- pull in server
-- poetry install in server
+- DONE deploy official testnet XLM
+- DONE update contract id python sdk
+- DONE publish python sdk
+- DONE update contract id javascript sdk
+- DONE publish javascript sdk
+- DONE server stop systemd units
+- DONE pull in server
+- DONE poetry install in server
+- DONE initialize contract
+- fix feed script to always feed with current normalized timestamp
 - restart systemd units
 - check website to see if prices are there
 - diagrams

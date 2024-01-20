@@ -34,7 +34,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="[%(asctime)s %(filename)s:%(lineno)d %(levelname)s] %(message)s",
 )
-logger = logging.getLogger("feed_all_from_db.py")
+logger = logging.getLogger("feed_bulk_from_db.py")
 
 
 def run_cli(cmd: str) -> Tuple[bool, str]:
@@ -62,10 +62,10 @@ def cursor_ctx():
         conn.close()
 
 
-def adjust_timestamp(external_timestamp, resolution):
+def normalize_timestamp(unnormalized_timestamp, resolution):
     # Calculate the closest future timestamp that preserves the resolution
-    adjusted_timestamp = math.ceil(external_timestamp / resolution) * resolution
-    return adjusted_timestamp
+    normalized_timestamp = math.ceil(unnormalized_timestamp / resolution) * resolution
+    return normalized_timestamp
 
 
 def list_to_base64(data_list):
@@ -110,7 +110,7 @@ def add_prices_to_blockchain(prices: List[Dict]):
             "asset_type": "other",
             "asset": price["buy_asset"],
             "price": price["price"],
-            "timestamp": price["adjusted_timestamp"],
+            "timestamp": price["normalized_timestamp"],
         }
         source_symbols.setdefault(price["source"], []).append(price["symbol"])
         if price["sell_asset"] == "XLM":
@@ -137,9 +137,7 @@ def add_prices_to_blockchain(prices: List[Dict]):
 
 def mark_symbols_as_added_to_blockchain(source, symbols):
     placeholders = ", ".join(["?"] * len(symbols))
-    query = (
-        f"UPDATE prices SET added_to_blockchain = 1 WHERE source = ? AND symbol IN ({placeholders})"
-    )
+    query = f"UPDATE prices SET added_to_blockchain = 1 WHERE source = ? AND symbol IN ({placeholders})"
     with cursor_ctx() as cursor:
         cursor.execute(query, [source] + symbols)
 
@@ -170,11 +168,11 @@ def read_prices_from_db():
                 symbols[result_dict["source"]] = []
             if result_dict["symbol"] in symbols[result_dict["source"]]:
                 continue
-            timestamp_as_unix = int(result_dict["updated_at"].timestamp())
-            result_dict["adjusted_timestamp"] = adjust_timestamp(
-                timestamp_as_unix, RESOLUTION
+            current_timestamp = int(datetime.now().timestamp())
+            result_dict["normalized_timestamp"] = normalize_timestamp(
+                current_timestamp, RESOLUTION
             )
-            if result_dict["adjusted_timestamp"] <= int(datetime.now().timestamp()):
+            if result_dict["normalized_timestamp"] <= current_timestamp:
                 prices.append(result_dict)
                 symbols[result_dict["source"]].append(result_dict["symbol"])
         if len(prices) == 0:

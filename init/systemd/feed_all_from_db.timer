@@ -1,8 +1,0 @@
-[Unit]
-Description=Run feed_all_from_db every minute
-
-[Timer]
-OnCalendar=*:0/1
-
-[Install]
-WantedBy=timers.target
