@@ -35,7 +35,8 @@ echo "➤ Deploying contract to $NETWORK"
 contract_id=$(soroban contract deploy \
     --wasm target/wasm32-unknown-unknown/release/oracle.wasm \
     --source "$SOURCE_SECRET" \
-    --network "$NETWORK")
+    --network "$NETWORK" \
+    --fee 1000)
 
 if [ -z "$contract_id" ]; then
     printf "${RED}Failed to deploy contract${NC}\n"
