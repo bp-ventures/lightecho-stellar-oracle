@@ -51,6 +51,13 @@
     const App = () => {
       const defaultRecords = "5";
 
+      const defaultSourceAccountSecret =
+        "SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH";
+      const [sourceAccountSecret, Set_sourceAccountSecret] =
+        useState(undefined);
+      const [settingSourceAccount, Set_settingSourceAccount] = useState(false);
+      const [stellarOracleClient, Set_stellarOracleClient] =
+        useState(undefined);
       const [running, Set_running] = useState(false);
       const [func, Set_func] = useState("lastprice");
       const [source, Set_source] = useState("1");
@@ -67,20 +74,6 @@
       const [adminSecret, Set_adminSecret] = useState(undefined);
       const [logs, Set_logs] = useState([]);
       const messagesEndRef = createRef();
-
-      const stellarOracleClient = new OracleClient(
-        OracleClient.TESTNET_CONTRACT_XLM,
-        "https://soroban-testnet.stellar.org",
-        "Test SDF Network ; September 2015",
-        "SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH",
-        {
-          baseFee: 50000,
-          logCallback: (msg) => {
-            console.log(msg);
-            appendToLog(msg, false);
-          },
-        }
-      );
 
       const scrollLogToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -114,6 +107,9 @@
 
       const isRunEnabled = () => {
         if (running) {
+          return false;
+        }
+        if (!sourceAccountSecret) {
           return false;
         }
         switch (func) {
@@ -241,6 +237,30 @@
         }
       };
 
+      const shortEllipsis = (s: string, sideLength: number = 3) => {
+        return `${s.substring(0, sideLength)}...${s.substring(
+          s.length - sideLength,
+          s.length
+        )}`;
+      };
+
+      const initializeOracleClient = (secret) => {
+        Set_stellarOracleClient(
+          new OracleClient(
+            OracleClient.TESTNET_CONTRACT_XLM,
+            "https://soroban-testnet.stellar.org",
+            "Test SDF Network ; September 2015",
+            secret,
+            {
+              baseFee: 50000,
+              logCallback: (msg) => {
+                appendToLog(msg, false);
+              },
+            }
+          )
+        );
+      };
+
       return (
         <main>
           <div className="container">
@@ -274,7 +294,57 @@
                 <p className="text-center">
                   Contract ID:
                   <br />
-                  <code>{stellarOracleClient.contractId}</code>
+                  <code>{OracleClient.TESTNET_CONTRACT_XLM}</code>
+                </p>
+              </div>
+            </div>
+            <div className="row pt-2 justify-content-center">
+              <div className="col">
+                <p className="text-center">
+                  Source account:
+                  <br />
+                  <div className="d-flex flex-row gap-2 justify-content-center align-items-center">
+                    {settingSourceAccount ? (
+                      <>
+                        <input
+                          type="text"
+                          onChange={(e) => {
+                            Set_sourceAccountSecret(e.target.value);
+                          }}
+                        />
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => {
+                            initializeOracleClient(sourceAccountSecret);
+                            Set_settingSourceAccount(false);
+                          }}
+                        >
+                          OK
+                        </button>
+                      </>
+                    ) : sourceAccountSecret ? (
+                      <code>{shortEllipsis(sourceAccountSecret)}</code>
+                    ) : (
+                      <>
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => Set_settingSourceAccount(true)}
+                        >
+                          Click here to set the Source account
+                        </button>
+                        or
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => {
+                            Set_sourceAccountSecret(defaultSourceAccountSecret);
+                            initializeOracleClient(defaultSourceAccountSecret);
+                          }}
+                        >
+                          Use default Source account
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </p>
               </div>
             </div>
