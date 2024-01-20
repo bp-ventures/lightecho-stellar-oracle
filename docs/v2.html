@@ -43,19 +43,6 @@
       }
     }
   </script>
-  <script>
-    const stellarOracleClient = new OracleClient(
-      OracleClient.TESTNET_CONTRACT_XLM,
-      "https://soroban-testnet.stellar.org",
-      "Test SDF Network ; September 2015",
-      "SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH",
-      {
-        baseFee: 50000,
-        logCallback: (msg) => console.log(msg),
-      }
-    );
-  </script>
-
   <script type="text/babel" data-type="module">
     import React, { useEffect, createRef, useState, StrictMode } from "react";
     import { createRoot } from "react-dom/client";
@@ -79,6 +66,20 @@
       const [adminSecret, Set_adminSecret] = useState(undefined);
       const [logs, Set_logs] = useState([]);
       const messagesEndRef = createRef();
+
+      const stellarOracleClient = new OracleClient(
+        OracleClient.TESTNET_CONTRACT_XLM,
+        "https://soroban-testnet.stellar.org",
+        "Test SDF Network ; September 2015",
+        "SAES4O3NXUE2CPIB7YH3O5ROAONADPZRXOEYFC4JPLNY6STOBM2RYLGH",
+        {
+          baseFee: 50000,
+          logCallback: (msg) => {
+            console.log(msg);
+            appendToLog(msg, false);
+          },
+        }
+      );
 
       const scrollLogToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
