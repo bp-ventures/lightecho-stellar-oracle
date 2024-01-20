@@ -11,8 +11,7 @@ class OracleClient {
   static TESTNET_NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
   static TESTNET_CONTRACT_XLM =
     "CB76Q5CX65O5M3DYJKYAG6OY6KL4E4W3OBVXPWZ2W54JIUSSNQGSWT3E";
-  static TESTNET_CONTRACT_USD =
-    "CBL4C45UDGD6IBTFK4I52PHAMA62PHFTFT2O7HRQMTY6L4MZPQNAUZMC";
+  static TESTNET_CONTRACT_USD = "";
 
   /**
    * Initializes a new OracleClient instance.
@@ -196,7 +195,9 @@ class OracleClient {
     if (assetAddress) {
       return StellarSdk.xdr.ScVal.scvVec([
         StellarSdk.xdr.ScVal.scvSymbol(Buffer.from("Stellar", "utf-8")),
-        (new StellarSdk.Asset(assetCode, assetAddress)).contractId(this.networkPassphrase)
+        new StellarSdk.Asset(assetCode, assetAddress).contractId(
+          this.networkPassphrase
+        ),
       ]);
     }
     return StellarSdk.xdr.ScVal.scvVec([
@@ -286,25 +287,6 @@ class OracleClient {
         StellarSdk.xdr.ScVal.scvU32(parseInt(resolution))
       )
     );
-  }
-
-  /**
-   * Bumps the contract instance so it doesn't expire.
-   * See https://soroban.stellar.org/docs/fundamentals-and-concepts/persisting-data
-   *
-   * @returns {any} - The result of the transaction.
-   */
-  async bump_instance() {
-    return await this.submitTx(this.contract.call("bump_instance"));
-  }
-
-  /**
-   * Checks if the contract has an admin.
-   *
-   * @returns {any} - The result of the transaction.
-   */
-  async has_admin() {
-    return await this.submitTx(this.contract.call("has_admin"));
   }
 
   /**
@@ -420,43 +402,6 @@ class OracleClient {
       };
     }
     return price;
-  }
-
-  /**
-   * Adds a new price record to the contract.
-   *
-   * @param {number} source - The source identifier.
-   * @param {string} assetCode - The asset code.
-   * @param {string} assetAddress - The Soroban asset address (Token Interface)
-   * @param {number} price - The price to add.
-   * @param {number} timestamp - The timestamp of the price record.
-   * @returns {any} - The result of the transaction.
-   */
-  async add_price(source, assetCode, assetAddress, price, timestamp) {
-    return await this.submitTx(
-      this.contract.call(
-        "add_price",
-        StellarSdk.xdr.ScVal.scvU32(parseInt(source)),
-        this.getAssetEnum(assetCode, assetAddress),
-        this.numberToScvI128(
-          this.convertToInt18DecimalPlaces(parseFloat(price))
-        ),
-        this.numberToScvU64(parseInt(timestamp))
-      )
-    );
-  }
-
-  /**
-   * Removes price records within a specific time range (Not implemented yet).
-   *
-   * @param {Array} sources - An array of source identifiers to filter by.
-   * @param {Array} assets - An array of asset codes to filter by.
-   * @param {number} start_timestamp - The start of the time range.
-   * @param {number} end_timestamp - The end of the time range.
-   * @throws {string} - A message indicating that this feature is not implemented yet.
-   */
-  async remove_prices(sources, assets, start_timestamp, end_timestamp) {
-    throw "Not implemented yet";
   }
 
   /**

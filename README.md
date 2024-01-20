@@ -5,17 +5,16 @@ things are not working right now. If you encounter any issues please create
 a ticket in GitHub.**
 
 TODO light version:
-- deploy to testnet
-- feed some prices
+- DONE deploy to testnet
+- DONE feed some prices
 - python sdk
-  - review code - OK
-  - run unit tests
+  - DONE review code
+  - DONE run unit tests
 - cli
-  - test all functions
-  - test feed scripts
+  - DONE test all functions
+  - DONE test feed scripts
 - javascript sdk
-  - review code
-  - run unit tests
+  - DONE review code
 - deploy official testnet XLM
 - deploy official testnet USD
 - update contract id python sdk
@@ -26,7 +25,10 @@ TODO light version:
 - poetry install in server
 - restart systemd units
 - check website to see if prices are there
+- diagrams
+- faq
 - update README.md explaining how good the contract is right now
+- metrics (how to collect?)
 
 Lightecho is a Stellar Oracle for emerging markets data and XLM volatility feeds.
 

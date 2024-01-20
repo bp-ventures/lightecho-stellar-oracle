@@ -120,14 +120,13 @@ def oracle_initialize(admin: str, base: str, decimals: int, resolution: int):
 
 
 @oracle_app.command("bump_instance", help="oracle: invoke bump_instance()")
-def oracle_bump_instance():
-    tx_hash, tx_data = state["oracle_client"].bump_instance()
-    print_contract_output(tx_hash, tx_data)
-
-
-@oracle_app.command("has_admin", help="oracle: invoke has_admin()")
-def oracle_has_admin():
-    tx_hash, tx_data = state["oracle_client"].has_admin()
+def oracle_bump_instance(
+    ledgers_to_live: int = typer.Option(
+        ...,
+        help="Number of ledgers to live",
+    ),
+):
+    tx_hash, tx_data = state["oracle_client"].bump_instance(ledgers_to_live)
     print_contract_output(tx_hash, tx_data)
 
 
@@ -194,26 +193,44 @@ def oracle_lastprice_by_source(
     print_contract_output(tx_hash, tx_data)
 
 
-@oracle_app.command("add_price", help="oracle: invoke add_price()")
+@oracle_app.command("add_price", help="oracle: invoke add_prices()")
 def oracle_add_price(
-    source: int,
-    asset_type: AssetType,
-    asset: str,
-    price: str,
-    timestamp: Optional[int] = None,
+    source: int = typer.Option(
+        ...,
+        help="Source",
+    ),
+    asset_type: AssetType = typer.Option(
+        ...,
+        help="Asset type",
+    ),
+    asset: str = typer.Option(
+        ...,
+        help="Asset",
+    ),
+    price: str = typer.Option(
+        ...,
+        help="Price",
+    ),
+    timestamp: int = typer.Option(
+        ...,
+        help="Timestamp",
+    ),
 ):
-    tx_hash, tx_data = state["admin_oracle_client"].add_price(
-        source,
-        asset_type.name,
-        asset,
-        price,
-        timestamp,
-    )
+    prices = [
+        {
+            "source": source,
+            "asset_type": asset_type.name,
+            "asset": asset,
+            "price": price,
+            "timestamp": timestamp,
+        }
+    ]
+    tx_hash, tx_data = state["admin_oracle_client"].add_prices(prices)
     print_contract_output(tx_hash, tx_data)
 
 
-@oracle_app.command("add_prices", help="oracle: invoke add_prices()")
-def oracle_add_prices(
+@oracle_app.command("add_prices_base64", help="oracle: invoke add_prices()")
+def oracle_add_prices_base64(
     prices_base64: str = typer.Argument(
         ...,
         help='A base64-encoded JSON list of prices. Each item in the list must be a dictionary, example: {"source": 0, "asset_type": "other", "asset": "USD", "price": "1.00", timestamp: 12345678}',
@@ -222,35 +239,6 @@ def oracle_add_prices(
     decoded_bytes = base64.b64decode(prices_base64)
     decoded_list = json.loads(decoded_bytes)
     tx_hash, tx_data = state["admin_oracle_client"].add_prices(decoded_list)
-    print_contract_output(tx_hash, tx_data)
-
-
-@oracle_app.command("remove_prices", help="oracle: invoke remove_prices()")
-def oracle_remove_prices():
-    # TODO
-    pass
-
-
-@oracle_app.command(
-    "lastprices_by_source_and_assets",
-    help="oracle: invoke lastprices_by_source_and_assets()",
-)
-def oracle_lastprices_by_source_and_assets(
-    source: int,
-    assets_base64: str = typer.Argument(
-        ...,
-        help="A base64-encoded JSON list. E.g. [{'asset_type': 'other', 'asset': 'BTC'}]. Note: fetching too many assets might result in errors from Soroban due to return size limits. We recommend requesting no more than 15 assets at a time.",
-    ),
-):
-    assets = json.loads(base64.b64decode(assets_base64))
-    if len(assets) > 15:
-        print(
-            "Warning: fetching too many assets at a time may result in errors.",
-            file=sys.stderr,
-        )
-    tx_hash, tx_data = state["oracle_client"].lastprices_by_source_and_assets(
-        source, assets
-    )
     print_contract_output(tx_hash, tx_data)
 
 
