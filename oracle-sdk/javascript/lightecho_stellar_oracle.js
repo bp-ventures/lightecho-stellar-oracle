@@ -164,7 +164,7 @@ class OracleClient {
   async submitTx(contractOp, signerSecret = this.sourceSecret) {
     const server = new StellarSdk.SorobanRpc.Server(this.rpcServerUrl);
     const keypair = StellarSdk.Keypair.fromSecret(signerSecret);
-    log(`Loading account ${keypair.publicKey()}`);
+    this.log(`Loading account ${keypair.publicKey()}`);
     const account = await server.getAccount(keypair.publicKey());
     let transaction = new StellarSdk.TransactionBuilder(account, {
       fee: this.options.baseFee,
@@ -173,15 +173,14 @@ class OracleClient {
       .addOperation(contractOp)
       .setTimeout(30)
       .build();
-    log(`Preparing transaction...`);
+    this.log(`Preparing transaction...`);
     transaction = await server.prepareTransaction(transaction);
     transaction.sign(keypair);
-    //console.log(`xdr: ${transaction.toEnvelope().toXDR("base64")}`);
-    log(`Submitting transaction...`);
+    this.log(`Submitting transaction...`);
     let response = await server.sendTransaction(transaction);
     const hash = response.hash;
-    log(`Transaction hash: ${hash}`);
-    log(`Awaiting confirmation...`);
+    this.log(`Transaction hash: ${hash}`);
+    this.log(`Awaiting confirmation...`);
     while (true) {
       response = await server.getTransaction(hash);
       if (response.status !== "NOT_FOUND") {
@@ -191,10 +190,10 @@ class OracleClient {
     }
 
     if (response.status === "SUCCESS") {
-      log(`Transaction successful.`);
+      this.log(`Transaction successful.`);
       return this.parseScVal(response.returnValue);
     } else {
-      log(`Transaction failed.`);
+      this.log(`Transaction failed.`);
       throw response;
     }
   }
@@ -291,7 +290,7 @@ class OracleClient {
     decimals,
     resolution
   ) {
-    log(`Invoking initialize()...`);
+    this.log(`Invoking initialize()...`);
     return await this.submitTx(
       this.contract.call(
         "initialize",
@@ -312,7 +311,7 @@ class OracleClient {
    * @returns {any} - The result of the transaction.
    */
   async write_admin(admin_pubkey) {
-    log(`Invoking write_admin()...`);
+    this.log(`Invoking write_admin()...`);
     return await this.submitTx(
       this.contract.call(
         "write_admin",
@@ -329,7 +328,7 @@ class OracleClient {
    * @returns {any} - The result of the transaction.
    */
   async read_admin() {
-    log(`Invoking read_admin()...`);
+    this.log(`Invoking read_admin()...`);
     return await this.submitTx(this.contract.call("read_admin"));
   }
 
@@ -339,7 +338,7 @@ class OracleClient {
    * @returns {any} - The result of the transaction.
    */
   async sources() {
-    log(`Invoking sources()...`);
+    this.log(`Invoking sources()...`);
     return await this.submitTx(this.contract.call("sources"));
   }
 
@@ -353,7 +352,7 @@ class OracleClient {
    * @returns {Array} - An array of price records.
    */
   async prices_by_source(source, assetCode, assetAddress, records) {
-    log(`Invoking prices_by_source()...`);
+    this.log(`Invoking prices_by_source()...`);
     let prices = await this.submitTx(
       this.contract.call(
         "prices_by_source",
@@ -382,7 +381,7 @@ class OracleClient {
    * @returns {object|null} - The price record or null if not found.
    */
   async price_by_source(source, assetCode, assetAddress, timestamp) {
-    log(`Invoking price_by_source()...`);
+    this.log(`Invoking price_by_source()...`);
     let price = await this.submitTx(
       this.contract.call(
         "price_by_source",
@@ -409,7 +408,7 @@ class OracleClient {
    * @returns {object|null} - The latest price record or null if not found.
    */
   async lastprice_by_source(source, assetCode, assetAddress) {
-    log(`Invoking lastprice_by_source()...`);
+    this.log(`Invoking lastprice_by_source()...`);
     let price = await this.submitTx(
       this.contract.call(
         "lastprice_by_source",
@@ -432,7 +431,7 @@ class OracleClient {
    * @returns {any} - The result of the transaction.
    */
   async base() {
-    log(`Invoking base()...`);
+    this.log(`Invoking base()...`);
     return await this.submitTx(this.contract.call("base"));
   }
 
@@ -442,7 +441,7 @@ class OracleClient {
    * @returns {any} - The result of the transaction.
    */
   async assets() {
-    log(`Invoking assets()...`);
+    this.log(`Invoking assets()...`);
     return await this.submitTx(this.contract.call("assets"));
   }
 
@@ -452,7 +451,7 @@ class OracleClient {
    * @returns {any} - The result of the transaction.
    */
   async decimals() {
-    log(`Invoking decimals()...`);
+    this.log(`Invoking decimals()...`);
     return await this.submitTx(this.contract.call("decimals"));
   }
 
@@ -462,7 +461,7 @@ class OracleClient {
    * @returns {any} - The result of the transaction.
    */
   async resolution() {
-    log(`Invoking resolution()...`);
+    this.log(`Invoking resolution()...`);
     return await this.submitTx(this.contract.call("resolution"));
   }
 
@@ -475,7 +474,7 @@ class OracleClient {
    * @returns {object|null} - The price record or null if not found.
    */
   async price(assetCode, assetAddress, timestamp) {
-    log(`Invoking price()...`);
+    this.log(`Invoking price()...`);
     let price = await this.submitTx(
       this.contract.call(
         "price",
@@ -501,7 +500,7 @@ class OracleClient {
    * @returns {Array} - An array of price records.
    */
   async prices(assetCode, assetAddress, records) {
-    log(`Invoking prices()...`);
+    this.log(`Invoking prices()...`);
     let prices = await this.submitTx(
       this.contract.call(
         "prices",
@@ -527,7 +526,7 @@ class OracleClient {
    * @returns {object|null} - The latest price record or null if not found.
    */
   async lastprice(assetCode, assetAddress) {
-    log(`Invoking lastprice()...`);
+    this.log(`Invoking lastprice()...`);
     let price = await this.submitTx(
       this.contract.call(
         "lastprice",
