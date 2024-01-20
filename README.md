@@ -30,6 +30,7 @@ This repository contains:
 - [Price Sources](#price-sources)
 - [A brief timeline of the Lightecho Oracle](a-brief-timeline-of-the-lightecho-oracle)
 - [Roadmap](#roadmap)
+- [Featured projects](#featured-projects)
 
 ## FAQ
 
@@ -127,7 +128,7 @@ To fetch the last price of USD from Coinbase for example, you can use the CLI:
 - Soroban go live (pilot mode)
 - Soroban Production```
 
-#### Install the price feed script
+#### (For BPV developer) Install the price feed script
 
 The price feed is a script that puts the prices into the blockchain contract.
 
@@ -147,7 +148,7 @@ journalctl --user -u feed_bulk_from_db
 journalctl --user -u bump_instance
 ```
 
-#### Featured projects
+## Featured projects
 
 Have a project that uses our Oracle? Feel free to share with us and we'll be happy to list it here!
 
