@@ -169,35 +169,39 @@ def read_prices_from_db():
     """
     with cursor_ctx() as cursor:
         cursor.execute(query)
-        prices = []
+        prices_from_db = []
         symbols = {}
 
         for price in cursor.fetchall():
-            prices.append(dict(price))
+            prices_from_db.append(dict(price))
 
-        highest_timestamp = find_highest_timestamp(prices)
+        highest_timestamp = find_highest_timestamp(prices_from_db)
         current_unix_time = int(datetime.now().timestamp())
         normalized_high_timestamp = get_closest_past_timestamp(
             highest_timestamp, RESOLUTION
         )
         if normalized_high_timestamp > current_unix_time:
             logger.info(
-                f"highest timestamp {normalized_high_timestamp} is in the future, skipping"
+                f"normalized highest timestamp {normalized_high_timestamp} is "
+                "in the future, skipping"
             )
             return
 
-        for price in prices:
+        prices_to_feed = []
+        for price in prices_from_db:
+            if len(prices_to_feed) >= 10:
+                break
             if price["source"] not in symbols:
                 symbols[price["source"]] = []
             if price["symbol"] in symbols[price["source"]]:
                 continue
             price["adjusted_timestamp"] = normalized_high_timestamp
-            prices.append(price)
+            prices_to_feed.append(price)
             symbols[price["source"]].append(price["symbol"])
-        if len(prices) == 0:
+        if len(prices_to_feed) == 0:
             logger.info("no new prices to feed into the blockchain contract")
         else:
-            add_prices_to_blockchain(prices)
+            add_prices_to_blockchain(prices_to_feed)
 
 
 if __name__ == "__main__":
