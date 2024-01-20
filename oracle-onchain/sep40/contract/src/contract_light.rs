@@ -242,7 +242,7 @@ impl LightOracleTrait for LightOracle {
             env.storage()
                 .temporary()
                 .set(&key, &PriceData::new(price.price, price.timestamp));
-            e.storage()
+            env.storage()
                 .temporary()
                 .extend_ttl(&key, TEMPORARY_KEY_TTL, TEMPORARY_KEY_TTL);
             if price.timestamp > highest_timestamp {
@@ -268,7 +268,7 @@ impl LightOracleTrait for LightOracle {
             env.storage()
                 .temporary()
                 .set(&key, &PriceData::new(price.price, price.timestamp));
-            e.storage()
+            env.storage()
                 .temporary()
                 .extend_ttl(&key, TEMPORARY_KEY_TTL, TEMPORARY_KEY_TTL);
             if price.timestamp > highest_timestamp {
