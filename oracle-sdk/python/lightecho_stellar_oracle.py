@@ -752,7 +752,7 @@ class OracleClient:
         Returns:
             Tuple[str, None]: A tuple containing the transaction hash and None.
         """
-        return self.invoke_and_parse("bump_instance", [ledgers_to_live])  # type: ignore
+        return self.invoke_and_parse("bump_instance", [scval.to_uint32(ledgers_to_live)])  # type: ignore
 
 
 class OracleDeployer:
