@@ -120,13 +120,13 @@ def add_prices_to_blockchain(prices: List[Dict]):
         else:
             raise ValueError(f"Unexpected price sell_asset: {price['sell_asset']}")
     if xlm_based_prices:
-        cmd = f"--oracle-contract-id {TESTNET_CONTRACT_XLM} oracle add_prices {list_to_base64(xlm_based_prices)}"
+        cmd = f"--oracle-contract-id {TESTNET_CONTRACT_XLM} oracle add_prices_base64 {list_to_base64(xlm_based_prices)}"
         logger.info(f"cli.py {cmd}")
         success, output = run_cli(cmd)
         logger.info(output)
         log_result_to_db(cmd, success, output)
     if usd_based_prices:
-        cmd = f"--oracle-contract-id {TESTNET_CONTRACT_USD} oracle add_prices {list_to_base64(usd_based_prices)}"
+        cmd = f"--oracle-contract-id {TESTNET_CONTRACT_USD} oracle add_prices_base64 {list_to_base64(usd_based_prices)}"
         logger.info(f"cli.py {cmd}")
         success, output = run_cli(cmd)
         logger.info(output)
