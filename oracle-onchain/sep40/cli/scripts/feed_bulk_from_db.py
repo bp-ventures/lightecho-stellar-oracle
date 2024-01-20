@@ -101,6 +101,7 @@ def log_result_to_db(cmd, success, output):
 
 
 def add_prices_to_blockchain(prices: List[Dict], timestamp: int):
+    logger.info(f"Adding {len(prices)} prices to the blockchain with timestamp {timestamp}")
     xlm_based_prices = []
     usd_based_prices = []
     source_symbols = {}
@@ -184,8 +185,13 @@ def read_prices_from_db():
             prices_from_db.append(dict(price))
 
         last_time_prices_were_added_to_blockchain = get_latest_time_prices_were_added_to_blockchain()
-        logger.info(f"last_time_prices_were_added_to_blockchain: {last_time_prices_were_added_to_blockchain}")
-        return
+        current_unix_time = int(datetime.now().timestamp())
+        closest_past_normalized_timestamp = get_closest_past_timestamp(
+            current_unix_time, RESOLUTION
+        )
+        if last_time_prices_were_added_to_blockchain >= closest_past_normalized_timestamp:
+            logger.info("prices were already added to the blockchain for the current resolution")
+            return
 
         prices_to_feed = []
         for price in prices_from_db:
@@ -200,7 +206,7 @@ def read_prices_from_db():
         if len(prices_to_feed) == 0:
             logger.info("no new prices to feed into the blockchain contract")
         else:
-            add_prices_to_blockchain(prices_to_feed)
+            add_prices_to_blockchain(prices_to_feed, closest_past_normalized_timestamp)
 
 
 if __name__ == "__main__":
