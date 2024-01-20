@@ -7,7 +7,9 @@
 /// removes the scalability issues we had in the previous implementation.
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Vec};
 
-use crate::constants::{ADMIN, ASSETS, BASE_ASSET, DECIMALS, LAST_TIMESTAMP, RESOLUTION, SOURCES};
+use crate::constants::{
+    ADMIN, ASSETS, BASE_ASSET, DECIMALS, LAST_TIMESTAMP, RESOLUTION, SOURCES, TEMPORARY_KEY_TTL,
+};
 use crate::types::{Asset, InternalAsset, InternalPrice, PriceData};
 use crate::utils::{get_asset_as_u32, set_asset_as_u32, to_price_data_key};
 
@@ -240,6 +242,9 @@ impl LightOracleTrait for LightOracle {
             env.storage()
                 .temporary()
                 .set(&key, &PriceData::new(price.price, price.timestamp));
+            e.storage()
+                .temporary()
+                .extend_ttl(&key, TEMPORARY_KEY_TTL, TEMPORARY_KEY_TTL);
             if price.timestamp > highest_timestamp {
                 highest_timestamp = price.timestamp;
             }
@@ -263,6 +268,9 @@ impl LightOracleTrait for LightOracle {
             env.storage()
                 .temporary()
                 .set(&key, &PriceData::new(price.price, price.timestamp));
+            e.storage()
+                .temporary()
+                .extend_ttl(&key, TEMPORARY_KEY_TTL, TEMPORARY_KEY_TTL);
             if price.timestamp > highest_timestamp {
                 highest_timestamp = price.timestamp;
             }
