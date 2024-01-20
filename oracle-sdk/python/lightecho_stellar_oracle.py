@@ -21,7 +21,7 @@ from stellar_sdk.xdr.sc_val_type import SCValType
 AssetType = Literal["stellar", "other"]
 Network = Literal["standalone", "futurenet", "testnet", "public"]
 
-TESTNET_CONTRACT_XLM = "CB76Q5CX65O5M3DYJKYAG6OY6KL4E4W3OBVXPWZ2W54JIUSSNQGSWT3E"
+TESTNET_CONTRACT_XLM = "CAKA4JKSMN7GVG6JABJU4PSOUBCJZHUESOYYMRYXC7J72S4JXLDXT7GK"
 TESTNET_CONTRACT_USD = "CBL4C45UDGD6IBTFK4I52PHAMA62PHFTFT2O7HRQMTY6L4MZPQNAUZMC"
 
 DECIMAL_PLACES_DIVIDER = Decimal(10**18)
@@ -745,14 +745,14 @@ class OracleClient:
             }
         return tx_hash, price  # type: ignore
 
-    def bump_instance(self):
+    def bump_instance(self, ledgers_to_live: int):
         """
         Bumps the contract instance.
 
         Returns:
             Tuple[str, None]: A tuple containing the transaction hash and None.
         """
-        return self.invoke_and_parse("bump_instance")  # type: ignore
+        return self.invoke_and_parse("bump_instance", [ledgers_to_live])  # type: ignore
 
 
 class OracleDeployer:
