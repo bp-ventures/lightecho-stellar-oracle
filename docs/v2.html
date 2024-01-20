@@ -483,7 +483,7 @@
                     if (source) {
                       Set_running(true);
                       try {
-                        appendToLog("Preparing transaction...");
+                        appendToLog("Invoking contract in the blockchain...");
                         const response = await runFunc();
                         appendToLog("Response:");
                         appendToLog(JSON.stringify(response));
