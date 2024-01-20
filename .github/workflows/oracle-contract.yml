@@ -31,6 +31,6 @@ jobs:
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Oracle build
-        run: cd oracle-onchain/sep40/contract && cargo build --features="use-light" --target wasm32-unknown-unknown --release
+        run: cd oracle-onchain/sep40/contract && cargo build --features="use_light" --target wasm32-unknown-unknown --release
       - name: Oracle code coverage
         run: cd oracle-onchain/sep40/contract && cargo llvm-cov --all-features --fail-under-lines 85
