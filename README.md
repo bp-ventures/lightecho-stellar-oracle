@@ -33,17 +33,17 @@ This repository contains:
 
 ## FAQ
 
-- What is the purpose of this repository?
+- **What is the purpose of this repository?**
   This repository is a monorepo that contains multiple software related to
   the Lightecho Oracle, including the Oracle source code itself.
-- What is the Lightecho Oracle?
+- **What is the Lightecho Oracle?**
   It's BP Venture's implementation of a blockchain oracle for the Stellar blockchain.
   It's built to run in the Soroban network, a smart contracts layer built on the Stellar blockchain.
   [See here](./blockchain_oracle.md) for more details about our motivation.
-- What is the target audience for this repository?
+- **What is the target audience for this repository?**
   Smart contract developers who are looking for Oracle contracts that they can
   integrate into and consume prices from.
-- How do I run this software?
+- **How do I run this software?**
   Since this repository contains multiple software components, you can run each
   component separately. For example, if you just wanna see the last price in
   the Oracle, check out the [Web app](https://bp-ventures.github.io/lightecho-stellar-oracle/).
