@@ -19,11 +19,11 @@ def run_cli(cmd: str):
     )
 
 if __name__ == "__main__":
-    cmd = f"--oracle-contract-id {TESTNET_CONTRACT_XLM} oracle bump_instance"
+    cmd = f"--oracle-contract-id {TESTNET_CONTRACT_XLM} oracle bump_instance --ledgers-to-live 7884000"
     logger.info(f"cli.py {cmd}")
     output = run_cli(cmd)
     logger.info(output)
-    cmd = f"--oracle-contract-id {TESTNET_CONTRACT_USD} oracle bump_instance"
-    logger.info(f"cli.py {cmd}")
-    output = run_cli(cmd)
-    logger.info(output)
+    #cmd = f"--oracle-contract-id {TESTNET_CONTRACT_USD} oracle bump_instance --ledgers-to-live 7884000"
+    #logger.info(f"cli.py {cmd}")
+    #output = run_cli(cmd)
+    #logger.info(output)
