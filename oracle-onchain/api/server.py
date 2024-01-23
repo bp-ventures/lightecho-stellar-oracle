@@ -217,8 +217,6 @@ def get_auth_basic_username(request):
 @auth.login_required
 def api_db_add_prices():
     data = request.json
-    if not data:
-        return {"error": "This endpoint requires a JSON payload"}, 400
     if not isinstance(data, list):
         return {
             "error": "The payload must be a list, each item of the list being a price entry object"
