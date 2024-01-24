@@ -81,7 +81,10 @@
       };
 
       useEffect(() => scrollLogToBottom(), [logs]);
-
+      useEffect(() => {
+        Set_sourceAccountSecret(defaultSourceAccountSecret);
+        initializeOracleClient(defaultSourceAccountSecret);
+      }, []);
       const appendToLog = (msg, isJsx) => {
         if (!isJsx) {
           console.log(msg);
