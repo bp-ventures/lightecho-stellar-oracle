@@ -19,7 +19,7 @@ from stellar_sdk.xdr.sc_val_type import SCValType
 
 
 AssetType = Literal["stellar", "other"]
-Network = Literal["standalone", "futurenet", "testnet", "public"]
+Network = Literal["standalone", "futurenet", "testnet", "public", "custom"]
 
 TESTNET_CONTRACT_XLM = "CA335SIV2XT6OC3SOUTZBHTX5IXMFO3WYBD3NNVBP37JXX4FXFNF5CI6"
 TESTNET_CONTRACT_USD = ""  # not deployed yet
@@ -84,6 +84,8 @@ class OracleClient:
         contract_id: str,
         signer: Keypair,
         network: Network,
+        custom_rpc_url: Optional[str] = None,
+        custom_network_passphrase: Optional[str] = None,
         wait_tx_interval: int = 3,
         tx_timeout: int = 30,
         decimal_places: int = 18,
@@ -115,6 +117,13 @@ class OracleClient:
         elif network == "public":
             self.network_passphrase = StellarSdkNetwork.PUBLIC_NETWORK_PASSPHRASE
             self.rpc_server_url = "https://rpc.stellar.org:443/"
+        elif network == "custom":
+            if custom_rpc_url is None:
+                raise ValueError("custom_rpc_url is required for custom network")
+            if custom_network_passphrase is None:
+                raise ValueError("custom_network_passphrase is required for custom network")
+            self.network_passphrase = custom_network_passphrase
+            self.rpc_server_url = custom_rpc_url
         self.server = SorobanServer(self.rpc_server_url)
         self.contract_id = contract_id
         self.signer = signer
