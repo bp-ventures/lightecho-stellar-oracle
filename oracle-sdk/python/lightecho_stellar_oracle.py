@@ -124,6 +124,10 @@ class OracleClient:
                 raise ValueError("custom_network_passphrase is required for custom network")
             self.network_passphrase = custom_network_passphrase
             self.rpc_server_url = custom_rpc_url
+        if network != "custom" and custom_rpc_url is not None:
+            raise ValueError("custom_rpc_url is only allowed for custom network")
+        if network != "custom" and custom_network_passphrase is not None:
+            raise ValueError("custom_network_passphrase is only allowed for custom network")
         self.server = SorobanServer(self.rpc_server_url)
         self.contract_id = contract_id
         self.signer = signer

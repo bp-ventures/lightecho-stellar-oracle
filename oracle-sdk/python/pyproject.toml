@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lightecho_stellar_oracle"
-version = "1.2.0"
+version = "1.3.0"
 description = "Python SDK for the Lightecho Stellar Oracle"
 authors = ["BP Ventures"]
 readme = "README.md"

@@ -13,11 +13,11 @@ use_light = []
 
 [dependencies]
 #soroban-sdk = "0.9.2"
-soroban-sdk = { git = "https://github.com/stellar/rs-soroban-sdk", tag = "v20.0.3" }
+soroban-sdk = { git = "https://github.com/stellar/rs-soroban-sdk", tag = "v20.3.2" }
 
 [dev_dependencies]
 #soroban-sdk = { version = "0.9.2", features = ["testutils"] }
-soroban-sdk = { git = "https://github.com/stellar/rs-soroban-sdk", tag = "v20.0.3" , features=["testutils"]}
+soroban-sdk = { git = "https://github.com/stellar/rs-soroban-sdk", tag = "v20.3.2" , features=["testutils"]}
 
 [profile.release]
 opt-level = "z"
