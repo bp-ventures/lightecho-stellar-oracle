@@ -9,9 +9,9 @@ ADMIN_SECRET = "SDFWYGBNP5TW4MS7RY5D4FILT65R2IEPWGL34NY2TLSU4DC4BJNXUAMU"
 
 ORACLE_CONTRACT_ID = "" # empty by default, but you must put the oracle contract id here later
 
-RPC_URL=""
-NETWORK_PASSPHRASE=""
-HORIZON_URL=""
+RPC_URL="https://my-custom-rpc.mydomain.com"
+NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
+HORIZON_URL="https://horizon-testnet.stellar.org"
 ```
 
 ```
