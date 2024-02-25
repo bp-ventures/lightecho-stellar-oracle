@@ -25,23 +25,6 @@ assert mod_spec.loader
 mod_spec.loader.exec_module(local_settings)
 
 MAX_DECIMAL_PLACES = 18
-STELLAR_NETWORKS = {
-    "futurenet": {
-        "rpc_server_url": "https://rpc-futurenet.stellar.org:443/",
-        "network_passphrase": "Test SDF Future Network ; October 2022",
-        "horizon_url": "https://horizon-futurenet.stellar.org",
-    },
-    "testnet": {
-        "rpc_server_url": "https://soroban-testnet.stellar.org",
-        "network_passphrase": "Test SDF Network ; September 2015",
-        "horizon_url": "https://horizon-testnet.stellar.org",
-    },
-    "standalone": {
-        "rpc_server_url": "http://localhost:8000/soroban/rpc",
-        "network_passphrase": "Standalone Network ; February 2017",
-        "horizon_url": "http://localhost:8000",
-    },
-}
 
 colorama_init()
 oracle_app = typer.Typer()
@@ -52,14 +35,10 @@ state = {
     "verbose": False,
     "source_secret": local_settings.SOURCE_SECRET,
     "admin_secret": local_settings.ADMIN_SECRET,
-    "rpc_server_url": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK][
-        "rpc_server_url"
-    ],
     "oracle_contract_id": local_settings.ORACLE_CONTRACT_ID,
-    "network_passphrase": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK][
-        "network_passphrase"
-    ],
-    "horizon_url": STELLAR_NETWORKS[local_settings.STELLAR_NETWORK]["horizon_url"],
+    "rpc_server_url": local_settings.RPC_URL,
+    "network_passphrase": local_settings.NETWORK_PASSPHRASE,
+    "horizon_url": local_settings.HORIZON_URL,
 }
 state["kp"] = Keypair.from_secret(state["source_secret"])
 state["admin_kp"] = Keypair.from_secret(state["admin_secret"])
@@ -321,15 +300,20 @@ def main(
         state["verbose"] = True
     if oracle_contract_id:
         state["oracle_contract_id"] = oracle_contract_id
+
     state["oracle_client"] = OracleClient(
         contract_id=state["oracle_contract_id"],
         signer=Keypair.from_secret(state["source_secret"]),
-        network=local_settings.STELLAR_NETWORK,
+        network="custom",
+        custom_rpc_url=state["rpc_server_url"],
+        custom_network_passphrase=state["network_passphrase"],
     )
     state["admin_oracle_client"] = OracleClient(
         contract_id=state["oracle_contract_id"],
         signer=Keypair.from_secret(state["admin_secret"]),
-        network=local_settings.STELLAR_NETWORK,
+        network="custom",
+        custom_rpc_url=state["rpc_server_url"],
+        custom_network_passphrase=str(state["network_passphrase"]),
     )
 
 
