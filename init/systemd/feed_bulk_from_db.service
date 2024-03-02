@@ -5,6 +5,7 @@ Description=feed_bulk_from_db
 ExecStart=/home/lightecho-stellar-oracle/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/feed_bulk_from_db.sh
 StandardOutput=journal
 StandardError=journal
+TimeoutSec=30
 
 [Install]
 WantedBy=multi-user.target
