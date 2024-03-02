@@ -132,14 +132,39 @@ To fetch the last price of USD from Coinbase for example, you can use the CLI:
 
 The price feed is a script that puts the prices into the blockchain contract.
 
+> [!IMPORTANT]
+> CLI must be already setup and configured via `local_settings.py`. See [instructions](./oracle-onchain/sep40/cli).
+
+Start by installing the systemd container:
 ```bash
 sudo apt install systemd-container
+```
+
+Now, login into the systemd container and copy the systemd service unit files:
+```bash
 sudo machinectl shell myusername@  # replace myusername with your Linux username
 mkdir -p ~/.config/systemd/user/
-cp init/systemd/* ~/.config/systemd/user/
+cp -v init/systemd/* ~/.config/systemd/user/
+```
+
+Go to `~/.config/systemd/user/` and update the `.service` files (that you copied) with the correct paths:
+```text
+...
+
+[Service]
+ExecStart=/path/to/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/bump_instance.sh   # <- replace /path/to/ with the correct path
+
+...
+```
+
+Enable and start the services:
+```bash
 systemctl --user enable feed_bulk_from_db.timer bump_instance.timer
 systemctl --user start feed_bulk_from_db.timer bump_instance.timer
+```
 
+Additional commands:
+```bash
 # to check status
 ./systemd-status.sh
 
