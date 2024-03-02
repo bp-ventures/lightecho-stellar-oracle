@@ -6,7 +6,7 @@ For more information see docs at https://github.com/bp-ventures/lightecho-stella
 
 - Base `XLM`:
   ```
-  CA76BOADOXD5N37TNYS3IT5LUDSUPBVKXR5CZRYTCYEJISQAM47ZO6EY
+  CA335SIV2XT6OC3SOUTZBHTX5IXMFO3WYBD3NNVBP37JXX4FXFNF5CI6
   ```
 - Base `USD`:
   ```
