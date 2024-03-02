@@ -1,4 +1,5 @@
 from decimal import Decimal
+import logging
 import time
 from typing import List, Literal, Optional, Tuple, TypedDict, Union, Dict
 import sys
@@ -57,6 +58,10 @@ ASSETS_TO_ASSET_U32: Dict[Tuple, int] = {
     ("other", "yBTC"): 28,
     ("other", "yUSDC"): 29,
 }
+
+
+class AssetU32NotFound(Exception):
+    pass
 
 
 class Price(TypedDict):
@@ -121,13 +126,17 @@ class OracleClient:
             if custom_rpc_url is None:
                 raise ValueError("custom_rpc_url is required for custom network")
             if custom_network_passphrase is None:
-                raise ValueError("custom_network_passphrase is required for custom network")
+                raise ValueError(
+                    "custom_network_passphrase is required for custom network"
+                )
             self.network_passphrase = custom_network_passphrase
             self.rpc_server_url = custom_rpc_url
         if network != "custom" and custom_rpc_url is not None:
             raise ValueError("custom_rpc_url is only allowed for custom network")
         if network != "custom" and custom_network_passphrase is not None:
-            raise ValueError("custom_network_passphrase is only allowed for custom network")
+            raise ValueError(
+                "custom_network_passphrase is only allowed for custom network"
+            )
         self.server = SorobanServer(self.rpc_server_url)
         self.contract_id = contract_id
         self.signer = signer
@@ -319,7 +328,7 @@ class OracleClient:
             elif result.type == SCValType.SCV_VEC:
                 return self.parse_sc_vec(result.vec)
             else:
-                print(f"Unexpected result type: {result.type}")
+                raise ValueError(f"Unexpected result type: {result.type}")
         else:
             raise RuntimeError(f"Cannot parse unsuccessful transaction data: {tx_data}")
 
@@ -343,7 +352,7 @@ class OracleClient:
     def asset_to_asset_u32(self, asset_type: AssetType, asset: str) -> int:
         asset_u32 = ASSETS_TO_ASSET_U32.get((asset_type, asset))
         if asset_u32 is None:
-            raise ValueError(
+            raise AssetU32NotFound(
                 f"Asset has no u32 value: {asset_type} {asset}. Make sure to "
                 "add a u32 value for this asset in ASSETS_TO_ASSET_U32."
             )
@@ -544,13 +553,17 @@ class OracleClient:
         """
         price_args = []
         for price in prices:
-            add_price_args = self.build_add_price_args(
-                price["source"],
-                price["asset_type"],
-                price["asset"],
-                price["price"],
-                price["timestamp"],
-            )
+            try:
+                add_price_args = self.build_add_price_args(
+                    price["source"],
+                    price["asset_type"],
+                    price["asset"],
+                    price["price"],
+                    price["timestamp"],
+                )
+            except AssetU32NotFound as e:
+                logging.warn(f"skipping price due to error: {e}")
+                continue
             # see https://github.com/StellarCN/py-stellar-base/issues/815
             add_price_struct = scval.to_struct(
                 {
@@ -598,9 +611,8 @@ class OracleClient:
         """
         asset_enums = []
         if len(assets) > 15:
-            print(
-                "Warning: fetching too many assets might result in errors from Soroban due to return size limits. We recommend requesting no more than 15 assets at a time.",
-                file=sys.stderr,
+            logging.warn(
+                "fetching too many assets might result in errors from Soroban due to return size limits. We recommend requesting no more than 15 assets at a time.",
             )
         for asset in assets:
             asset_enums.append(
