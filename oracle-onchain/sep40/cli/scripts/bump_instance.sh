@@ -12,4 +12,10 @@ else
         exit 1
     fi
 fi
-timeout 30s $POETRY run python bump_instance.py || ./send_email_failed_bump_instance.sh
+timeout 30s $POETRY run python bump_instance.py
+
+if [ $? -ne 0 ]; then
+    echo "Failed to bump instance"
+    ./send_email_failed_bump_instance.sh
+    exit 1
+fi
