@@ -14,4 +14,4 @@ else
     fi
 fi
 
-$POETRY run python feed_bulk_from_db.py || ./send_email_failed_bulk_prices.sh
+timeout 30s $POETRY run python feed_bulk_from_db.py || ./send_email_failed_bulk_prices.sh
