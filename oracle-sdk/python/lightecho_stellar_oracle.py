@@ -22,7 +22,7 @@ from stellar_sdk.xdr.sc_val_type import SCValType
 AssetType = Literal["stellar", "other"]
 Network = Literal["standalone", "futurenet", "testnet", "public", "custom"]
 
-TESTNET_CONTRACT_XLM = "CA335SIV2XT6OC3SOUTZBHTX5IXMFO3WYBD3NNVBP37JXX4FXFNF5CI6"
+TESTNET_CONTRACT_XLM = "CA76BOADOXD5N37TNYS3IT5LUDSUPBVKXR5CZRYTCYEJISQAM47ZO6EY"
 TESTNET_CONTRACT_USD = ""  # not deployed yet
 
 DECIMAL_PLACES_DIVIDER = Decimal(10**18)
