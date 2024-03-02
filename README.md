@@ -152,7 +152,8 @@ Go to `~/.config/systemd/user/` and update the `.service` files (that you copied
 ...
 
 [Service]
-ExecStart=/path/to/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/bump_instance.sh   # <- replace /path/to/ with the correct path
+# replace /path/to/ with the correct path
+ExecStart=/path/to/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/bump_instance.sh
 
 ...
 ```
