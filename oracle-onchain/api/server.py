@@ -1,5 +1,6 @@
 import base64
 from decimal import Decimal
+import json
 import importlib.util
 from pathlib import Path
 from subprocess import check_output
@@ -22,6 +23,7 @@ sys.modules["local_settings"] = local_settings
 assert mod_spec.loader
 mod_spec.loader.exec_module(local_settings)
 
+LATEST_PRICES_JSON_FILE_PATH = Path(__file__).parent.resolve() / "latest_prices.json"
 
 auth = HTTPBasicAuth()
 auth.error_handler(lambda status: ({"error": "Unauthorized"}, status))
@@ -229,10 +231,12 @@ def api_db_add_prices():
             "error": "The payload must be a list, each item of the list being a price entry object"
         }, 400
     api_username = get_auth_basic_username(request)
+    items = []
     with cursor_ctx() as cursor:
         for item in data:
             item_values = dict(item)
             item_values["api_username"] = api_username
+            items.append(item_values)
             cursor.execute(
                 """
             INSERT INTO prices (
@@ -263,6 +267,8 @@ def api_db_add_prices():
             """,
                 item_values,
             )
+    with open(LATEST_PRICES_JSON_FILE_PATH, "w") as json_file:
+        json.dump(data, json_file)
     return {
         "success": True,
         "feed_bulk_from_db_latest_log": get_feed_bulk_from_db_latest_log(),
@@ -272,26 +278,8 @@ def api_db_add_prices():
 @app.route("/db/get-prices/", methods=["GET", "OPTIONS"])
 @auth.login_required
 def api_db_get_prices():
-    query = """
-        SELECT *
-        FROM prices
-        ORDER BY created_at DESC
-    """
-    with cursor_ctx() as cursor:
-        cursor.execute(query)
-        prices_from_db = []
-        symbols = {}
-
-        for price in cursor.fetchall():
-            prices_from_db.append(dict(price))
-
-        prices_response = []
-        for price in prices_from_db:
-            if price["source"] not in symbols:
-                symbols[price["source"]] = []
-            if price["symbol"] in symbols[price["source"]]:
-                continue
-            symbols[price["source"]].append(price["symbol"])
-            prices_response.append(price)
-
-        return {"prices": prices_response}
+    with open(LATEST_PRICES_JSON_FILE_PATH, "r") as json_file:
+        data = json.load(json_file)
+    return {
+        "prices": data,
+    }
