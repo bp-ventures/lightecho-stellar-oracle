@@ -594,6 +594,8 @@ class OracleClient:
         deployer = OracleDeployer(
             signer=self.signer,
             network=self.network,  # type: ignore
+            custom_network_passphrase=self.network_passphrase,
+            custom_rpc_url=self.rpc_server_url,
             wait_tx_interval=self.wait_tx_interval,
             tx_timeout=self.tx_timeout,
         )
