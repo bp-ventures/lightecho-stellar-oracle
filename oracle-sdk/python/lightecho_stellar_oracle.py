@@ -102,6 +102,8 @@ class OracleClient:
             contract_id (str): The contract ID.
             signer (Keypair): The keypair used to sign transactions.
             network (Network): The Stellar network to connect to (e.g., "standalone", "futurenet", "testnet", "public").
+            custom_rpc_url (str, optional): The custom RPC server URL. Default is None.
+            custom_network_passphrase (str, optional): The custom network passphrase. Default is None.
             wait_tx_interval (int, optional): The interval to wait for a transaction (in seconds). Default is 3 seconds.
             tx_timeout (int, optional): The transaction timeout (in seconds). Default is 30 seconds.
             decimal_places (int, optional): The number of decimal places for prices. Default is 18.
@@ -786,6 +788,8 @@ class OracleDeployer:
         *,
         signer: Keypair,
         network: Network,
+        custom_rpc_url: Optional[str] = None,
+        custom_network_passphrase: Optional[str] = None,
         wait_tx_interval: int = 3,
         tx_timeout: int = 30,
     ):
@@ -795,6 +799,8 @@ class OracleDeployer:
         Args:
             signer (Keypair): The keypair used to sign transactions.
             network (Network): The Stellar network to connect to (e.g., "futurenet", "testnet", "public").
+            custom_rpc_url (str, optional): The custom RPC server URL. Default is None.
+            custom_network_passphrase (str, optional): The custom network passphrase. Default is None.
             wait_tx_interval (int, optional): The interval to wait for a transaction (in seconds). Default is 3 seconds.
             tx_timeout (int, optional): The transaction timeout (in seconds). Default is 30 seconds.
 
@@ -814,6 +820,15 @@ class OracleDeployer:
         elif network == "public":
             self.network_passphrase = StellarSdkNetwork.PUBLIC_NETWORK_PASSPHRASE
             self.rpc_server_url = "https://rpc.stellar.org:443/"
+        elif network == "custom":
+            if custom_rpc_url is None:
+                raise ValueError("custom_rpc_url is required for custom network")
+            if custom_network_passphrase is None:
+                raise ValueError(
+                    "custom_network_passphrase is required for custom network"
+                )
+            self.network_passphrase = custom_network_passphrase
+            self.rpc_server_url = custom_rpc_url
         self.server = SorobanServer(self.rpc_server_url)
         self.signer = signer
         self.wait_tx_interval = wait_tx_interval
