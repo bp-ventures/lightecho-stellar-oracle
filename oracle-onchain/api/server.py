@@ -1,6 +1,7 @@
 import base64
 from decimal import Decimal
 import json
+import logging
 from datetime import datetime
 import pytz
 import os
@@ -239,6 +240,7 @@ def file_modified_timestamp(file_path: str | Path) -> datetime:
 @app.route("/db/add-prices/", methods=["POST", "OPTIONS"])
 @auth.login_required
 def api_db_add_prices():
+    logging.info(f"{request.method} {request.url} {request.json}")
     data = request.json
     if not isinstance(data, list):
         return {
@@ -292,6 +294,7 @@ def api_db_add_prices():
 @app.route("/db/get-prices/", methods=["GET", "OPTIONS"])
 @auth.login_required
 def api_db_get_prices():
+    logging.info(f"{request.method} {request.url} {request.json}")
     with open(LATEST_PRICES_JSON_FILE_PATH, "r") as json_file:
         data = json.load(json_file)
     return {
