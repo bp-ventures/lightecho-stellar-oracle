@@ -32,9 +32,20 @@ poetry install
 Run server:
 
 ```
+ttm run --name server ./server.sh
+```
+
+For status/start/stop/logs the server:
+```
+ttm ls -a
+ttm stop server
+ttm start server
+ttm logs server
+```
+
+To run in development mode:
+```
 poetry run flask --app server run --reload
-# or
-poetry run gunicorn -w 4 server:app
 ```
 
 # Using the API
