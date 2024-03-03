@@ -295,6 +295,6 @@ def api_db_get_prices():
     with open(LATEST_PRICES_JSON_FILE_PATH, "r") as json_file:
         data = json.load(json_file)
     return {
-        "json_modified_at": file_modified_timestamp(LATEST_PRICES_JSON_FILE_PATH),
+        "json_modified_at": file_modified_timestamp(LATEST_PRICES_JSON_FILE_PATH).isoformat(),
         "prices": data,
     }
