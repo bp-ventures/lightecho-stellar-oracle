@@ -123,6 +123,22 @@ def handle_options():
         return Response()
 
 
+@app.after_request
+def log_response(response):
+    logging.info(
+        '%s - - [%s] "%s %s %s" %s'
+        % (
+            request.remote_addr,
+            request.method,
+            request.scheme,
+            request.full_path,
+            request.environ.get("SERVER_PROTOCOL"),
+            response.status,
+        )
+    )
+    return response
+
+
 def parse_symbol(symbol: Optional[str] = None):
     if symbol is None:
         return None, None, "Missing payload field 'symbol'"
@@ -250,7 +266,6 @@ def file_modified_timestamp(file_path: str | Path) -> datetime:
 @app.route("/db/add-prices/", methods=["POST", "OPTIONS"])
 @auth.login_required
 def api_db_add_prices():
-    logging.info(f"{request.method} {request.url}")
     data = request.json
     if not isinstance(data, list):
         return {
@@ -304,10 +319,11 @@ def api_db_add_prices():
 @app.route("/db/get-prices/", methods=["GET", "OPTIONS"])
 @auth.login_required
 def api_db_get_prices():
-    logging.info(f"{request.method} {request.url}")
     with open(LATEST_PRICES_JSON_FILE_PATH, "r") as json_file:
         data = json.load(json_file)
     return {
-        "json_modified_at": file_modified_timestamp(LATEST_PRICES_JSON_FILE_PATH).isoformat(),
+        "json_modified_at": file_modified_timestamp(
+            LATEST_PRICES_JSON_FILE_PATH
+        ).isoformat(),
         "prices": data,
     }
