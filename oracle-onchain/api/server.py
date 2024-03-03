@@ -1,6 +1,9 @@
 import base64
 from decimal import Decimal
 import json
+from datetime import datetime
+import pytz
+import os
 import importlib.util
 from pathlib import Path
 from subprocess import check_output
@@ -222,6 +225,17 @@ def get_enum_variable_name(enum_class, value):
     raise ValueError(f"Value {value} not found in the {enum_class.__name__} IntEnum.")
 
 
+def file_modified_timestamp(file_path: str | Path) -> datetime:
+    file_path = str(file_path)
+    if os.path.exists(file_path):
+        modified_timestamp = os.path.getmtime(file_path)
+        modified_datetime = datetime.utcfromtimestamp(modified_timestamp)
+        modified_datetime_utc = modified_datetime.replace(tzinfo=pytz.utc)
+        return modified_datetime_utc
+    else:
+        raise RuntimeError(f"File not found: {file_path}")
+
+
 @app.route("/db/add-prices/", methods=["POST", "OPTIONS"])
 @auth.login_required
 def api_db_add_prices():
@@ -281,5 +295,6 @@ def api_db_get_prices():
     with open(LATEST_PRICES_JSON_FILE_PATH, "r") as json_file:
         data = json.load(json_file)
     return {
+        "json_modified_at": file_modified_timestamp(LATEST_PRICES_JSON_FILE_PATH),
         "prices": data,
     }
