@@ -294,7 +294,7 @@ def api_db_add_prices():
 @app.route("/db/get-prices/", methods=["GET", "OPTIONS"])
 @auth.login_required
 def api_db_get_prices():
-    logging.info(f"{request.method} {request.url} {request.json}")
+    logging.info(f"{request.method} {request.url}")
     with open(LATEST_PRICES_JSON_FILE_PATH, "r") as json_file:
         data = json.load(json_file)
     return {
