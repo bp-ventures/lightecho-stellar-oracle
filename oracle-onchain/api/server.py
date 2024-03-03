@@ -213,6 +213,13 @@ def get_auth_basic_username(request):
     )
 
 
+def get_enum_variable_name(enum_class, value):
+    for name, member in enum_class.__members__.items():
+        if member.value == value:
+            return name
+    raise ValueError(f"Value {value} not found in the {enum_class.__name__} IntEnum.")
+
+
 @app.route("/db/add-prices/", methods=["POST", "OPTIONS"])
 @auth.login_required
 def api_db_add_prices():
@@ -262,8 +269,29 @@ def api_db_add_prices():
     }
 
 
-def get_enum_variable_name(enum_class, value):
-    for name, member in enum_class.__members__.items():
-        if member.value == value:
-            return name
-    raise ValueError(f"Value {value} not found in the {enum_class.__name__} IntEnum.")
+@app.route("/db/get-prices/", methods=["GET", "OPTIONS"])
+@auth.login_required
+def api_db_get_prices():
+    query = """
+        SELECT *
+        FROM prices
+        ORDER BY created_at DESC
+    """
+    with cursor_ctx() as cursor:
+        cursor.execute(query)
+        prices_from_db = []
+        symbols = {}
+
+        for price in cursor.fetchall():
+            prices_from_db.append(dict(price))
+
+        prices_response = []
+        for price in prices_from_db:
+            if price["source"] not in symbols:
+                symbols[price["source"]] = []
+            if price["symbol"] in symbols[price["source"]]:
+                continue
+            symbols[price["source"]].append(price["symbol"])
+            prices_response.append(price)
+
+        return {"prices": prices_response}
