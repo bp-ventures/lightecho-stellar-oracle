@@ -35,6 +35,11 @@ Run server:
 ttm run --name server ./server.sh
 ```
 
+To see log file:
+```
+tail ./data/server.log
+```
+
 For status/start/stop/logs the server:
 ```
 ttm ls -a

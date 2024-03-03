@@ -250,7 +250,7 @@ def file_modified_timestamp(file_path: str | Path) -> datetime:
 @app.route("/db/add-prices/", methods=["POST", "OPTIONS"])
 @auth.login_required
 def api_db_add_prices():
-    logging.info(f"{request.method} {request.url} {request.json}")
+    logging.info(f"{request.method} {request.url}")
     data = request.json
     if not isinstance(data, list):
         return {
