@@ -157,6 +157,8 @@ def get_latest_time_prices_were_added_to_blockchain():
     with cursor_ctx() as cursor:
         cursor.execute(query)
         row = cursor.fetchone()
+        if not row:
+            return None
         row_dict = dict(row)
         return row_dict["created_at"]
 
@@ -185,15 +187,19 @@ def read_prices_from_db():
         for price in cursor.fetchall():
             prices_from_db.append(dict(price))
 
-        last_time_prices_were_added_to_blockchain = (
-            get_latest_time_prices_were_added_to_blockchain().timestamp()
+
+        latest_time_prices_were_added_to_blockchain = get_latest_time_prices_were_added_to_blockchain()
+        if latest_time_prices_were_added_to_blockchain is None:
+            latest_time_prices_were_added_to_blockchain = datetime(1970, 1, 1)
+        last_time_prices_were_added_to_blockchain_timestamp = (
+            latest_time_prices_were_added_to_blockchain.timestamp()
         )
         current_unix_time = int(datetime.now().timestamp())
         closest_past_normalized_timestamp = get_closest_past_timestamp(
             current_unix_time, RESOLUTION
         )
         if (
-            last_time_prices_were_added_to_blockchain
+            last_time_prices_were_added_to_blockchain_timestamp
             >= closest_past_normalized_timestamp
         ):
             logger.info(
