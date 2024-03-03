@@ -61,7 +61,21 @@ See endpoints below for more detailed instructions and examples.
 ### Add prices to a deployed contract
 
 ```
-curl -X POST "http://localhost:5000/soroban/add-price/" \
+curl -X POST "http://localhost:5000/db/add-prices/" \
+  -H "Authorization: Basic a2V5OnZhbHVl" \
+  -H "Content-Type: application/json" \
+  --data-raw '{
+    "source": 2,
+    "symbol": "XLMUSDC",
+    "asset_type": "other",
+    "price": "1.2"
+  }'
+```
+
+### Get latest prices
+
+```
+curl -X POST "http://localhost:5000/db/get-prices/" \
   -H "Authorization: Basic a2V5OnZhbHVl" \
   -H "Content-Type: application/json" \
   --data-raw '{
