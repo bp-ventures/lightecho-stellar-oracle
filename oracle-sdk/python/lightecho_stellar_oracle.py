@@ -443,6 +443,15 @@ class OracleClient:
         """
         return self.invoke_and_parse("read_admin")  # type: ignore
 
+    def write_resolution(self, resolution: int) -> Tuple[str, None]:
+        """
+        Writes the resolution value to the contract.
+
+        Returns:
+            Tuple[str, None]: A tuple containing the transaction hash and None.
+        """
+        return self.invoke_and_parse("write_resolution", [scval.to_uint32(resolution)])  # type: ignore
+
     def sources(self) -> Tuple[str, List[int]]:
         """
         Retrieves the list of prices sources supported by the contract.
