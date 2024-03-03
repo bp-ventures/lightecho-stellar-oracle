@@ -27,6 +27,13 @@ sys.modules["local_settings"] = local_settings
 assert mod_spec.loader
 mod_spec.loader.exec_module(local_settings)
 
+CURRENT_DIR = Path(__file__).parent.resolve()
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    filename=str(CURRENT_DIR / "server.log"),
+)
+
 LATEST_PRICES_JSON_FILE_PATH = Path(__file__).parent.resolve() / "latest_prices.json"
 
 auth = HTTPBasicAuth()
