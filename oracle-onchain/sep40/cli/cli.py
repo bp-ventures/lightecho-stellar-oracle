@@ -120,6 +120,12 @@ def oracle_read_admin():
     print_contract_output(tx_hash, tx_data)
 
 
+@oracle_app.command("write_resolution", help="oracle: invoke write_resolution()")
+def oracle_write_resolution(resolution: int):
+    tx_hash, tx_data = state["admin_oracle_client"].write_resolution(resolution)
+    print_contract_output(tx_hash, tx_data)
+
+
 @oracle_app.command("sources", help="oracle: invoke sources()")
 def oracle_sources():
     tx_hash, tx_data = state["oracle_client"].sources()

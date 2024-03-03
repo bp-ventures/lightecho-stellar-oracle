@@ -18,6 +18,7 @@ pub trait LightOracleTrait {
     fn bump_instance(env: Env, ledgers_to_live: u32);
     fn write_admin(env: Env, id: Address);
     fn read_admin(env: Env) -> Option<Address>;
+    fn write_resolution(env: Env, resolution: u32);
     fn sources(env: Env) -> Vec<u32>;
     fn prices_by_source(
         env: Env,
@@ -82,6 +83,11 @@ impl LightOracleTrait for LightOracle {
 
     fn read_admin(env: Env) -> Option<Address> {
         return env.storage().instance().get(&ADMIN);
+    }
+
+    fn write_resolution(env: Env, resolution: u32) {
+        panic_if_not_admin(&env);
+        env.storage().instance().set(&RESOLUTION, &resolution);
     }
 
     fn sources(env: Env) -> Vec<u32> {
