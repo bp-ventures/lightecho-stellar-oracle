@@ -12,6 +12,7 @@ ORACLE_CONTRACT_ID = "" # empty by default, but you must put the oracle contract
 RPC_URL="https://my-custom-rpc.mydomain.com"
 NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
 HORIZON_URL="https://horizon-testnet.stellar.org"
+ADD_PRICES_SUCCESS_HEARTBEAT_URL="https://sm.hetrixtools.net/hb/?s=..."
 ```
 
 ```

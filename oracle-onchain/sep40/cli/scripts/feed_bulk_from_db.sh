@@ -17,6 +17,7 @@ fi
 timeout 120s $POETRY run python feed_bulk_from_db.py
 if [ $? -ne 0 ]; then
     echo "Failed to feed bulk prices from db"
-    ./send_email_failed_bulk_prices.sh
+    echo "Sending email to notify about failure..."
+    ./send_email_failed_bulk_prices.sh && echo "Sent email to notify about failure" || echo "Failed to send email to notify about failure"
     exit 1
 fi

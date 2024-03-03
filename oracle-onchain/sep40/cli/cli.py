@@ -10,6 +10,7 @@ from colorama import init as colorama_init
 from colorama import Fore
 from colorama import Style
 from lightecho_stellar_oracle import OracleClient
+import requests
 from stellar_sdk import Keypair
 from stellar_sdk import scval
 from stellar_sdk.soroban_server import SorobanServer
@@ -39,6 +40,7 @@ state = {
     "rpc_server_url": local_settings.RPC_URL,
     "network_passphrase": local_settings.NETWORK_PASSPHRASE,
     "horizon_url": local_settings.HORIZON_URL,
+    "add_prices_success_heartbeat_url": local_settings.ADD_PRICES_SUCCESS_HEARTBEAT_URL,
 }
 state["kp"] = Keypair.from_secret(state["source_secret"])
 state["admin_kp"] = Keypair.from_secret(state["admin_secret"])
@@ -212,6 +214,10 @@ def oracle_add_price(
     ]
     tx_hash, tx_data = state["admin_oracle_client"].add_prices(prices)
     print_contract_output(tx_hash, tx_data)
+    if state["add_prices_success_heartbeat_url"]:
+        requests.get(state["add_prices_success_heartbeat_url"])
+    else:
+        print_error("No ADD_PRICES_SUCCESS_HEARTBEAT_URL set")
 
 
 @oracle_app.command("add_prices_base64", help="oracle: invoke add_prices()")
