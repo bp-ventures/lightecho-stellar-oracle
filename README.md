@@ -1,11 +1,32 @@
 **Lightecho Oracle - Oracle smart contract for Soroban**
 
-Lightecho is a Stellar Oracle for emerging markets data and XLM volatility feeds.
+Lightecho is a Stellar Oracle for emerging markets data and XLM volatility feeds. Oracles are bridge technologies that connect blockchain systems with the outside world, enabling smart contracts to securely access external data. In the realm of Stellar, a platform designed for the fast and cost-efficient transfer of value across the globe, Lightecho Oracle emerges as a critical tool, especially for Soroban — Stellar's smart contracts platform.
+
+Lightecho is dedicated to delivering real-time, reliable market data and XLM volatility feeds, addressing a significant gap in emerging markets. These markets often face challenges such as limited access to traditional banking services and financial volatility. 
+
+**PRODUCTION** Official Contracts:
+- Base `XLM`: [CDOR3QD27WAAF4TK4MO33TGQXR6RPNANNVLOY277W2XVV6ZVJ6X6X42T](https://stellar.expert/explorer/public/contract/CDOR3QD27WAAF4TK4MO33TGQXR6RPNANNVLOY277W2XVV6ZVJ6X6X42T)
+- Base `USD`: `not deployed yet`
 
 **TESTNET** Official Contracts:
 
 - Base `XLM`: [CA335SIV2XT6OC3SOUTZBHTX5IXMFO3WYBD3NNVBP37JXX4FXFNF5CI6](https://stellar.expert/explorer/testnet/contract/CA335SIV2XT6OC3SOUTZBHTX5IXMFO3WYBD3NNVBP37JXX4FXFNF5CI6)
 - Base `USD`: `not deployed yet`
+
+## Roadmap
+
+- Complete JS examples ( playcode / fiddle updates)
+- Improve documentation
+- Deploy market data feeds for XLM/EUR, XLM/USD, XLM/ARS, XLM/BRL, XLM/NGN, XLM/NGN_2 and a test of XLM Vol and many more
+- Confirm prices resolution
+- Improved documentation
+- Bounty for usage
+- Soroban go live (pilot mode)
+- list of initially supported assets
+- updates as to data sources 
+- architecture and failover (currently a 2 + 1 model)
+- licensing
+
 
 This repository contains:
 
@@ -114,19 +135,9 @@ To fetch the last price of USD from Coinbase for example, you can use the CLI:
   More curious about the code structure? [See here](https://github.com/bp-ventures/lightecho-stellar-oracle/blob/1377a5ed8270fdd89e0b183ba0007fd6b91d36ae/oracle-onchain/sep40/contract/src/utils.rs#L35) how we generate the ledger key for a given price.
 - **January 2024:** Second official launch of the Oracle, now using the new lightweight
   structure to store the prices.
+ **March 5 2024:** Lauched the smart contract in Production Pilot [See here] (https://stellar.expert/explorer/public/tx/c74242b939e6d7b492d1297d239807b2cf766d7c1bfaa0286e9ffef63bfb3b9e)
+  
 
-## Roadmap
-
-- Complete JS examples
-- Improve documentation
-- Deploy market data feeds for XLM/EUR, XLM/USD, XLM/ARS, XLM/BRL, XLM/NGN, XLM/NGN_2 and a test of XLM Vol
-- Confirm prices resolution
-- Improved documentation
-- Uptime monitoring for feeds
-- Diversity of feeds (2+ organizations)
-- Bounty for usage
-- Soroban go live (pilot mode)
-- Soroban Production```
 
 #### (For BPV developer) Install the price feed script
 
