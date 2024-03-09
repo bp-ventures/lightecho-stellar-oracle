@@ -1,17 +1,18 @@
 **Lightecho Oracle contract Rust source code**
 
+Lightecho is a Stellar Oracle for emerging markets data and XLM volatility feeds.
+
 For more information see docs at https://github.com/bp-ventures/lightecho-stellar-oracle
 
 **TESTNET** Official Contracts:
 
-- Base `XLM`:
-  ```
-  CA335SIV2XT6OC3SOUTZBHTX5IXMFO3WYBD3NNVBP37JXX4FXFNF5CI6
-  ```
-- Base `USD`:
-  ```
-  not deployed yet
-  ```
+- Base `XLM`: [CA335SIV2XT6OC3SOUTZBHTX5IXMFO3WYBD3NNVBP37JXX4FXFNF5CI6](https://stellar.expert/explorer/testnet/contract/CA335SIV2XT6OC3SOUTZBHTX5IXMFO3WYBD3NNVBP37JXX4FXFNF5CI6)
+- Base `USD`: `not deployed yet`
+
+**PUBLIC** Official Contracts:
+
+- Base `XLM`: [CDOR3QD27WAAF4TK4MO33TGQXR6RPNANNVLOY277W2XVV6ZVJ6X6X42T](https://stellar.expert/explorer/public/contract/CDOR3QD27WAAF4TK4MO33TGQXR6RPNANNVLOY277W2XVV6ZVJ6X6X42T)
+- Base `USD`: `not deployed yet`
 
 # Consuming the Oracle from another Soroban contract
 
