@@ -8,7 +8,7 @@
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Vec};
 
 use crate::constants::{
-    ADMIN, ASSETS, BASE_ASSET, DECIMALS, LAST_TIMESTAMP, RESOLUTION, SOURCES, TEMPORARY_KEY_TTL,
+    ADMIN, ASSETS, BASE_ASSET, DECIMALS, LAST_TIMESTAMP, RESOLUTION, SOURCES, TEMPORARY_KEY_TTL, TOPIC_LIGHTECHO, TOPIC_NEW_PRICES,
 };
 use crate::types::{Asset, InternalAsset, InternalPrice, PriceData};
 use crate::utils::{get_asset_as_u32, set_asset_as_u32, to_price_data_key};
@@ -235,6 +235,7 @@ impl LightOracleTrait for LightOracle {
             None => panic!("SOURCES is not initialized"),
         };
         let mut highest_timestamp = 0;
+        let mut added_prices = Vec::<PriceData>::new(&env);
         for price in prices {
             if !storage_assets.contains(&price.asset) {
                 storage_assets.push_back(price.asset.clone());
@@ -245,12 +246,14 @@ impl LightOracleTrait for LightOracle {
             }
 
             let key = to_price_data_key(price.source, price.asset_u32, price.timestamp);
+            let price_data = PriceData::new(price.price, price.timestamp);
             env.storage()
                 .temporary()
-                .set(&key, &PriceData::new(price.price, price.timestamp));
+                .set(&key, &price_data);
             env.storage()
                 .temporary()
                 .extend_ttl(&key, TEMPORARY_KEY_TTL, TEMPORARY_KEY_TTL);
+            added_prices.push_back(price_data);
             if price.timestamp > highest_timestamp {
                 highest_timestamp = price.timestamp;
             }
@@ -261,6 +264,8 @@ impl LightOracleTrait for LightOracle {
         env.storage()
             .instance()
             .set(&LAST_TIMESTAMP, &highest_timestamp);
+
+        env.events().publish((TOPIC_LIGHTECHO, TOPIC_NEW_PRICES), added_prices);
     }
 
     /// A more lightweight version of add_prices that does not update the
