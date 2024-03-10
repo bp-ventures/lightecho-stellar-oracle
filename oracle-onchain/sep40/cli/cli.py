@@ -29,8 +29,10 @@ MAX_DECIMAL_PLACES = 18
 
 colorama_init()
 oracle_app = typer.Typer()
+rpc_app = typer.Typer()
 app = typer.Typer()
 app.add_typer(oracle_app, name="oracle")
+app.add_typer(rpc_app, name="rpc")
 
 state = {
     "verbose": False,
@@ -77,6 +79,19 @@ def print_contract_output(tx_hash, tx_data):
     print(f"{state['horizon_url']}/transactions/{tx_hash}")
     print()
     print("Success!")
+
+
+def perform_rpc_request(payload: dict):
+    resp = requests.post(
+        state["rpc_server_url"],
+        json=payload,
+    )
+    if resp.status_code > 299:
+        abort(
+            f"Failed to perform RPC request: status={resp.status_code} response={resp.text}"
+        )
+        return
+    print(json.dumps(resp.json(), indent=2))
 
 
 def build_asset_enum(asset_type: AssetType, asset: str):
@@ -224,7 +239,7 @@ def oracle_add_price(
 def oracle_add_prices_base64(
     prices_base64: str = typer.Argument(
         ...,
-        help='A base64-encoded JSON list of prices. Each item in the list must be a dictionary, example: {"source": 0, "asset_type": "other", "asset": "USD", "price": "1.00", timestamp: 12345678}',
+        help='A base64-encoded JSON list of prices. Each item in the list must be a dictionary, example: {"source": 0, "asset_type": "other", "asset": "USD", "price": "1.00", "timestamp": 12345678}',
     )
 ):
     decoded_bytes = base64.b64decode(prices_base64)
@@ -301,6 +316,34 @@ def oracle_update_contract(
         wasm_bytes = f.read()
     tx_hash, tx_data = state["admin_oracle_client"].update_contract(wasm_bytes)
     print_contract_output(tx_hash, tx_data)
+
+
+@rpc_app.command("get_latest_ledger", help="invoke RPC getLatestLedger()")
+def rpc_get_latest_ledger():
+    perform_rpc_request({"jsonrpc": "2.0", "id": 1, "method": "getLatestLedger"})
+
+
+@rpc_app.command("get_events", help="invoke RPC getEvents()")
+def rpc_get_events(
+    start_ledger: int, pagination_limit: Optional[int] = 2
+):
+    perform_rpc_request(
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getEvents",
+            "params": {
+                "startLedger": start_ledger,
+                "filters": [
+                    {
+                        "type": "contract",
+                        "contractIds": [state["oracle_contract_id"]],
+                    }
+                ],
+                "pagination": {"limit": pagination_limit},
+            },
+        }
+    )
 
 
 @app.callback()
