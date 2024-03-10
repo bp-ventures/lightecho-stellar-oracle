@@ -224,7 +224,7 @@ def oracle_add_price(
 def oracle_add_prices_base64(
     prices_base64: str = typer.Argument(
         ...,
-        help='A base64-encoded JSON list of prices. Each item in the list must be a dictionary, example: {"source": 0, "asset_type": "other", "asset": "USD", "price": "1.00", timestamp: 12345678}',
+        help='A base64-encoded JSON list of prices. Each item in the list must be a dictionary, example: {"source": 0, "asset_type": "other", "asset": "USD", "price": "1.00", "timestamp": 12345678}',
     )
 ):
     decoded_bytes = base64.b64decode(prices_base64)
