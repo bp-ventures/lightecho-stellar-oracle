@@ -35,7 +35,7 @@ This repository contains:
     - [Visit web app](https://bp-ventures.github.io/lightecho-stellar-oracle/)
     - [Web app source code](./docs/v2.html)
   - [Python-based CLI](./oracle-onchain/sep40/cli)
-  - [(outdated) A JS fiddle for testing and debugging the contract calls](https://playcode.io/1678393)
+  - [A JS fiddle for testing and debugging the contract calls](https://playcode.io/1794896)
   - [(outdated) Example on how to use the Oracle from a consumer contract (in Rust)](./oracle-onchain/sep40/examples/price_up_down)
 - Developer tools
   - [Python SDK](./oracle-sdk/python)
