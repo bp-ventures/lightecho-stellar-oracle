@@ -268,6 +268,8 @@ class OracleClient:
             return self.parse_sc_vec(sc_val.vec)
         if sc_val.sym is not None:
             return sc_val.sym.sc_symbol.decode()
+        if sc_val.address is not None:
+            return Address.from_xdr_sc_address(sc_val.address).address
         raise ValueError("Could not parse sc_val")
 
     def parse_sc_vec(self, sc_vec):
