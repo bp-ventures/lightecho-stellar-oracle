@@ -655,7 +655,7 @@ class OracleClient:
         tx_hash, result = self.invoke_and_parse("base")
         if result[0] == "Other":  # type: ignore
             asset = Asset({"asset_type": "other", "asset": result[1]})  # type: ignore
-        elif result[1] == "Stellar":  # type: ignore
+        elif result[0] == "Stellar":  # type: ignore
             asset = Asset({"asset_type": "stellar", "asset": result[1]})  # type: ignore
         else:
             raise ValueError(f"Unexpected asset type: {result[1]}")  # type: ignore
@@ -673,7 +673,7 @@ class OracleClient:
         for result in results:  # type: ignore
             if result[0] == "Other":  # type: ignore
                 asset = Asset({"asset_type": "other", "asset": result[1]})  # type: ignore
-            elif result[1] == "Stellar":  # type: ignore
+            elif result[0] == "Stellar":  # type: ignore
                 asset = Asset({"asset_type": "stellar", "asset": result[1]})  # type: ignore
             else:
                 raise ValueError(f"Unexpected asset type: {result[1]}")  # type: ignore
