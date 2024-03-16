@@ -28,7 +28,6 @@ TESTNET_CONTRACT_USD = ""  # not deployed yet
 PUBLIC_CONTRACT_XLM = "CDOR3QD27WAAF4TK4MO33TGQXR6RPNANNVLOY277W2XVV6ZVJ6X6X42T"
 PUBLIC_CONTRACT_USD = ""  # not deployed yet
 
-DECIMAL_PLACES_DIVIDER = Decimal(10**18)
 ASSETS_TO_ASSET_U32: Dict[Tuple, int] = {
     ("other", "ARST"): 0,
     ("other", "AUDD"): 1,
@@ -148,6 +147,7 @@ class OracleClient:
         self.wait_tx_interval = wait_tx_interval
         self.tx_timeout = tx_timeout
         self.decimal_places = decimal_places
+        self.decimal_places_divider = 10**decimal_places
 
     def build_asset_enum(self, asset_type: AssetType, asset: str):
         if asset_type == "stellar":
@@ -493,7 +493,7 @@ class OracleClient:
         for price in prices:  # type: ignore
             results.append(
                 {
-                    "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),
+                    "price": str(Decimal(price["price"]) / self.decimal_places_divider),
                     "timestamp": price["timestamp"],
                 }
             )
@@ -524,7 +524,7 @@ class OracleClient:
         )
         if price is not None:
             price = {
-                "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),  # type: ignore
+                "price": str(Decimal(price["price"]) / self.decimal_places_divider),  # type: ignore
                 "timestamp": price["timestamp"],  # type: ignore
             }
         return tx_hash, price  # type: ignore
@@ -552,7 +552,7 @@ class OracleClient:
         )
         if price is not None:
             price = {
-                "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),  # type: ignore
+                "price": str(Decimal(price["price"]) / self.decimal_places_divider),  # type: ignore
                 "timestamp": price["timestamp"],  # type: ignore
             }
         return tx_hash, price  # type: ignore
@@ -724,7 +724,7 @@ class OracleClient:
         )
         if price is not None:
             price = {
-                "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),  # type: ignore
+                "price": str(Decimal(price["price"]) / self.decimal_places_divider),  # type: ignore
                 "timestamp": price["timestamp"],  # type: ignore
             }
         return tx_hash, price  # type: ignore
@@ -754,7 +754,7 @@ class OracleClient:
         for price in prices:  # type: ignore
             results.append(
                 {
-                    "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),
+                    "price": str(Decimal(price["price"]) / self.decimal_places_divider),
                     "timestamp": price["timestamp"],
                 }
             )
@@ -783,7 +783,7 @@ class OracleClient:
         )
         if price is not None:
             price = {
-                "price": str(Decimal(price["price"]) / DECIMAL_PLACES_DIVIDER),  # type: ignore
+                "price": str(Decimal(price["price"]) / self.decimal_places_divider),  # type: ignore
                 "timestamp": price["timestamp"],  # type: ignore
             }
         return tx_hash, price  # type: ignore
