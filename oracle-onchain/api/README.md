@@ -29,6 +29,11 @@ Install dependencies:
 poetry install
 ```
 
+Install `ttm` task manager:
+```
+pip install -U ttm
+```
+
 Run server:
 
 ```
