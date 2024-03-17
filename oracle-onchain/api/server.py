@@ -319,6 +319,9 @@ def api_db_add_prices():
 @app.route("/db/get-prices/", methods=["GET", "OPTIONS"])
 @auth.login_required
 def api_db_get_prices():
+    """
+    Return latest prices added to the blockchain contract
+    """
     with open(LATEST_PRICES_JSON_FILE_PATH, "r") as json_file:
         data = json.load(json_file)
     return {
@@ -327,3 +330,26 @@ def api_db_get_prices():
         ).isoformat(),
         "prices": data,
     }
+
+
+@app.route("/db/all-prices/", methods=["GET", "OPTIONS"])
+@auth.login_required
+def api_db_all_prices():
+    """
+    Return all prices in the database. Symbols are unique, so the latest price for each symbol is returned.
+    """
+    query = """
+        SELECT p.*
+        FROM prices p
+        INNER JOIN (
+            SELECT symbol, MAX(created_at) AS max_created_at
+            FROM prices
+            GROUP BY symbol
+        ) latest_prices
+        ON p.symbol = latest_prices.symbol AND p.created_at = latest_prices.max_created_at
+    """
+    prices = []
+    with cursor_ctx() as cursor:
+        cursor.execute(query)
+        prices = [dict(row) for row in cursor.fetchall()]
+    return {"prices": prices}
