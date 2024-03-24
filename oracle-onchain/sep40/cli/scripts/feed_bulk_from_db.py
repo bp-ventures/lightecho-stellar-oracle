@@ -12,6 +12,7 @@ from typing import List, Dict, Tuple
 from pathlib import Path
 
 RESOLUTION = 600
+EXIT_CODE_INSUFFICIENT_BALANCE = 2
 
 mod_spec = importlib.util.spec_from_file_location(
     "local_settings", Path(__file__).resolve().parent.parent / "local_settings.py"
@@ -36,13 +37,13 @@ logging.basicConfig(
 logger = logging.getLogger("feed_bulk_from_db.py")
 
 
-def run_cli(cmd: str) -> Tuple[bool, str]:
+def run_cli(cmd: str) -> Tuple[int, str]:
     try:
-        return True, subprocess.check_output(
+        return 0, subprocess.check_output(
             f"./cli {cmd}", shell=True, text=True, cwd=cli_dir, stderr=subprocess.STDOUT
         )
     except subprocess.CalledProcessError as e:
-        return False, e.output
+        return e.returncode, e.output
 
 
 @contextmanager
@@ -124,16 +125,14 @@ def add_prices_to_blockchain(prices: List[Dict], timestamp: int):
     if xlm_based_prices:
         cmd = f"--oracle-contract-id {local_settings.ORACLE_CONTRACT_ID} oracle add_prices_base64 {list_to_base64(xlm_based_prices)}"
         logger.info(f"cli.py {cmd}")
-        success, output = run_cli(cmd)
+        returncode, output = run_cli(cmd)
         logger.info(output)
-        log_result_to_db(cmd, success, output)
+        if returncode == EXIT_CODE_INSUFFICIENT_BALANCE:
+            sys.exit(EXIT_CODE_INSUFFICIENT_BALANCE)
+        is_success = returncode == 0
+        log_result_to_db(cmd, is_success, output)
     if usd_based_prices:
         raise ValueError("USD-based prices are not supported yet")
-        #cmd = f"--oracle-contract-id {TESTNET_CONTRACT_USD} oracle add_prices_base64 {list_to_base64(usd_based_prices)}"
-        #logger.info(f"cli.py {cmd}")
-        #success, output = run_cli(cmd)
-        #logger.info(output)
-        #log_result_to_db(cmd, success, output)
     for source, symbols in source_symbols.items():
         mark_symbols_as_added_to_blockchain(source, symbols)
 
@@ -187,8 +186,9 @@ def read_prices_from_db():
         for price in cursor.fetchall():
             prices_from_db.append(dict(price))
 
-
-        latest_time_prices_were_added_to_blockchain = get_latest_time_prices_were_added_to_blockchain()
+        latest_time_prices_were_added_to_blockchain = (
+            get_latest_time_prices_were_added_to_blockchain()
+        )
         if latest_time_prices_were_added_to_blockchain is None:
             latest_time_prices_were_added_to_blockchain = datetime(1970, 1, 1)
         last_time_prices_were_added_to_blockchain_timestamp = (

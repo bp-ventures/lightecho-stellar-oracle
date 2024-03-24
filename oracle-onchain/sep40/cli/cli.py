@@ -4,12 +4,12 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
-from typing import Optional
+from typing import NoReturn, Optional
 
 from colorama import init as colorama_init
 from colorama import Fore
 from colorama import Style
-from lightecho_stellar_oracle import OracleClient
+from lightecho_stellar_oracle import InsufficientBalance, OracleClient
 import requests
 from stellar_sdk import Keypair
 from stellar_sdk import scval
@@ -26,6 +26,7 @@ assert mod_spec.loader
 mod_spec.loader.exec_module(local_settings)
 
 MAX_DECIMAL_PLACES = 18
+EXIT_CODE_INSUFFICIENT_BALANCE = 2
 
 colorama_init()
 oracle_app = typer.Typer()
@@ -62,9 +63,9 @@ def print_error(msg: str):
     print(Fore.RED + msg + Style.RESET_ALL)
 
 
-def abort(msg: str):
+def abort(msg: str, exit_code: int = 1) -> NoReturn:
     print_error(msg)
-    raise typer.Exit(1)
+    raise typer.Exit(exit_code)
 
 
 def vprint(msg: str):
@@ -90,8 +91,36 @@ def perform_rpc_request(payload: dict):
         abort(
             f"Failed to perform RPC request: status={resp.status_code} response={resp.text}"
         )
-        return
     print(json.dumps(resp.json(), indent=2))
+
+
+def invoke_oracle_client_function_and_print_output(function_name, *args, **kwargs):
+    """
+    Wraps the invocation of an OracleClient function and prints the output.
+    Handles specific exceptions and exits with the appropriate code.
+    """
+    try:
+        tx_hash, tx_data = getattr(state["oracle_client"], function_name)(
+            *args, **kwargs
+        )
+    except InsufficientBalance:
+        abort(f"Insufficient XLM balance", EXIT_CODE_INSUFFICIENT_BALANCE)
+    print_contract_output(tx_hash, tx_data)
+
+
+def invoke_oracle_admin_function_and_print_output(function_name, *args, **kwargs):
+    """
+    Wraps the invocation of an OracleClient admin function and prints the
+    output.
+    Handles specific exceptions and exits with the appropriate code.
+    """
+    try:
+        tx_hash, tx_data = getattr(state["admin_oracle_client"], function_name)(
+            *args, **kwargs
+        )
+    except InsufficientBalance:
+        abort(f"Insufficient XLM balance", EXIT_CODE_INSUFFICIENT_BALANCE)
+    print_contract_output(tx_hash, tx_data)
 
 
 def build_asset_enum(asset_type: AssetType, asset: str):
@@ -105,14 +134,14 @@ def build_asset_enum(asset_type: AssetType, asset: str):
 
 @oracle_app.command("initialize", help="oracle: invoke initialize()")
 def oracle_initialize(admin: str, base: str, decimals: int, resolution: int):
-    tx_hash, tx_data = state["oracle_client"].initialize(
+    invoke_oracle_client_function_and_print_output(
+        "initialize",
         admin,
         "other",
         base,
         decimals,
         resolution,
     )
-    print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("bump_instance", help="oracle: invoke bump_instance()")
@@ -122,8 +151,7 @@ def oracle_bump_instance(
         help="Number of ledgers to live",
     ),
 ):
-    tx_hash, tx_data = state["oracle_client"].bump_instance(ledgers_to_live)
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_client_function_and_print_output("bump_instance", ledgers_to_live)
 
 
 @oracle_app.command("write_admin", help="oracle: invoke write_admin()")
@@ -133,20 +161,17 @@ def oracle_write_admin():
 
 @oracle_app.command("read_admin", help="oracle: invoke read_admin()")
 def oracle_read_admin():
-    tx_hash, tx_data = state["oracle_client"].read_admin()
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_client_function_and_print_output("read_admin")
 
 
 @oracle_app.command("write_resolution", help="oracle: invoke write_resolution()")
 def oracle_write_resolution(resolution: int):
-    tx_hash, tx_data = state["admin_oracle_client"].write_resolution(resolution)
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_admin_function_and_print_output("write_resolution", resolution)
 
 
 @oracle_app.command("sources", help="oracle: invoke sources()")
 def oracle_sources():
-    tx_hash, tx_data = state["oracle_client"].sources()
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_client_function_and_print_output("sources")
 
 
 @oracle_app.command("prices_by_source", help="oracle: invoke prices_by_source()")
@@ -156,13 +181,13 @@ def oracle_prices_by_source(
     asset: str,
     records: int,
 ):
-    tx_hash, tx_data = state["oracle_client"].prices_by_source(
+    invoke_oracle_client_function_and_print_output(
+        "prices_by_source",
         source,
         asset_type.name,
         asset,
         records,
     )
-    print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("price_by_source", help="oracle: invoke prices_by_source")
@@ -172,13 +197,13 @@ def oracle_price_by_source(
     asset: str,
     timestamp: int,
 ):
-    tx_hash, tx_data = state["oracle_client"].price_by_source(
+    invoke_oracle_client_function_and_print_output(
+        "price_by_source",
         source,
         asset_type.name,
         asset,
         timestamp,
     )
-    print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("lastprice_by_source", help="oracle: invoke lastprice_by_source")
@@ -187,12 +212,12 @@ def oracle_lastprice_by_source(
     asset_type: AssetType,
     asset: str,
 ):
-    tx_hash, tx_data = state["oracle_client"].lastprice_by_source(
+    invoke_oracle_client_function_and_print_output(
+        "lastprice_by_source",
         source,
         asset_type.name,
         asset,
     )
-    print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("add_price", help="oracle: invoke add_prices()")
@@ -227,8 +252,7 @@ def oracle_add_price(
             "timestamp": timestamp,
         }
     ]
-    tx_hash, tx_data = state["admin_oracle_client"].add_prices(prices)
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_admin_function_and_print_output("add_prices", prices)
     if state["add_prices_success_heartbeat_url"]:
         requests.get(state["add_prices_success_heartbeat_url"])
     else:
@@ -244,32 +268,27 @@ def oracle_add_prices_base64(
 ):
     decoded_bytes = base64.b64decode(prices_base64)
     decoded_list = json.loads(decoded_bytes)
-    tx_hash, tx_data = state["admin_oracle_client"].add_prices(decoded_list)
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_admin_function_and_print_output("add_prices", decoded_list)
 
 
 @oracle_app.command("base", help="oracle: invoke base()")
 def oracle_base():
-    tx_hash, tx_data = state["oracle_client"].base()
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_client_function_and_print_output("base")
 
 
 @oracle_app.command("assets", help="oracle: invoke assets()")
 def oracle_assets():
-    tx_hash, tx_data = state["oracle_client"].assets()
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_client_function_and_print_output("assets")
 
 
 @oracle_app.command("decimals", help="oracle: invoke decimals()")
 def oracle_decimals():
-    tx_hash, tx_data = state["oracle_client"].decimals()
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_client_function_and_print_output("decimals")
 
 
 @oracle_app.command("resolution", help="oracle: invoke resolution()")
 def oracle_resolution():
-    tx_hash, tx_data = state["oracle_client"].resolution()
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_client_function_and_print_output("resolution")
 
 
 @oracle_app.command("price", help="oracle: invoke price()")
@@ -278,22 +297,22 @@ def oracle_price(
     asset: str,
     timestamp: int,
 ):
-    tx_hash, tx_data = state["oracle_client"].price(
+    invoke_oracle_client_function_and_print_output(
+        "price",
         asset_type.name,
         asset,
         timestamp,
     )
-    print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("prices", help="oracle: invoke prices()")
 def oracle_prices(asset_type: AssetType, asset: str, records: int):
-    tx_hash, tx_data = state["oracle_client"].prices(
+    invoke_oracle_client_function_and_print_output(
+        "prices",
         asset_type.name,
         asset,
         records,
     )
-    print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("lastprice", help="oracle: invoke lastprice()")
@@ -301,11 +320,11 @@ def oracle_lastprice(
     asset_type: AssetType,
     asset: str,
 ):
-    tx_hash, tx_data = state["oracle_client"].lastprice(
+    invoke_oracle_client_function_and_print_output(
+        "lastprice",
         asset_type.name,
         asset,
     )
-    print_contract_output(tx_hash, tx_data)
 
 
 @oracle_app.command("update_contract", help="oracle: invoke update_contract()")
@@ -314,8 +333,7 @@ def oracle_update_contract(
 ):
     with open(wasm_file, "rb") as f:
         wasm_bytes = f.read()
-    tx_hash, tx_data = state["admin_oracle_client"].update_contract(wasm_bytes)
-    print_contract_output(tx_hash, tx_data)
+    invoke_oracle_admin_function_and_print_output("update_contract", wasm_bytes)
 
 
 @rpc_app.command("get_latest_ledger", help="invoke RPC getLatestLedger()")
@@ -324,9 +342,7 @@ def rpc_get_latest_ledger():
 
 
 @rpc_app.command("get_events", help="invoke RPC getEvents()")
-def rpc_get_events(
-    start_ledger: int, pagination_limit: Optional[int] = 2
-):
+def rpc_get_events(start_ledger: int, pagination_limit: Optional[int] = 2):
     perform_rpc_request(
         {
             "jsonrpc": "2.0",
