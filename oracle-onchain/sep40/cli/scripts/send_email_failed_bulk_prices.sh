@@ -3,9 +3,9 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR" || exit
 
-local FEED_EXIT_CODE=$1
-local SUBJECT
-local BODY
+FEED_EXIT_CODE=$1
+SUBJECT=""
+BODY=""
 
 if [[ $FEED_EXIT_CODE == 2 ]]; then
     SUBJECT="Oracle feed failed: insufficient XLM balance"
