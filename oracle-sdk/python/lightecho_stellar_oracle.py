@@ -1,3 +1,4 @@
+import binascii
 from decimal import Decimal
 import logging
 import time
@@ -64,6 +65,12 @@ ASSETS_TO_ASSET_U32: Dict[Tuple, int] = {
 
 class AssetU32NotFound(Exception):
     pass
+
+
+class InsufficientBalance(Exception):
+    def __init__(self, message, tx_data):
+        super().__init__(message)
+        self.tx_data = tx_data
 
 
 class Price(TypedDict):
@@ -157,6 +164,23 @@ class OracleClient:
         else:
             return ValueError(f"unexpected asset_type: {asset_type}")
 
+    def is_insufficient_balance_transaction_data(self, tx_data):
+        error_result_xdr = getattr(tx_data, "error_result_xdr", None)
+        if error_result_xdr is None:
+            return False
+
+        try:
+            xdr_tx_result = stellar_xdr.TransactionResult.from_xdr(error_result_xdr)
+        except (TypeError, ValueError, binascii.Error):
+            return False
+
+        if (
+            xdr_tx_result.result.code
+            != stellar_xdr.TransactionResultCode.txINSUFFICIENT_BALANCE
+        ):
+            return False
+        return True
+
     def send_tx(self, tx: TransactionEnvelope):
         """
         Sends a transaction and waits for confirmation.
@@ -171,6 +195,11 @@ class OracleClient:
         tx.sign(self.signer)
         send_transaction_data = self.server.send_transaction(tx)
         if send_transaction_data.status != SendTransactionStatus.PENDING:
+            if self.is_insufficient_balance_transaction_data(send_transaction_data):
+                raise InsufficientBalance(
+                    "Insufficient balance",
+                    send_transaction_data,
+                )
             raise RuntimeError(f"Failed to send transaction: {send_transaction_data}")
         tx_hash = send_transaction_data.hash
         return tx_hash, self.wait_tx(tx_hash)
