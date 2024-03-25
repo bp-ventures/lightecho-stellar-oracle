@@ -45,8 +45,8 @@ ASSETS_TO_ASSET_U32: Dict[Tuple, int] = {
     ("other", "KES"): 12,
     ("other", "KRW"): 13,
     ("other", "NGNT"): 14,
-    ("other", "TRY"): 15,
-    ("other", "TRYB"): 16,
+    # ("other", "TRY"): 15,
+    # ("other", "TRYB"): 16,
     ("other", "TZS"): 17,
     ("other", "UPUSDT"): 18,
     ("other", "USD"): 19,
@@ -60,6 +60,8 @@ ASSETS_TO_ASSET_U32: Dict[Tuple, int] = {
     ("other", "ZAR"): 27,
     ("other", "yBTC"): 28,
     ("other", "yUSDC"): 29,
+    ("other", "INR"): 30,
+    ("other", "ARS"): 31,
 }
 
 
