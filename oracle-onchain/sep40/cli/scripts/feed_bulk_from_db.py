@@ -132,7 +132,7 @@ def add_prices_to_blockchain(prices: List[Dict], timestamp: int):
         is_success = returncode == 0
         log_result_to_db(cmd, is_success, output)
     if usd_based_prices:
-        raise ValueError("USD-based prices are not supported yet")
+        logger.warning("Skipping adding USD-based prices, as they're not supported in the blockchain contract yet")
     for source, symbols in source_symbols.items():
         mark_symbols_as_added_to_blockchain(source, symbols)
 
