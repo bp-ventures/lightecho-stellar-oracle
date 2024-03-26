@@ -51,7 +51,7 @@ function start {
     run_ttm start server 2>/dev/null || run_ttm run --name server ./server.sh
 
     echo "Starting Feed..."
-    journalctl --user start feed_bulk_from_db
+    systemctl --user start feed_bulk_from_db
 }
 
 function stop {
@@ -60,7 +60,7 @@ function stop {
     run_ttm stop server 2>/dev/null
 
     echo "Stopping Feed..."
-    journalctl --user stop feed_bulk_from_db
+    systemctl --user stop feed_bulk_from_db
 }
 
 function restart {
