@@ -51,6 +51,7 @@ function start {
     run_ttm start server 2>/dev/null || run_ttm run --name server ./server.sh
 
     echo "Starting Feed..."
+    systemctl --user daemon-reload
     systemctl --user start feed_bulk_from_db feed_bulk_from_db.timer bump_instance bump_instance.timer
 }
 
