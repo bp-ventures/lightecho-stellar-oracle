@@ -104,14 +104,19 @@ function status() {
 case "$subcommand" in
     "deploy")
         deploy
+        ;;
     "start")
         start
+        ;;
     "stop")
         stop
+        ;;
     "restart")
         restart
+        ;;
     "status")
         status
+        ;;
     "help")
         echo "Usage: $0 {stop|start|restart|deploy|status}"
         exit 0
