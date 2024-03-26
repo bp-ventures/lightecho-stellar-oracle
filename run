@@ -36,10 +36,10 @@ function run_ttm() {
 }
 
 UNIT_FILES=(
-    "~/.config/systemd/user/bump_instance.service"
-    "~/.config/systemd/user/bump_instance.timer"
-    "~/.config/systemd/user/feed_bulk_from_db.service"
-    "~/.config/systemd/user/feed_bulk_from_db.timer"
+    "$HOME/.config/systemd/user/bump_instance.service"
+    "$HOME/.config/systemd/user/bump_instance.timer"
+    "$HOME/.config/systemd/user/feed_bulk_from_db.service"
+    "$HOME/.config/systemd/user/feed_bulk_from_db.timer"
 )
 
 subcommand="$1"
