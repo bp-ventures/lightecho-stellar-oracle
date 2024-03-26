@@ -21,14 +21,19 @@ if [ $? -ne 0 ]; then
         exit 1
     fi
 fi
-POETRY_VIRTUALENV=$("$POETRY" show -v | awk '/Using virtualenv/ {print $3}')
-if [ ! -d "$POETRY_VIRTUALENV" ]; then
-    >&2 printf "${RED}The poetry virtual environment does not exist at ${POETRY_VIRTUALENV}.${NC}\n"
-    exit 1
-fi
-POETRY_BIN_DIR="${POETRY_VIRTUALENV}/bin"
-PYTHON_EXECUTABLE="${POETRY_BIN_DIR}/python"
-TTM_EXECUTABLE="${POETRY_BIN_DIR}/ttm"
+
+function run_ttm() {
+    local POETRY_VIRTUALENV=$("$POETRY" show -v | awk '/Using virtualenv/ {print $3}')
+    if [ ! -d "$POETRY_VIRTUALENV" ]; then
+        >&2 printf "${RED}The poetry virtual environment does not exist at ${POETRY_VIRTUALENV}.${NC}\n"
+        exit 1
+    fi
+    local POETRY_BIN_DIR="${POETRY_VIRTUALENV}/bin"
+    local PYTHON_EXECUTABLE="${POETRY_BIN_DIR}/python"
+    local TTM_EXECUTABLE="${POETRY_BIN_DIR}/ttm"
+
+    "$TTM_EXECUTABLE" "$@"
+}
 
 UNIT_FILES=(
     "~/.config/systemd/user/bump_instance.service"
@@ -43,7 +48,7 @@ shift  # Remove the subcommand from the argument list
 function start {
     echo "Starting API..."
     cd "${SCRIPT_DIR}/oracle-onchain/api" || exit
-    "$TTM_EXECUTABLE" start server 2>/dev/null || "$TTM_EXECUTABLE" run --name server ./server.sh
+    run_ttm start server 2>/dev/null || run_ttm run --name server ./server.sh
 
     echo "Starting Feed..."
     journalctl --user start feed_bulk_from_db
@@ -52,7 +57,7 @@ function start {
 function stop {
     echo "Stopping API..."
     cd "${SCRIPT_DIR}/oracle-onchain/api" || exit
-    "$TTM_EXECUTABLE" stop server 2>/dev/null
+    run_ttm stop server 2>/dev/null
 
     echo "Stopping Feed..."
     journalctl --user stop feed_bulk_from_db
@@ -87,7 +92,7 @@ function deploy {
 }
 
 function status() {
-    "$TTM_EXECUTABLE" ls -a
+    run_ttm ls -a
     for UNIT_FILE in "${UNIT_FILES[@]}"; do
         local BASENAME=$(basename "$UNIT_FILE")
         systemctl --user status "$BASENAME"
