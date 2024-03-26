@@ -103,6 +103,7 @@ function status() {
 
     echo "Querying API status..."
     run_ttm ls -a
+    echo
 
     echo "Querying Systemd Feed status..."
     for UNIT_FILE in "${UNIT_FILES[@]}"; do
