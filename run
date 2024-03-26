@@ -100,8 +100,11 @@ function systemctl_status () {
 
 function status() {
     cd "${SCRIPT_DIR}/oracle-onchain/api"
+
+    echo "Querying API status..."
     run_ttm ls -a
 
+    echo "Querying Systemd Feed status..."
     for UNIT_FILE in "${UNIT_FILES[@]}"; do
         local BASENAME=$(basename "$UNIT_FILE")
         systemctl_status "$BASENAME"
