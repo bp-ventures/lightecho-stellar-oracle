@@ -92,13 +92,19 @@ function deploy {
     start
 }
 
+function systemctl_status () {
+    for name in $@; do \
+      echo ${name} $(systemctl --user is-active ${name}) $(systemctl --user is-enabled ${name}); \
+      done | column -t | grep --color=always '\(disabled\|inactive\|$\)'
+}
+
 function status() {
     cd "${SCRIPT_DIR}/oracle-onchain/api"
     run_ttm ls -a
 
     for UNIT_FILE in "${UNIT_FILES[@]}"; do
         local BASENAME=$(basename "$UNIT_FILE")
-        systemctl --user status "$BASENAME"
+        systemctl_status "$BASENAME"
     done
 }
 
