@@ -89,6 +89,10 @@ function deploy {
     cd "${SCRIPT_DIR}/oracle-onchain/api"
     "$POETRY" install --no-root --only main
 
+    echo "Installing CLI dependencies..."
+    cd "${SCRIPT_DIR}/oracle-onchain/sep40/cli"
+    "$POETRY" install --no-root --only main
+
     start
 }
 
