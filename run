@@ -30,6 +30,13 @@ POETRY_BIN_DIR="${POETRY_VIRTUALENV}/bin"
 PYTHON_EXECUTABLE="${POETRY_BIN_DIR}/python"
 TTM_EXECUTABLE="${POETRY_BIN_DIR}/ttm"
 
+UNIT_FILES=(
+    "~/.config/systemd/user/bump_instance.service"
+    "~/.config/systemd/user/bump_instance.timer"
+    "~/.config/systemd/user/feed_bulk_from_db.service"
+    "~/.config/systemd/user/feed_bulk_from_db.timer"
+)
+
 subcommand="$1"
 shift  # Remove the subcommand from the argument list
 
@@ -60,12 +67,6 @@ function deploy {
     stop
 
     echo "Checking feed Systemd unit files..."
-    local UNIT_FILES=(
-        "~/.config/systemd/user/bump_instance.service"
-        "~/.config/systemd/user/bump_instance.timer"
-        "~/.config/systemd/user/feed_bulk_from_db.service"
-        "~/.config/systemd/user/feed_bulk_from_db.timer"
-    )
     for UNIT_FILE in "${UNIT_FILES[@]}"; do
         if [ ! -f "$UNIT_FILE" ]; then
             >&2 printf "${RED}Error: Systemd unit file $UNIT_FILE does not exist.${NC}\n"
@@ -84,3 +85,35 @@ function deploy {
 
     start
 }
+
+function status() {
+    "$TTM_EXECUTABLE" ls -a
+    for UNIT_FILE in "${UNIT_FILES[@]}"; do
+        local BASENAME=$(basename "$UNIT_FILE")
+        systemctl --user status "$BASENAME"
+    done
+}
+
+case "$subcommand" in
+    "deploy")
+        deploy
+    "start")
+        start
+    "stop")
+        stop
+    "restart")
+        restart
+    "status")
+        status
+    "help")
+        echo "Usage: $0 {stop|start|restart|deploy|status}"
+        exit 0
+        ;;
+    *)
+        echo "Usage: $0 {stop|start|restart|deploy|status}"
+        exit 1
+        ;;
+esac
+
+exit 0
+
