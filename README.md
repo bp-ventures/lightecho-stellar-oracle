@@ -171,13 +171,15 @@ ExecStart=/path/to/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/bum
 
 Enable and start the services:
 ```bash
-systemctl --user enable feed_bulk_from_db.timer bump_instance.timer
-systemctl --user start feed_bulk_from_db.timer bump_instance.timer
+./run deploy
 ```
 
 Additional commands:
 ```bash
-# to check status
+./run status  # check status of API and Feed
+./run restart  # restart API and Feed
+
+# systemd helper
 ./systemd-status.sh
 
 # to see logs
