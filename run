@@ -50,9 +50,9 @@ function start {
     cd "${SCRIPT_DIR}/oracle-onchain/api" || exit
     run_ttm start server 2>/dev/null || run_ttm run --name server ./server.sh
 
-    echo "Starting Feed..."
+    echo "Starting Feed timers..."
     systemctl --user daemon-reload
-    systemctl --user start feed_bulk_from_db feed_bulk_from_db.timer bump_instance bump_instance.timer
+    systemctl --user start feed_bulk_from_db.timer bump_instance.timer
 }
 
 function stop {
