@@ -809,6 +809,17 @@ files = [
 ]
 
 [[package]]
+name = "ttm"
+version = "0.14.0"
+description = "Tiny task manager for Linux, MacOS and Unix-like systems"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "ttm-0.14.0-py3-none-any.whl", hash = "sha256:4919afb3981bfd82a8687cd54c0d3d66963dd78e57df01ceee59826ba22ae4b7"},
+    {file = "ttm-0.14.0.tar.gz", hash = "sha256:2a52cce4a262b1adb96c974c2b081acb8cc79a0425a3f308bd3e4ddc075c61d8"},
+]
+
+[[package]]
 name = "types-requests"
 version = "2.31.0.20240106"
 description = "Typing stubs for requests"
@@ -880,4 +891,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "f93df87f60277238e7774eddd9727b55f9e0873492aa6b1bcd78234e6d7c1281"
+content-hash = "945296fdb96d825504df135f8236f140f18aee967cd2fd4f03490480f570d8d7"
