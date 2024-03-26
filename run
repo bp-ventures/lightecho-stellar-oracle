@@ -92,7 +92,9 @@ function deploy {
 }
 
 function status() {
+    cd "${SCRIPT_DIR}/oracle-onchain/api"
     run_ttm ls -a
+
     for UNIT_FILE in "${UNIT_FILES[@]}"; do
         local BASENAME=$(basename "$UNIT_FILE")
         systemctl --user status "$BASENAME"
