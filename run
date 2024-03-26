@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+# This is a repo-wide CLI tool for running common tasks like deploying
+# the Oracle feed and checking status of the services.
+# This CLI is made for server sysadmins. It's not meant to be a
+# development tool.
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd "$SCRIPT_DIR" || exit
+
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+POETRY=poetry
+command $POETRY &>/dev/null
+if [ $? -ne 0 ]; then
+    if [ -f ~/.local/bin/poetry ]; then
+        POETRY=~/.local/bin/poetry
+    else
+        >&2 printf "${RED}Error: program 'poetry' not found. Make sure poetry is available in your PATH environment variable.${NC}\n"
+        exit 1
+    fi
+fi
+POETRY_VIRTUALENV=$("$POETRY" show -v | awk '/Using virtualenv/ {print $3}')
+if [ ! -d "$POETRY_VIRTUALENV" ]; then
+    >&2 printf "${RED}The poetry virtual environment does not exist at ${POETRY_VIRTUALENV}.${NC}\n"
+    exit 1
+fi
+POETRY_BIN_DIR="${POETRY_VIRTUALENV}/bin"
+PYTHON_EXECUTABLE="${POETRY_BIN_DIR}/python"
+TTM_EXECUTABLE="${POETRY_BIN_DIR}/ttm"
+
+subcommand="$1"
+shift  # Remove the subcommand from the argument list
+
+function start {
+    echo "Starting API..."
+    cd "${SCRIPT_DIR}/oracle-onchain/api" || exit
+    "$TTM_EXECUTABLE" start server 2>/dev/null || "$TTM_EXECUTABLE" run --name server ./server.sh
+
+    echo "Starting Feed..."
+    journalctl --user start feed_bulk_from_db
+}
+
+function stop {
+    echo "Stopping API..."
+    cd "${SCRIPT_DIR}/oracle-onchain/api" || exit
+    "$TTM_EXECUTABLE" stop server 2>/dev/null
+
+    echo "Stopping Feed..."
+    journalctl --user stop feed_bulk_from_db
+}
+
+function restart {
+    stop
+    start
+}
+
+function deploy {
+    stop
+
+    echo "Checking feed Systemd unit files..."
+    local UNIT_FILES=(
+        "~/.config/systemd/user/bump_instance.service"
+        "~/.config/systemd/user/bump_instance.timer"
+        "~/.config/systemd/user/feed_bulk_from_db.service"
+        "~/.config/systemd/user/feed_bulk_from_db.timer"
+    )
+    for UNIT_FILE in "${UNIT_FILES[@]}"; do
+        if [ ! -f "$UNIT_FILE" ]; then
+            >&2 printf "${RED}Error: Systemd unit file $UNIT_FILE does not exist.${NC}\n"
+            exit 1
+        fi
+        local BASENAME=$(basename "$UNIT_FILE")
+        enabled=$(systemctl --user is-enabled --quiet "$BASENAME" && echo "Yes" || echo "No")
+        if [[ "$enabled" == "No" ]]; then
+            systemctl --user enable "$BASENAME"
+        fi
+    done
+
+    echo "Installing API dependencies..."
+    cd "${SCRIPT_DIR}/oracle-onchain/api"
+    "$POETRY" install --no-root --only main
+
+    start
+}
