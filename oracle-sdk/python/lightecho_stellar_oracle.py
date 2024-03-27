@@ -62,6 +62,8 @@ ASSETS_TO_ASSET_U32: Dict[Tuple, int] = {
     ("other", "yUSDC"): 29,
     ("other", "INR"): 30,
     ("other", "ARS"): 31,
+    ("other", "NGN"): 32,
+    ("other", "IDR"): 33,
 }
 
 
