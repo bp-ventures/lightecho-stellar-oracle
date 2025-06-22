@@ -1,6 +1,7 @@
 import base64
 from decimal import Decimal
 import json
+import re
 import logging
 from datetime import datetime
 import pytz
@@ -30,6 +31,7 @@ mod_spec.loader.exec_module(local_settings)
 CURRENT_DIR = Path(__file__).parent.resolve()
 DATA_DIR = CURRENT_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
+VALID_SYMBOL_REGEX = re.compile(r"^[A-Z0-9]{3,20}$")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,8 +41,12 @@ logging.basicConfig(
 
 LATEST_PRICES_JSON_FILE_PATH = Path(__file__).parent.resolve() / "latest_prices.json"
 
-auth = HTTPBasicAuth()
-auth.error_handler(lambda status: ({"error": "Unauthorized"}, status))
+admin_auth = HTTPBasicAuth()
+admin_auth.error_handler(lambda status: ({"error": "Unauthorized"}, status))
+
+readonly_auth = HTTPBasicAuth()
+readonly_auth.error_handler(lambda status: ({"error": "Unauthorized"}, status))
+
 db_path = getattr(local_settings, "DB_PATH", None)
 if db_path is None:
     db_path = Path(__file__).parent.resolve() / "db.sqlite3"
@@ -109,10 +115,18 @@ def init_app():
 app = init_app()
 
 
-@auth.verify_password
+@admin_auth.verify_password
 def verify_password(username, password):
     if username in local_settings.API_USERS and check_password_hash(
         local_settings.API_USERS.get(username), password
+    ):
+        return username
+
+
+@readonly_auth.verify_password
+def readonly_verify_password(username, password):
+    if username in local_settings.READONLY_API_USERS and check_password_hash(
+        local_settings.READONLY_API_USERS.get(username), password
     ):
         return username
 
@@ -201,7 +215,7 @@ def get_feed_bulk_from_db_latest_log():
 
 
 @app.route("/soroban/add-price/", methods=["POST", "OPTIONS"])
-@auth.login_required
+@admin_auth.login_required
 def add_price():
     data = request.json
     if not data:
@@ -264,7 +278,7 @@ def file_modified_timestamp(file_path: str | Path) -> datetime:
 
 
 @app.route("/db/add-prices/", methods=["POST", "OPTIONS"])
-@auth.login_required
+@admin_auth.login_required
 def api_db_add_prices():
     data = request.json
     if not isinstance(data, list):
@@ -317,7 +331,7 @@ def api_db_add_prices():
 
 
 @app.route("/db/get-prices/", methods=["GET", "OPTIONS"])
-@auth.login_required
+@admin_auth.login_required
 def api_db_get_prices():
     """
     Return latest prices added to the blockchain contract
@@ -333,7 +347,7 @@ def api_db_get_prices():
 
 
 @app.route("/db/all-prices/", methods=["GET", "OPTIONS"])
-@auth.login_required
+@admin_auth.login_required
 def api_db_all_prices():
     """
     Return all prices in the database. Symbols are unique, so the latest price for each symbol is returned.
@@ -353,3 +367,66 @@ def api_db_all_prices():
         cursor.execute(query)
         prices = [dict(row) for row in cursor.fetchall()]
     return {"prices": prices}
+
+
+@app.route("/readonly/prices/", methods=["GET", "OPTIONS"])
+@readonly_auth.login_required
+def api_readonly_prices():
+    """
+    Return prices from the database. Each asset pair (e.g. USDEUR) is unique,
+    and this endpoint returns the latest price for each pair.
+    A list of asset pairs can be defined via params, example:
+        GET example.com/readonly/prices?pairs=USDEUR,BTCUSDT
+    """
+    pairs = request.args.get("pairs")
+    pair_list = (
+        [p.strip().upper() for p in pairs.split(",") if p.strip()] if pairs else []
+    )
+
+    max_pairs = 50
+    if len(pair_list) > max_pairs:
+        return {"error": f"Too many pairs requested. Max is {max_pairs}."}, 400
+
+    invalid_symbols = [p for p in pair_list if not VALID_SYMBOL_REGEX.match(p)]
+    if invalid_symbols:
+        return {"error": f"Invalid symbols: {', '.join(invalid_symbols)}"}, 400
+
+    subquery_filter = " WHERE status = 'active' "
+
+    # outer_filter is redundant with subquery_filter but may improve query performance
+    outer_filter = " WHERE p.status = 'active' "
+
+    query_params = []
+
+    if pair_list:
+        placeholders = ", ".join(["?"] * len(pair_list))
+        subquery_filter += f" AND symbol IN ({placeholders}) "
+        outer_filter += f" AND p.symbol IN ({placeholders})"
+        query_params = pair_list * 2
+
+    query = f"""
+        SELECT
+            p.asset_type,
+            p.bid,
+            p.buy_asset,
+            p.offer,
+            p.price,
+            p.sell_asset,
+            p.symbol,
+            p.created_at
+        FROM prices p
+        INNER JOIN (
+            SELECT symbol, MAX(created_at) AS max_created_at
+            FROM prices
+            {subquery_filter}
+            GROUP BY symbol
+        ) latest_prices
+        ON p.symbol = latest_prices.symbol AND p.created_at = latest_prices.max_created_at
+        {outer_filter}
+    """
+
+    with cursor_ctx() as cursor:
+        cursor.execute(query, query_params)
+        prices = [dict(row) for row in cursor.fetchall()]
+
+    return {"prices": prices}, 200

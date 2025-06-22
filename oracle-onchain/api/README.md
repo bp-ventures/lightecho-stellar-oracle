@@ -21,6 +21,12 @@ API_USERS = {
     "john": generate_password_hash("hello"),
     "susan": generate_password_hash("bye")
 }
+
+# HTTP Basic read-only authorized users
+READONLY_API_USERS = {
+    "publicuser1": generate_password_hash("password1"),
+    "publicuser2": generate_password_hash("password2")
+}
 ```
 
 Install dependencies:
