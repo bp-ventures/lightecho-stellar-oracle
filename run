@@ -85,6 +85,10 @@ function deploy {
         fi
     done
 
+    echo "Installing SDK dependencies..."
+    cd "${SCRIPT_DIR}/oracle-sdk/python"
+    "$POETRY" install --only main
+
     echo "Installing API dependencies..."
     cd "${SCRIPT_DIR}/oracle-onchain/api"
     "$POETRY" install --no-root --only main
