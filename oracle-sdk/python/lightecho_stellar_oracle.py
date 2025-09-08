@@ -270,8 +270,9 @@ class OracleClient:
         assert tx_data.result_meta_xdr is not None
         transaction_meta = stellar_xdr.TransactionMeta.from_xdr(tx_data.result_meta_xdr)  # type: ignore
         # TODO handle multiple results[]
-        assert transaction_meta.v3.soroban_meta
-        result = transaction_meta.v3.soroban_meta.return_value
+        assert transaction_meta.v4 is not None
+        assert transaction_meta.v4.soroban_meta
+        result = transaction_meta.v4.soroban_meta.return_value
         return result
 
     def parse_sc_val(self, sc_val):
