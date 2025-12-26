@@ -76,8 +76,8 @@ def vprint(msg: str):
 def print_contract_output(tx_hash, tx_data):
     print("Output:")
     print(tx_data)
-    print("Horizon tx:")
-    print(f"{state['horizon_url']}/transactions/{tx_hash}")
+    print("Horizon Transaction Hash:")
+    print(tx_hash)
     print()
     print("Success!")
 
