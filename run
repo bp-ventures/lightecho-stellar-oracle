@@ -36,8 +36,6 @@ function run_ttm() {
 }
 
 UNIT_FILES=(
-    "$HOME/.config/systemd/user/bump_instance.service"
-    "$HOME/.config/systemd/user/bump_instance.timer"
     "$HOME/.config/systemd/user/feed_bulk_from_db.service"
     "$HOME/.config/systemd/user/feed_bulk_from_db.timer"
 )
@@ -52,7 +50,7 @@ function start {
 
     echo "Starting Feed timers..."
     systemctl --user daemon-reload
-    systemctl --user start feed_bulk_from_db.timer bump_instance.timer
+    systemctl --user start feed_bulk_from_db.timer
 }
 
 function stop {
@@ -61,7 +59,7 @@ function stop {
     run_ttm stop server 2>/dev/null
 
     echo "Stopping Feed..."
-    systemctl --user stop feed_bulk_from_db feed_bulk_from_db.timer bump_instance bump_instance.timer
+    systemctl --user stop feed_bulk_from_db feed_bulk_from_db.timer
 }
 
 function restart {

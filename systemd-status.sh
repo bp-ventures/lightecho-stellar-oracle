@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Specify the services you want to check
-services=("feed_bulk_from_db.service" "feed_bulk_from_db.timer" "bump_instance.service" "bump_instance.timer")
+services=("feed_bulk_from_db.service" "feed_bulk_from_db.timer")
 systemctl_cmd="systemctl --user"
 
 # Function to display a table header

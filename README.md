@@ -158,20 +158,25 @@ mkdir -p ~/.config/systemd/user/
 cp -v init/systemd/* ~/.config/systemd/user/
 ```
 
-Go to `~/.config/systemd/user/` and update the `.service` files (that you copied) with the correct paths:
+Go to `~/.config/systemd/user/` and edit the `.service` files (that you copied) with the correct paths in `ExecStart=`:
 ```text
 ...
-
 [Service]
-# replace /path/to/ with the correct path
-ExecStart=/path/to/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/bump_instance.sh
-
+ExecStart=/path/to/lightecho-stellar-oracle/...  # <-- replace /path/to/ with the correct dir path
 ...
 ```
 
 Enable and start the services:
 ```bash
 ./run deploy
+```
+
+Add bump script to cron so the contract gets bumped once in a while:
+```bash
+crontab -e
+
+# then add this to the bottom of the file (REPLACE /path/to with the correct dir path)
+0 0 * * 1 /path/to/lightecho-stellar-oracle/oracle-onchain/sep40/cli/scripts/bump_instance.sh
 ```
 
 Additional commands:
@@ -184,7 +189,6 @@ Additional commands:
 
 # to see logs
 journalctl --user -u feed_bulk_from_db
-journalctl --user -u bump_instance
 ```
 
 ## Featured projects
