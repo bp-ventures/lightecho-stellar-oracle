@@ -46,6 +46,14 @@ Run server:
 ttm run --name server ./server.sh
 ```
 
+Add scripts to cron:
+```bash
+crontab -e
+
+# add the following to the bottom of file (REPLACE /path/to with correct dir)
+0 0 * * 1 /path/to/lightecho-stellar-oracle/oracle-onchain/api/db_delete_old_data.sh
+```
+
 To see log file:
 ```
 tail ./data/server.log
