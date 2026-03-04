@@ -27,6 +27,7 @@ mod_spec.loader.exec_module(local_settings)
 
 MAX_DECIMAL_PLACES = 18
 EXIT_CODE_INSUFFICIENT_BALANCE = 2
+ASSETS_TO_ASSET_U32 = getattr(local_settings, "ASSETS_TO_ASSET_U32", None)
 
 colorama_init()
 oracle_app = typer.Typer()
@@ -378,6 +379,7 @@ def main(
         network="custom",
         custom_rpc_url=state["rpc_server_url"],
         custom_network_passphrase=state["network_passphrase"],
+        assets_to_asset_u32=ASSETS_TO_ASSET_U32,
     )
     state["admin_oracle_client"] = OracleClient(
         contract_id=state["oracle_contract_id"],
@@ -385,6 +387,7 @@ def main(
         network="custom",
         custom_rpc_url=state["rpc_server_url"],
         custom_network_passphrase=str(state["network_passphrase"]),
+        assets_to_asset_u32=ASSETS_TO_ASSET_U32,
     )
 
 

@@ -29,37 +29,42 @@ TESTNET_CONTRACT_USD = ""  # not deployed yet
 PUBLIC_CONTRACT_XLM = "CDOR3QD27WAAF4TK4MO33TGQXR6RPNANNVLOY277W2XVV6ZVJ6X6X42T"
 PUBLIC_CONTRACT_USD = ""  # not deployed yet
 
-ASSETS_TO_ASSET_U32: Dict[Tuple, int] = {
- #   ("other", "ARST"): 0,
- #   ("other", "AUDD"): 1,
+# Each asset must have a unique integer representation.
+# You must NEVER change the integer value for a given asset, otherwise it might
+# conflict with other asset with the same integer value.
+# ALWAYS use new integer value for new assets, even if there are existing unused values.
+# You can override this dict via assets_to_asset_u32 parameter in OracleClient.
+DEFAULT_ASSETS_TO_ASSET_U32: Dict[Tuple, int] = {
+    ("other", "ARST"): 0,
+    ("other", "AUDD"): 1,
     ("other", "BRL"): 2,
- #   ("other", "BTC"): 3,
- #   ("other", "BTCLN"): 4,
- #   ("other", "CLPX"): 5,
- #   ("other", "ETH"): 6,
+    ("other", "BTC"): 3,
+    ("other", "BTCLN"): 4,
+    ("other", "CLPX"): 5,
+    ("other", "ETH"): 6,
     ("other", "EUR"): 7,
     ("other", "EURC"): 8,
- #   ("other", "EURT"): 9,
- #   ("other", "GYEN"): 10,
+    ("other", "EURT"): 9,
+    ("other", "GYEN"): 10,
     ("other", "IDRT"): 11,
     ("other", "KES"): 12,
- #   ("other", "KRW"): 13,
+    ("other", "KRW"): 13,
     ("other", "NGNT"): 14,
-    # ("other", "TRY"): 15,
-    # ("other", "TRYB"): 16,
+    ("other", "TRY"): 15,
+    ("other", "TRYB"): 16,
     ("other", "TZS"): 17,
- #   ("other", "UPUSDT"): 18,
+    ("other", "UPUSDT"): 18,
     ("other", "USD"): 19,
     ("other", "USDC"): 20,
- #   ("other", "USDT"): 21,
+    ("other", "USDT"): 21,
     ("other", "VOL30d"): 22,
- #   ("other", "XCHF"): 23,
- #   ("other", "XLM"): 24,
- #   ("other", "XSGD"): 25,
- #   ("other", "YUSDC"): 26,
- #   ("other", "ZAR"): 27,
- #   ("other", "yBTC"): 28,
- #   ("other", "yUSDC"): 29,
+    ("other", "XCHF"): 23,
+    ("other", "XLM"): 24,
+    ("other", "XSGD"): 25,
+    ("other", "YUSDC"): 26,
+    ("other", "ZAR"): 27,
+    ("other", "yBTC"): 28,
+    ("other", "yUSDC"): 29,
     ("other", "INR"): 30,
     ("other", "ARS"): 31,
     ("other", "NGN"): 32,
@@ -107,6 +112,7 @@ class OracleClient:
         wait_tx_interval: int = 3,
         tx_timeout: int = 30,
         decimal_places: int = 18,
+        assets_to_asset_u32: Optional[Dict[Tuple, int]] = None,
     ):
         """
         Initializes an Oracle Client instance.
@@ -159,6 +165,10 @@ class OracleClient:
         self.tx_timeout = tx_timeout
         self.decimal_places = decimal_places
         self.decimal_places_divider = 10**decimal_places
+        if assets_to_asset_u32 is not None:
+            self.assets_to_asset_u32 = assets_to_asset_u32
+        else:
+            self.assets_to_asset_u32 = DEFAULT_ASSETS_TO_ASSET_U32
 
     def build_asset_enum(self, asset_type: AssetType, asset: str):
         if asset_type == "stellar":
@@ -391,11 +401,10 @@ class OracleClient:
         return tx_hash, self.parse_tx_data(tx_data, expect_asset_map=expect_asset_map)
 
     def asset_to_asset_u32(self, asset_type: AssetType, asset: str) -> int:
-        asset_u32 = ASSETS_TO_ASSET_U32.get((asset_type, asset))
+        asset_u32 = self.assets_to_asset_u32.get((asset_type, asset))
         if asset_u32 is None:
             raise AssetU32NotFound(
-                f"Asset has no u32 value: {asset_type} {asset}. Make sure to "
-                "add a u32 value for this asset in ASSETS_TO_ASSET_U32."
+                f"Asset has no u32 value: {asset_type} {asset}. You can configure the list of u32 values via the assets_to_asset_u32 parameter of this class."
             )
         return asset_u32
 
@@ -591,12 +600,15 @@ class OracleClient:
             }
         return tx_hash, price  # type: ignore
 
-    def add_prices(self, prices: List[AssetPrice]) -> Tuple[str, None]:
+    def add_prices(
+        self, prices: List[AssetPrice], fail_u32_silently=True
+    ) -> Tuple[str, None]:
         """
         Add prices to the contract.
 
         Args:
             prices (List[AssetPrice]): List of prices
+            fail_u32_silently (bool): If True, won't raise error if asset u32 code is not found
 
         Returns:
             Tuple[str, None]: A tuple containing the transaction hash and None.
@@ -612,8 +624,11 @@ class OracleClient:
                     price["timestamp"],
                 )
             except AssetU32NotFound as e:
-                logging.warn(f"skipping price due to error: {e}")
-                continue
+                if fail_u32_silently:
+                    logging.debug(f"skipping price due to error: {e}")
+                    continue
+                else:
+                    raise e
             # see https://github.com/StellarCN/py-stellar-base/issues/815
             add_price_struct = scval.to_struct(
                 {
